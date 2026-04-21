@@ -9,13 +9,18 @@ export default function Register() {
   const [message, setMessage] = useState('');
 
   async function handleRegister() {
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage('Uspešno! Proveri email da potvrdiš nalog.');
-    }
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) {
+    setMessage(error.message);
+  } else {
+    await supabase.from('profiles').insert({
+      id: data.user.id,
+      username,
+      email,
+    });
+    setMessage('Uspešno! Proveri email da potvrdiš nalog.');
   }
+}
 
   return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#f5f5f5' }}>
