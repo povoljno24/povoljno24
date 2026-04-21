@@ -84,12 +84,12 @@ export default function Home() {
         <div style={{ display:'flex', alignItems:'center', gap:'20px' }}>
           <a href="#" style={{ fontSize:'13px', color:'#555' }}>{t.listings}</a>
           <a href="#" style={{ fontSize:'13px', color:'#555' }}>{t.howItWorks}</a>
-          <a href="#" style={{ fontSize:'13px', color:'#555' }}>{t.signIn}</a>
+          <a href="/login" style={{ fontSize:'13px', color:'#555' }}>{t.signIn}</a>
           <div style={{ display:'flex', border:'1px solid #ddd', borderRadius:'8px', overflow:'hidden' }}>
             <button onClick={() => setLang('sr')} style={{ padding:'6px 12px', fontSize:'12px', border:'none', cursor:'pointer', background: lang==='sr' ? '#185FA5' : 'transparent', color: lang==='sr' ? '#fff' : '#555' }}>🇷🇸 SR</button>
             <button onClick={() => setLang('en')} style={{ padding:'6px 12px', fontSize:'12px', border:'none', cursor:'pointer', background: lang==='en' ? '#185FA5' : 'transparent', color: lang==='en' ? '#fff' : '#555' }}>🇬🇧 EN</button>
           </div>
-          <button style={{ background:'#185FA5', color:'#fff', border:'none', borderRadius:'8px', padding:'7px 16px', fontSize:'13px', cursor:'pointer' }}>{t.postAd}</button>
+          <a href="/register"><button style={{ background:'#185FA5', color:'#fff', border:'none', borderRadius:'8px', padding:'7px 16px', fontSize:'13px', cursor:'pointer' }}>{t.postAd}</button></a>
         </div>
       </nav>
 
