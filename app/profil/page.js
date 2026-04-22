@@ -6,6 +6,7 @@ export default function Profil() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [listings, setListings] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +28,14 @@ export default function Profil() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       setListings(listingsData || []);
+
+      const { data: messagesData } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('receiver_id', user.id)
+        .order('created_at', { ascending: false });
+      setMessages(messagesData || []);
+
       setLoading(false);
     }
     loadProfile();
@@ -45,7 +54,6 @@ export default function Profil() {
 
   return (
     <div style={{ minHeight:'100vh', background:'#f5f5f5' }}>
-      {/* Navbar */}
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 24px', background:'#fff', borderBottom:'1px solid #e5e5e5' }}>
         <a href="/" style={{ fontSize:'20px', fontWeight:'600', color:'#185FA5', textDecoration:'none' }}>
           Povoljno<span style={{ color:'#E24B4A' }}>24</span>.rs
@@ -57,7 +65,6 @@ export default function Profil() {
       </nav>
 
       <div style={{ maxWidth:'700px', margin:'32px auto', padding:'0 24px' }}>
-        {/* Profile card */}
         <div style={{ background:'#fff', borderRadius:'16px', border:'1px solid #eee', padding:'32px', marginBottom:'24px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:'20px', marginBottom:'24px' }}>
             <div style={{ width:'64px', height:'64px', borderRadius:'50%', background:'#E6F1FB', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px', fontWeight:'600', color:'#185FA5' }}>
@@ -91,28 +98,48 @@ export default function Profil() {
           </div>
         </div>
 
-        {/* User's listings */}
         <h2 style={{ fontSize:'16px', fontWeight:'600', marginBottom:'16px', color:'#1a1a1a' }}>Moji oglasi</h2>
         {listings.length === 0 ? (
-          <div style={{ background:'#fff', borderRadius:'16px', border:'1px solid #eee', padding:'40px', textAlign:'center' }}>
+          <div style={{ background:'#fff', borderRadius:'16px', border:'1px solid #eee', padding:'40px', textAlign:'center', marginBottom:'24px' }}>
             <p style={{ color:'#999', fontSize:'14px', marginBottom:'16px' }}>Još nemaš aktivnih oglasa.</p>
             <a href="/postoglas" style={{ background:'#185FA5', color:'#fff', padding:'10px 20px', borderRadius:'8px', textDecoration:'none', fontSize:'13px' }}>Postavi prvi oglas</a>
           </div>
         ) : (
-          <div style={{ display:'grid', gap:'12px' }}>
+          <div style={{ display:'grid', gap:'12px', marginBottom:'24px' }}>
             {listings.map(listing => (
-              <div key={listing.id} style={{ background:'#fff', borderRadius:'12px', border:'1px solid #eee', padding:'16px', display:'flex', gap:'16px', alignItems:'center' }}>
-                <div style={{ width:'64px', height:'64px', borderRadius:'8px', background:'#f5f5f5', overflow:'hidden', flexShrink:0 }}>
-                  {listing.image_url
-                    ? <img src={listing.image_url} alt={listing.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                    : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px' }}>📦</div>
-                  }
+              <a key={listing.id} href={`/oglas/${listing.id}`} style={{ textDecoration:'none', color:'inherit' }}>
+                <div style={{ background:'#fff', borderRadius:'12px', border:'1px solid #eee', padding:'16px', display:'flex', gap:'16px', alignItems:'center' }}>
+                  <div style={{ width:'64px', height:'64px', borderRadius:'8px', background:'#f5f5f5', overflow:'hidden', flexShrink:0 }}>
+                    {listing.image_url
+                      ? <img src={listing.image_url} alt={listing.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                      : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px' }}>📦</div>
+                    }
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:'14px', fontWeight:'600', color:'#1a1a1a', marginBottom:'4px' }}>{listing.title}</div>
+                    <div style={{ fontSize:'13px', color:'#185FA5', fontWeight:'600' }}>{listing.price?.toLocaleString()} RSD</div>
+                    <div style={{ fontSize:'11px', color:'#999', marginTop:'2px' }}>{listing.city} · {listing.category}</div>
+                  </div>
                 </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:'14px', fontWeight:'600', color:'#1a1a1a', marginBottom:'4px' }}>{listing.title}</div>
-                  <div style={{ fontSize:'13px', color:'#185FA5', fontWeight:'600' }}>{listing.price?.toLocaleString()} RSD</div>
-                  <div style={{ fontSize:'11px', color:'#999', marginTop:'2px' }}>{listing.city} · {listing.category}</div>
+              </a>
+            ))}
+          </div>
+        )}
+
+        <h2 style={{ fontSize:'16px', fontWeight:'600', marginBottom:'16px', color:'#1a1a1a' }}>Primljene poruke</h2>
+        {messages.length === 0 ? (
+          <div style={{ background:'#fff', borderRadius:'16px', border:'1px solid #eee', padding:'40px', textAlign:'center' }}>
+            <p style={{ color:'#999', fontSize:'14px' }}>Nema primljenih poruka.</p>
+          </div>
+        ) : (
+          <div style={{ display:'grid', gap:'12px' }}>
+            {messages.map(msg => (
+              <div key={msg.id} style={{ background:'#fff', borderRadius:'12px', border:`1px solid ${msg.is_read ? '#eee' : '#185FA5'}`, padding:'16px' }}>
+                <div style={{ fontSize:'13px', color:'#555', marginBottom:'8px' }}>
+                  Oglas #{msg.listing_id} · {new Date(msg.created_at).toLocaleDateString('sr-RS')}
+                  {!msg.is_read && <span style={{ marginLeft:'8px', fontSize:'10px', background:'#E6F1FB', color:'#185FA5', borderRadius:'4px', padding:'2px 6px' }}>Novo</span>}
                 </div>
+                <p style={{ fontSize:'14px', color:'#1a1a1a', lineHeight:'1.6' }}>{msg.content}</p>
               </div>
             ))}
           </div>

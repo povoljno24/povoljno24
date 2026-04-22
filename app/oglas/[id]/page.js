@@ -7,6 +7,10 @@ export default function Oglas({ params }) {
   const { id } = use(params);
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+  const [msgSent, setMsgSent] = useState(false);
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const [msgError, setMsgError] = useState('');
 
   useEffect(() => {
     async function loadListing() {
@@ -20,6 +24,35 @@ export default function Oglas({ params }) {
     }
     loadListing();
   }, [id]);
+
+  async function handleSendMessage() {
+    setSendingMsg(true);
+    setMsgError('');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setMsgError('Morate biti prijavljeni da biste poslali poruku.');
+      setSendingMsg(false);
+      return;
+    }
+    if (!message.trim()) {
+      setMsgError('Poruka ne može biti prazna.');
+      setSendingMsg(false);
+      return;
+    }
+    const { error } = await supabase.from('messages').insert({
+      listing_id: listing.id,
+      sender_id: user.id,
+      receiver_id: listing.user_id,
+      content: message,
+      is_read: false,
+    });
+    if (error) {
+      setMsgError('Greška: ' + error.message);
+    } else {
+      setMsgSent(true);
+    }
+    setSendingMsg(false);
+  }
 
   if (loading) return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -73,9 +106,26 @@ export default function Oglas({ params }) {
 
         <div style={{ background:'#fff', borderRadius:'16px', border:'1px solid #eee', padding:'24px' }}>
           <h2 style={{ fontSize:'16px', fontWeight:'600', marginBottom:'16px', color:'#1a1a1a' }}>Kontaktiraj prodavca</h2>
-          <button style={{ width:'100%', padding:'14px', background:'#185FA5', color:'#fff', border:'none', borderRadius:'8px', fontSize:'15px', fontWeight:'600', cursor:'pointer' }}>
-            Pošalji poruku
-          </button>
+          {msgSent ? (
+            <p style={{ color:'#3B6D11', fontSize:'14px', textAlign:'center' }}>✓ Poruka je poslata prodavcu!</p>
+          ) : (
+            <>
+              <textarea
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                placeholder="Napiši poruku prodavcu..."
+                rows={4}
+                style={{ width:'100%', padding:'10px 14px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'14px', outline:'none', resize:'vertical', marginBottom:'12px' }}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={sendingMsg}
+                style={{ width:'100%', padding:'14px', background: sendingMsg ? '#aaa' : '#185FA5', color:'#fff', border:'none', borderRadius:'8px', fontSize:'15px', fontWeight:'600', cursor: sendingMsg ? 'not-allowed' : 'pointer' }}>
+                {sendingMsg ? 'Slanje...' : 'Pošalji poruku'}
+              </button>
+              {msgError && <p style={{ color:'#E24B4A', fontSize:'13px', marginTop:'8px', textAlign:'center' }}>{msgError}</p>}
+            </>
+          )}
         </div>
       </div>
     </div>
