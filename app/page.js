@@ -33,8 +33,6 @@ const translations = {
     help: 'Pomoć',
     terms: 'Uslovi korišćenja',
     contact: 'Kontakt',
-    scooter: 'Električni trotinet',
-    sofa: 'Ugaona garnitura',
   },
   en: {
     listings: 'Listings',
@@ -66,18 +64,19 @@ const translations = {
     help: 'Help',
     terms: 'Terms of use',
     contact: 'Contact',
-    scooter: 'Electric scooter',
-    sofa: 'Corner sofa set',
   },
 };
 
 export default function Home() {
   const [lang, setLang] = useState('sr');
   const [user, setUser] = useState(null);
+  const [listings, setListings] = useState([]);
   const t = translations[lang];
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    supabase.from('listings').select('*').order('created_at', { ascending: false }).limit(8)
+      .then(({ data }) => setListings(data || []));
   }, []);
 
   return (
@@ -156,24 +155,30 @@ export default function Home() {
           <a href="#" style={{ fontSize:'13px', color:'#185FA5' }}>{t.viewAll}</a>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(155px, 1fr))', gap:'12px' }}>
-          {[
-            { icon:'📱', title:'iPhone 14 Pro, 256GB', price:'82.000 RSD', city:'Beograd' },
-            { icon:'🚲', title: t.scooter, price:'24.500 RSD', city:'Novi Sad' },
-            { icon:'🛋️', title: t.sofa, price:'38.000 RSD', city:'Niš' },
-            { icon:'💻', title:'MacBook Air M2', price:'115.000 RSD', city:'Kragujevac' },
-          ].map(listing => (
-            <div key={listing.title} style={{ background:'#fff', border:'1px solid #eee', borderRadius:'12px', overflow:'hidden', cursor:'pointer' }}>
-              <div style={{ height:'120px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'36px', background:'#f5f5f5' }}>{listing.icon}</div>
-              <div style={{ padding:'10px 12px' }}>
-                <div style={{ fontSize:'13px', marginBottom:'4px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{listing.title}</div>
-                <div style={{ fontSize:'15px', fontWeight:'600', color:'#185FA5' }}>{listing.price}</div>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'6px' }}>
-                  <span style={{ fontSize:'11px', color:'#999' }}>{listing.city}</span>
-                  <span style={{ fontSize:'10px', background:'#EAF3DE', color:'#3B6D11', borderRadius:'4px', padding:'2px 6px' }}>{t.verified}</span>
+          {listings.length === 0 ? (
+            <p style={{ fontSize:'14px', color:'#999', textAlign:'center', padding:'40px' }}>Nema oglasa još uvek.</p>
+          ) : (
+            listings.map(listing => (
+              <a key={listing.id} href={`/oglas/${listing.id}`} style={{ textDecoration:'none', color:'inherit' }}>
+                <div style={{ background:'#fff', border:'1px solid #eee', borderRadius:'12px', overflow:'hidden', cursor:'pointer' }}>
+                  <div style={{ height:'120px', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'36px', background:'#f5f5f5', overflow:'hidden' }}>
+                    {listing.image_url
+                      ? <img src={listing.image_url} alt={listing.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                      : '📦'
+                    }
+                  </div>
+                  <div style={{ padding:'10px 12px' }}>
+                    <div style={{ fontSize:'13px', marginBottom:'4px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{listing.title}</div>
+                    <div style={{ fontSize:'15px', fontWeight:'600', color:'#185FA5' }}>{listing.price?.toLocaleString()} RSD</div>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'6px' }}>
+                      <span style={{ fontSize:'11px', color:'#999' }}>{listing.city}</span>
+                      <span style={{ fontSize:'10px', background:'#EAF3DE', color:'#3B6D11', borderRadius:'4px', padding:'2px 6px' }}>{t.verified}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </a>
+            ))
+          )}
         </div>
       </div>
 
