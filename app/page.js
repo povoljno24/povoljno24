@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const translations = {
   sr: {
@@ -72,7 +73,12 @@ const translations = {
 
 export default function Home() {
   const [lang, setLang] = useState('sr');
+  const [user, setUser] = useState(null);
   const t = translations[lang];
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+  }, []);
 
   return (
     <div>
@@ -84,12 +90,15 @@ export default function Home() {
         <div style={{ display:'flex', alignItems:'center', gap:'20px' }}>
           <a href="#" style={{ fontSize:'13px', color:'#555' }}>{t.listings}</a>
           <a href="#" style={{ fontSize:'13px', color:'#555' }}>{t.howItWorks}</a>
-          <a href="/login" style={{ fontSize:'13px', color:'#555' }}>{t.signIn}</a>
+          {user
+            ? <a href="/profil" style={{ fontSize:'13px', color:'#555' }}>Profil</a>
+            : <a href="/login" style={{ fontSize:'13px', color:'#555' }}>{t.signIn}</a>
+          }
           <div style={{ display:'flex', border:'1px solid #ddd', borderRadius:'8px', overflow:'hidden' }}>
             <button onClick={() => setLang('sr')} style={{ padding:'6px 12px', fontSize:'12px', border:'none', cursor:'pointer', background: lang==='sr' ? '#185FA5' : 'transparent', color: lang==='sr' ? '#fff' : '#555' }}>🇷🇸 SR</button>
             <button onClick={() => setLang('en')} style={{ padding:'6px 12px', fontSize:'12px', border:'none', cursor:'pointer', background: lang==='en' ? '#185FA5' : 'transparent', color: lang==='en' ? '#fff' : '#555' }}>🇬🇧 EN</button>
           </div>
-         <a href="/postoglas"><button style={{ background:'#185FA5', color:'#fff', border:'none', borderRadius:'8px', padding:'7px 16px', fontSize:'13px', cursor:'pointer' }}>{t.postAd}</button></a>
+          <a href="/postoglas"><button style={{ background:'#185FA5', color:'#fff', border:'none', borderRadius:'8px', padding:'7px 16px', fontSize:'13px', cursor:'pointer' }}>{t.postAd}</button></a>
         </div>
       </nav>
 
