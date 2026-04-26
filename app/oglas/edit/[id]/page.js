@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../../../lib/supabase';
 import { useRouter } from 'next/navigation';
-import imageCompression from 'browser-image-compression';
+import { use } from 'react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { applyWatermark } from '../../lib/watermark';
 
 const oglasSchema = z.object({
   title: z.string().min(3, 'Naslov mora imati najmanje 3 karaktera.'),
@@ -16,91 +16,92 @@ const oglasSchema = z.object({
   category: z.string().min(1, 'Izaberite kategoriju.'),
 });
 
-export default function PostOglas() {
+export default function EditOglas({ params }) {
+  const { id } = use(params);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
+  const [fetching, setFetching] = useState(true);
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(oglasSchema)
   });
 
-  async function onSubmit(data) {
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      setMessage('Morate biti prijavljeni da biste postavili oglas.');
-      setLoading(false);
-      return;
-    }
-
-    let image_url = null;
-
-    if (imageFile) {
-      try {
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        };
-        const compressedFile = await imageCompression(imageFile, options);
-
-        // Apply Watermark
-        const watermarkedBlob = await applyWatermark(compressedFile);
-        
-        // Convert Blob back to File for naming
-        const finalFile = new File([watermarkedBlob], compressedFile.name, { type: compressedFile.type });
-
-        const fileExt = finalFile.name.split('.').pop() || 'jpg';
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('listing-images')
-          .upload(fileName, finalFile);
-          
-        if (uploadError) {
-          setMessage('Greška pri uploadu slike: ' + uploadError.message);
-          setLoading(false);
-          return;
-        }
-        
-        const { data: urlData } = supabase.storage
-          .from('listing-images')
-          .getPublicUrl(fileName);
-        image_url = urlData.publicUrl;
-      } catch (error) {
-        setMessage('Greška pri kompresiji ili watermarking-u slike.');
-        setLoading(false);
+  useEffect(() => {
+    async function loadListing() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
         return;
       }
-    }
 
-    const { error } = await supabase.from('listings').insert({
-      title: data.title,
-      description: data.description,
-      price: data.price,
-      category: data.category,
-      city: data.city,
-      user_id: user.id,
-      is_verified: false,
-      image_url,
-    });
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !data) {
+        setMessage('Oglas nije pronađen.');
+        setFetching(false);
+        return;
+      }
+
+      if (data.user_id !== user.id) {
+        router.push('/');
+        return;
+      }
+
+      // Pre-populate the form
+      reset({
+        title: data.title,
+        description: data.description || '',
+        price: data.price,
+        category: data.category,
+        city: data.city,
+      });
+      
+      setFetching(false);
+    }
+    loadListing();
+  }, [id, router, reset]);
+
+  async function onSubmit(data) {
+    setLoading(true);
+    
+    const { error } = await supabase
+      .from('listings')
+      .update({
+        title: data.title,
+        description: data.description,
+        price: data.price,
+        category: data.category,
+        city: data.city,
+      })
+      .eq('id', id);
 
     if (error) {
       setMessage('Greška: ' + error.message);
     } else {
-      setMessage('Oglas je uspešno postavljen!');
+      setMessage('Oglas je uspešno izmenjen!');
       setTimeout(() => router.push('/profil'), 1500);
     }
     setLoading(false);
   }
 
+  if (fetching) return (
+    <div className="flex-1 flex items-center justify-center">
+      <p className="text-gray-500">Učitavanje...</p>
+    </div>
+  );
+
   return (
     <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
       <div className="max-w-[600px] mx-auto bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-        <h1 className="text-xl font-semibold mb-6 text-gray-900">Postavi oglas</h1>
+        <Link href="/profil" className="inline-block mb-6 text-sm text-gray-600 hover:text-[#185FA5] transition-colors">
+          ← Nazad na profil
+        </Link>
+        <h1 className="text-xl font-semibold mb-6 text-gray-900">Izmeni oglas</h1>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
@@ -108,7 +109,6 @@ export default function PostOglas() {
             <input 
               type="text" 
               {...register('title')}
-              placeholder="npr. iPhone 14 Pro, 256GB"
               className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
             />
             {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>}
@@ -118,7 +118,6 @@ export default function PostOglas() {
             <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Opis</label>
             <textarea 
               {...register('description')}
-              placeholder="Opiši šta prodaješ..."
               rows={4} 
               className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all resize-y ${errors.description ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
             />
@@ -131,7 +130,6 @@ export default function PostOglas() {
               <input 
                 type="number" 
                 {...register('price')}
-                placeholder="npr. 15000"
                 className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.price ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
               />
               {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
@@ -141,14 +139,13 @@ export default function PostOglas() {
               <input 
                 type="text" 
                 {...register('city')}
-                placeholder="npr. Beograd"
                 className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.city ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
               />
               {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city.message}</p>}
             </div>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-6">
             <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Kategorija</label>
             <select 
               {...register('category')}
@@ -167,23 +164,12 @@ export default function PostOglas() {
             {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
           </div>
 
-          <div className="mb-6">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Fotografija proizvoda</label>
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={e => setImageFile(e.target.files[0])}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-[#E6F1FB] file:text-[#185FA5] hover:file:bg-[#d0e5f7] cursor-pointer" 
-            />
-            {imageFile && <p className="text-[12px] text-[#3B6D11] mt-1.5">✓ {imageFile.name}</p>}
-          </div>
-
           <button 
             type="submit"
             disabled={loading}
             className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
           >
-            {loading ? 'Postavljam...' : 'Postavi oglas'}
+            {loading ? 'Čuvanje...' : 'Sačuvaj izmene'}
           </button>
         </form>
 

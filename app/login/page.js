@@ -1,65 +1,86 @@
 'use client';
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Unesite validnu email adresu.'),
+  password: z.string().min(6, 'Lozinka mora imati najmanje 6 karaktera.'),
+});
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  async function handleLogin() {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(loginSchema)
+  });
+
+  async function onSubmit(data) {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ 
+      email: data.email, 
+      password: data.password 
+    });
+    
     if (error) {
       setMessage(error.message);
     } else {
-      window.location.href = '/';
+      router.push('/');
     }
+    setLoading(false);
   }
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#f5f5f5' }}>
-      <div style={{ background:'#fff', padding:'40px', borderRadius:'16px', border:'1px solid #eee', width:'100%', maxWidth:'400px' }}>
-        <div style={{ fontSize:'20px', fontWeight:'600', color:'#185FA5', marginBottom:'8px' }}>
-          Povoljno<span style={{ color:'#E24B4A' }}>24</span>.rs
-        </div>
-        <h1 style={{ fontSize:'18px', fontWeight:'600', marginBottom:'24px', color:'#1a1a1a' }}>Prijavi se</h1>
+    <div className="flex-1 flex items-center justify-center p-6 bg-[#f5f5f5]">
+      <div className="bg-white p-8 rounded-2xl border border-gray-200 w-full max-w-[400px] shadow-sm">
+        <h1 className="text-xl font-semibold mb-6 text-gray-900 text-center">Prijavi se</h1>
 
-        <div style={{ marginBottom:'16px' }}>
-          <label style={{ fontSize:'13px', color:'#555', display:'block', marginBottom:'6px' }}>Email adresa</label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="tvoj@email.com"
-            style={{ width:'100%', padding:'10px 14px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'14px', outline:'none' }}
-          />
-        </div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Email adresa</label>
+            <input
+              type="email"
+              {...register('email')}
+              placeholder="tvoj@email.com"
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            />
+            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+          </div>
 
-        <div style={{ marginBottom:'24px' }}>
-          <label style={{ fontSize:'13px', color:'#555', display:'block', marginBottom:'6px' }}>Lozinka</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Tvoja lozinka"
-            style={{ width:'100%', padding:'10px 14px', borderRadius:'8px', border:'1px solid #ddd', fontSize:'14px', outline:'none' }}
-          />
-        </div>
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Lozinka</label>
+            <input
+              type="password"
+              {...register('password')}
+              placeholder="Tvoja lozinka"
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            />
+            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+          </div>
 
-        <button
-          onClick={handleLogin}
-          style={{ width:'100%', padding:'12px', background:'#185FA5', color:'#fff', border:'none', borderRadius:'8px', fontSize:'14px', fontWeight:'600', cursor:'pointer' }}>
-          Prijavi se
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+          >
+            {loading ? 'Prijavljivanje...' : 'Prijavi se'}
+          </button>
+        </form>
 
         {message && (
-          <p style={{ marginTop:'16px', fontSize:'13px', color:'#E24B4A', textAlign:'center' }}>
+          <p className="mt-4 text-[13px] text-[#E24B4A] text-center bg-red-50 py-2 rounded-md">
             {message}
           </p>
         )}
 
-        <p style={{ marginTop:'20px', fontSize:'13px', color:'#555', textAlign:'center' }}>
-          Nemaš nalog? <a href="/register" style={{ color:'#185FA5' }}>Registruj se</a>
+        <p className="mt-6 text-[13px] text-gray-600 text-center">
+          Nemaš nalog? <Link href="/register" className="text-[#185FA5] hover:underline font-medium">Registruj se</Link>
         </p>
       </div>
     </div>
