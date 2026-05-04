@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '../components/LanguageContext';
 
 const translations = {
   sr: {
@@ -34,6 +35,11 @@ const translations = {
     sortPriceDesc: 'Najskuplje',
     advancedFilters: 'Napredni filteri',
     applyFilters: 'Primeni filtere',
+    condition: 'Stanje',
+    condNew: 'Novo',
+    condUsed: 'Polovno',
+    city: 'Grad',
+    allCities: 'Svi gradovi',
   },
   en: {
     hero: 'Buy and sell anything — fast, safe, affordable',
@@ -64,11 +70,20 @@ const translations = {
     sortPriceDesc: 'Most expensive',
     advancedFilters: 'Advanced filters',
     applyFilters: 'Apply filters',
+    condition: 'Condition',
+    condNew: 'New',
+    condUsed: 'Used',
+    city: 'City',
+    allCities: 'All cities',
   },
 };
 
+const cities = [
+  'Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Priština', 'Subotica', 'Zrenjanin', 'Pančevo', 'Čačak', 'Kruševac', 'Kraljevo', 'Novi Pazar', 'Smederevo', 'Leskovac', 'Užice', 'Vranje', 'Valjevo', 'Šabac', 'Sombor', 'Požarevac', 'Pirot', 'Zaječar', 'Kikinda', 'Sremska Mitrovica', 'Jagodina', 'Vršac', 'Bor', 'Prokuplje', 'Loznica'
+].sort();
+
 export default function Home() {
-  const [lang, setLang] = useState('sr');
+  const { lang } = useLanguage();
   const [listings, setListings] = useState([]);
   
   // Basic search & filter states
@@ -78,6 +93,8 @@ export default function Home() {
   // Advanced filter states
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [filterCity, setFilterCity] = useState('');
+  const [filterCondition, setFilterCondition] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -104,19 +121,21 @@ export default function Home() {
     { name: t.books, value: 'knjige' },
   ];
 
-  async function loadListings(searchTerm, category, minP, maxP, sortParams, pageNum = 0, append = false) {
+  async function loadListings(searchTerm, category, minP, maxP, city, condition, sortParams, pageNum = 0, append = false) {
     if (!append) setLoading(true);
     else setMoreLoading(true);
     
     let query = supabase
       .from('listings')
-      .select('*', { count: 'exact' });
+      .select('id, title, price, city, category, image_url, created_at, user_id', { count: 'exact' });
       
     // Apply filters
     if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
     if (category) query = query.eq('category', category);
-    if (minP && !isNaN(minP)) query = query.gte('price', parseFloat(minP));
-    if (maxP && !isNaN(maxP)) query = query.lte('price', parseFloat(maxP));
+    if (minP) query = query.gte('price', parseInt(minP));
+    if (maxP) query = query.lte('price', parseInt(maxP));
+    if (city) query = query.eq('city', city);
+    // if (condition) query = query.eq('condition', condition); // Temporarily bypassed
     
     // Apply sorting
     if (sortParams === 'price_asc') {
@@ -146,7 +165,9 @@ export default function Home() {
   }
 
   useEffect(() => {
-    loadListings('', '', '', '', 'newest', 0, false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadListings('', '', '', '', '', '', 'newest', 0, false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update suggestions based on input
@@ -155,15 +176,18 @@ export default function Home() {
       const filtered = categories.filter(c => 
         c.name.toLowerCase().includes(search.toLowerCase())
       );
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions(filtered);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const handleSearch = () => {
     setShowSuggestions(false);
-    loadListings(search, filterCat, minPrice, maxPrice, sortBy, 0, false);
+    loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false);
   };
 
   const clearFilters = () => {
@@ -171,8 +195,10 @@ export default function Home() {
     setSearch('');
     setMinPrice('');
     setMaxPrice('');
+    setFilterCity('');
+    setFilterCondition('');
     setSortBy('newest');
-    loadListings('', '', '', '', 'newest', 0, false);
+    loadListings('', '', '', '', '', '', 'newest', 0, false);
   };
 
   return (
@@ -188,13 +214,20 @@ export default function Home() {
             <select 
               value={filterCat} 
               onChange={e => setFilterCat(e.target.value)} 
-              className="border-none outline-none py-3 px-4 text-[13px] text-gray-600 bg-gray-50 border-r border-gray-200 cursor-pointer hidden sm:block"
+              className="border-none outline-none py-3 px-4 text-[13px] text-gray-600 bg-gray-50 border-r border-gray-200 cursor-pointer hidden sm:block max-w-[160px]"
             >
               <option value="">{t.allCats}</option>
               {categories.map(c => (
                 <option key={c.value} value={c.value}>{c.name}</option>
               ))}
             </select>
+            <button 
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="border-none outline-none py-3 px-3 sm:px-4 text-[13px] text-gray-600 bg-gray-50 border-r border-gray-200 hover:bg-gray-100 cursor-pointer flex items-center gap-1.5 shrink-0 transition-colors"
+            >
+              <span className="text-[15px] text-[#185FA5] font-bold">{showAdvanced ? '−' : '＋'}</span> 
+              <span className="hidden md:inline">{t.advancedFilters}</span>
+            </button>
             <input 
               type="text" 
               value={search} 
@@ -218,14 +251,14 @@ export default function Home() {
             <div className="absolute top-[52px] left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl z-50 text-left overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
               {suggestions.length > 0 && (
                 <div className="p-2 border-b border-gray-50">
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1">Kategorije</div>
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1">{t.suggestionsCategories}</div>
                   {suggestions.map(s => (
                     <button 
                       key={s.value}
                       onClick={() => {
                         setFilterCat(s.value);
                         setSearch('');
-                        loadListings('', s.value, minPrice, maxPrice, sortBy, 0, false);
+                        loadListings('', s.value, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false);
                       }}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors group"
                     >
@@ -236,67 +269,105 @@ export default function Home() {
                 </div>
               )}
               <div className="p-2">
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1">Pretraga</div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1">{t.suggestionsSearch}</div>
                 <button 
                   onClick={handleSearch}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors group"
                 >
                   <span className="opacity-60 group-hover:opacity-100">🔍</span>
-                  <span className="text-gray-700 font-medium">Traži "{search}"</span>
+                  <span className="text-gray-700 font-medium">{t.suggestionsSearchFor} &quot;{search}&quot;</span>
                 </button>
               </div>
             </div>
           )}
 
-          {/* Advanced Filters Toggle */}
-          <div className="flex justify-end mt-2">
-            <button 
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-[12px] font-medium text-[#185FA5] hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1"
-            >
-              {showAdvanced ? '− ' : '+ '}{t.advancedFilters}
-            </button>
-          </div>
 
-          {/* Advanced Filters Panel */}
+
+          {/* Advanced Filters Panel - Full screen on mobile, dropdown on desktop */}
           {showAdvanced && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 mt-2 shadow-sm text-left grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in slide-in-from-top-2 duration-200">
+            <div className="fixed inset-0 sm:relative sm:inset-auto z-[100] sm:z-10 bg-white sm:bg-white sm:rounded-xl sm:border border-gray-200 p-6 sm:p-4 mt-0 sm:mt-2 shadow-2xl sm:shadow-sm text-left flex flex-col sm:grid sm:grid-cols-3 gap-6 sm:gap-4 animate-in slide-in-from-bottom sm:slide-in-from-top-2 duration-300 sm:duration-200">
+              <div className="flex items-center justify-between sm:hidden mb-2">
+                <h3 className="text-xl font-bold text-gray-900">{t.advancedFilters}</h3>
+                <button 
+                  onClick={() => setShowAdvanced(false)}
+                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl text-gray-500"
+                >
+                  ×
+                </button>
+              </div>
+              
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">{t.minPrice} (RSD)</label>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.minPrice} (RSD)</label>
                 <input 
                   type="number" 
                   value={minPrice} 
                   onChange={e => setMinPrice(e.target.value)} 
                   placeholder="0" 
-                  className="w-full border border-gray-300 rounded-lg py-2 px-3 text-[13px] outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5]"
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">{t.maxPrice} (RSD)</label>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.maxPrice} (RSD)</label>
                 <input 
                   type="number" 
                   value={maxPrice} 
                   onChange={e => setMaxPrice(e.target.value)} 
                   placeholder="100000" 
-                  className="w-full border border-gray-300 rounded-lg py-2 px-3 text-[13px] outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5]"
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 block">{t.sortBy}</label>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.sortBy}</label>
                 <select 
                   value={sortBy} 
                   onChange={e => setSortBy(e.target.value)} 
-                  className="w-full border border-gray-300 rounded-lg py-2 px-3 text-[13px] outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-white cursor-pointer"
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50 cursor-pointer appearance-none"
                 >
                   <option value="newest">{t.sortNewest}</option>
                   <option value="price_asc">{t.sortPriceAsc}</option>
                   <option value="price_desc">{t.sortPriceDesc}</option>
                 </select>
               </div>
-              <div className="col-span-1 sm:col-span-3 flex justify-end">
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.city}</label>
+                <select 
+                  value={filterCity} 
+                  onChange={e => setFilterCity(e.target.value)} 
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50 cursor-pointer appearance-none"
+                >
+                  <option value="">{t.allCities}</option>
+                  {cities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.condition}</label>
+                <div className="flex bg-gray-50 p-1.5 rounded-xl border border-gray-200 h-[46px]">
+                  <button 
+                    onClick={() => setFilterCondition(filterCondition === 'Novo' ? '' : 'Novo')}
+                    className={`flex-1 rounded-lg text-sm font-bold transition-all ${filterCondition === 'Novo' ? 'bg-[#185FA5] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    {t.condNew}
+                  </button>
+                  <button 
+                    onClick={() => setFilterCondition(filterCondition === 'Polovno' ? '' : 'Polovno')}
+                    className={`flex-1 rounded-lg text-sm font-bold transition-all ${filterCondition === 'Polovno' ? 'bg-[#185FA5] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    {t.condUsed}
+                  </button>
+                </div>
+              </div>
+              <div className="mt-auto sm:mt-0 sm:col-span-3 flex flex-col sm:flex-row gap-3 sm:justify-end">
                 <button 
-                  onClick={handleSearch}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-5 rounded-lg text-[13px] font-semibold transition-colors border border-gray-200"
+                  onClick={() => { clearFilters(); setShowAdvanced(false); }}
+                  className="sm:hidden w-full py-4 rounded-xl text-sm font-bold text-gray-500 bg-gray-100"
+                >
+                  {t.resetAll}
+                </button>
+                <button 
+                  onClick={() => { handleSearch(); setShowAdvanced(false); }}
+                  className="w-full sm:w-auto bg-[#185FA5] hover:bg-[#0C447C] text-white py-4 sm:py-2.5 px-10 rounded-xl text-sm sm:text-[13px] font-bold transition-all shadow-xl active:scale-95"
                 >
                   {t.applyFilters}
                 </button>
@@ -333,7 +404,7 @@ export default function Home() {
               key={cat.name} 
               onClick={() => { 
                 setFilterCat(cat.value); 
-                loadListings(search, cat.value, minPrice, maxPrice, sortBy, 0, false); 
+                loadListings(search, cat.value, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false); 
               }} 
               className={`rounded-xl py-4 px-3 text-center cursor-pointer transition-all ${filterCat === cat.value ? 'bg-[#E6F1FB] border-[#185FA5] border shadow-sm' : 'bg-gray-50 border border-gray-100 hover:bg-gray-100 hover:border-gray-200'}`}
             >
@@ -348,12 +419,12 @@ export default function Home() {
       <section className="pt-2 pb-12 px-6 bg-transparent max-w-[1200px] mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-base font-semibold text-gray-800">{t.newListings}</h2>
-          {(filterCat || search || minPrice || maxPrice || sortBy !== 'newest') && (
+          {(filterCat || search || minPrice || maxPrice || filterCity || filterCondition || sortBy !== 'newest') && (
             <button 
               onClick={clearFilters} 
               className="text-[13px] font-medium text-[#E24B4A] hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1"
             >
-              <span>×</span> Ukloni sve filtere
+              <span>×</span> {t.removeFilters}
             </button>
           )}
         </div>
@@ -376,13 +447,13 @@ export default function Home() {
           ) : listings.length === 0 ? (
             <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-gray-100 shadow-sm">
               <div className="text-4xl mb-3 opacity-50">🔍</div>
-              <p className="text-[15px] font-medium text-gray-800 mb-1">Nema rezultata</p>
-              <p className="text-sm text-gray-500">Pokušajte da promenite filtere ili kriterijum pretrage.</p>
+              <p className="text-[15px] font-medium text-gray-800 mb-1">{t.noResults}</p>
+              <p className="text-sm text-gray-500">{t.noResultsSub}</p>
               <button 
                 onClick={clearFilters}
                 className="mt-4 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[13px] font-medium transition-colors"
               >
-                Prikaži sve oglase
+                {t.showAll}
               </button>
             </div>
           ) : (
@@ -416,7 +487,14 @@ export default function Home() {
                   </div>
                   <div className="p-3.5 flex flex-col flex-1">
                     <div className="text-[14px] font-medium text-gray-800 mb-1 line-clamp-2 leading-snug group-hover:text-[#185FA5] transition-colors">{listing.title}</div>
-                    <div className="text-[16px] font-bold text-[#185FA5] mt-auto pt-2">{listing.price?.toLocaleString()} RSD</div>
+                    <div className="flex items-center justify-between mt-auto pt-2">
+                      <div className="text-[16px] font-bold text-[#185FA5]">{listing.price?.toLocaleString()} RSD</div>
+                      {listing.condition && (
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${listing.condition === 'Novo' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
+                          {listing.condition}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
                       <span className="text-[11px] text-gray-500 truncate pr-2 flex items-center gap-1">
                         📍 {listing.city}
@@ -437,17 +515,17 @@ export default function Home() {
         {hasMore && !loading && listings.length > 0 && (
           <div className="flex justify-center mt-10">
             <button 
-              onClick={() => loadListings(search, filterCat, minPrice, maxPrice, sortBy, page + 1, true)}
+              onClick={() => loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, page + 1, true)}
               disabled={moreLoading}
               className={`bg-white border border-gray-300 text-gray-700 hover:bg-[#E6F1FB] hover:text-[#185FA5] hover:border-[#185FA5] px-8 py-3 rounded-xl font-semibold shadow-sm transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 ${moreLoading ? 'opacity-70' : ''}`}
             >
               {moreLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-gray-300 border-t-[#185FA5] rounded-full animate-spin"></div>
-                  Učitavam...
+                  {t.loading}
                 </>
               ) : (
-                'Učitaj još oglasa'
+                t.loadMore
               )}
             </button>
           </div>

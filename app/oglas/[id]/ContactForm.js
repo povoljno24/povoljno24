@@ -1,8 +1,10 @@
 'use client';
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabase';
+import { useLanguage } from '../../../components/LanguageContext';
 
 export default function ContactForm({ listingId, receiverId }) {
+  const { t } = useLanguage();
   const [message, setMessage] = useState('');
   const [msgSent, setMsgSent] = useState(false);
   const [sendingMsg, setSendingMsg] = useState(false);
@@ -15,13 +17,13 @@ export default function ContactForm({ listingId, receiverId }) {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      setMsgError('Morate biti prijavljeni da biste poslali poruku.');
+      setMsgError(t.contactMustLogin);
       setSendingMsg(false);
       return;
     }
     
     if (!message.trim()) {
-      setMsgError('Poruka ne može biti prazna.');
+      setMsgError(t.contactEmpty);
       setSendingMsg(false);
       return;
     }
@@ -35,9 +37,9 @@ export default function ContactForm({ listingId, receiverId }) {
     });
     
     if (error) {
-      setMsgError('Greška: ' + error.message);
+      setMsgError(t.reportError + error.message);
     } else {
-      setMsgSent(true);
+      window.location.href = `/poruke/${listingId}-${receiverId}`;
     }
     setSendingMsg(false);
   }
@@ -45,7 +47,7 @@ export default function ContactForm({ listingId, receiverId }) {
   if (msgSent) {
     return (
       <div className="bg-[#EAF3DE] border border-[#d3ecc1] rounded-lg p-4 text-center">
-        <p className="text-[#3B6D11] text-sm font-medium">✓ Poruka je uspešno poslata prodavcu!</p>
+        <p className="text-[#3B6D11] text-sm font-medium">{t.contactSent}</p>
       </div>
     );
   }
@@ -55,7 +57,7 @@ export default function ContactForm({ listingId, receiverId }) {
       <textarea
         value={message}
         onChange={e => setMessage(e.target.value)}
-        placeholder="Napiši poruku prodavcu..."
+        placeholder={t.contactPlaceholder}
         rows={4}
         className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] transition-all resize-y"
       />
@@ -64,7 +66,7 @@ export default function ContactForm({ listingId, receiverId }) {
         disabled={sendingMsg}
         className={`w-full py-3.5 text-white rounded-xl text-[15px] font-semibold transition-colors ${sendingMsg ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
       >
-        {sendingMsg ? 'Slanje...' : 'Pošalji poruku'}
+        {sendingMsg ? t.contactSending : t.contactSend}
       </button>
       {msgError && <p className="text-[#E24B4A] text-[13px] text-center">{msgError}</p>}
     </div>

@@ -7,6 +7,9 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
+import { applyWatermark } from '../../../../lib/watermark';
 
 const oglasSchema = z.object({
   title: z.string().min(3, 'Naslov mora imati najmanje 3 karaktera.'),
@@ -14,6 +17,7 @@ const oglasSchema = z.object({
   price: z.preprocess((val) => Number(val), z.number().positive('Cena mora biti veća od 0.')),
   city: z.string().min(2, 'Unesite validan grad.'),
   category: z.string().min(1, 'Izaberite kategoriju.'),
+  condition: z.string().min(1, 'Izaberite stanje predmeta.'),
 });
 
 export default function EditOglas({ params }) {
@@ -21,6 +25,10 @@ export default function EditOglas({ params }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImageFiles, setNewImageFiles] = useState([]);
+  const [newPreviews, setNewPreviews] = useState([]);
+  const [oldPrice, setOldPrice] = useState(null);
   const router = useRouter();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
@@ -59,30 +67,103 @@ export default function EditOglas({ params }) {
         price: data.price,
         category: data.category,
         city: data.city,
+        condition: data.condition || 'Polovno',
       });
       
+      setOldPrice(data.price);
+      setExistingImages(data.images || (data.image_url ? [data.image_url] : []));
       setFetching(false);
     }
     loadListing();
   }, [id, router, reset]);
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + existingImages.length + newImageFiles.length > 10) {
+      alert('Maksimalno 10 slika je dozvoljeno.');
+      return;
+    }
+    setNewImageFiles(prev => [...prev, ...files]);
+    const previews = files.map(file => URL.createObjectURL(file));
+    setNewPreviews(prev => [...prev, ...previews]);
+  };
+
+  const removeExisting = (index) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNew = (index) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+    setNewPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   async function onSubmit(data) {
     setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const uploadedUrls = [...existingImages];
+
+    // Upload new images
+    if (newImageFiles.length > 0) {
+      try {
+        for (let i = 0; i < newImageFiles.length; i++) {
+          const file = newImageFiles[i];
+          const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true };
+          const compressedFile = await imageCompression(file, options);
+          const watermarkedBlob = await applyWatermark(compressedFile);
+          const finalFile = new File([watermarkedBlob], file.name, { type: file.type });
+          
+          // eslint-disable-next-line react-hooks/purity
+          const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-edit-${i}.${finalFile.name.split('.').pop()}`;
+          const { error: uploadError } = await supabase.storage.from('listing-images').upload(fileName, finalFile);
+          if (uploadError) throw uploadError;
+          
+          const { data: urlData } = supabase.storage.from('listing-images').getPublicUrl(fileName);
+          uploadedUrls.push(urlData.publicUrl);
+        }
+      } catch (error) {
+        setMessage('Greška pri obradi novih slika: ' + error.message);
+        setLoading(false);
+        return;
+      }
+    }
     
     const { error } = await supabase
       .from('listings')
       .update({
         title: data.title,
         description: data.description,
-        price: data.price,
+        price: Number(data.price),
         category: data.category,
         city: data.city,
+        condition: data.condition,
+        image_url: uploadedUrls[0] || null,
+        images: uploadedUrls,
       })
       .eq('id', id);
 
     if (error) {
       setMessage('Greška: ' + error.message);
     } else {
+      // Check for price drop
+      if (data.price < oldPrice) {
+        // Fetch all users who favorited this listing
+        const { data: fans } = await supabase
+          .from('favorites')
+          .select('user_id')
+          .eq('listing_id', id);
+
+        if (fans?.length > 0) {
+          const notifications = fans.map(fan => ({
+            user_id: fan.user_id,
+            type: 'price_drop',
+            content: `Cena je pala! Oglas koji pratite "${data.title}" je sada ${data.price.toLocaleString()} RSD.`,
+            listing_id: id
+          }));
+          await supabase.from('notifications').insert(notifications);
+        }
+      }
+      
       setMessage('Oglas je uspešno izmenjen!');
       setTimeout(() => router.push('/profil'), 1500);
     }
@@ -162,6 +243,77 @@ export default function EditOglas({ params }) {
               <option value="knjige">Knjige</option>
             </select>
             {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Stanje predmeta</label>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="cursor-pointer">
+                <input type="radio" value="Novo" {...register('condition')} className="peer hidden" />
+                <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
+                  Novo
+                </div>
+              </label>
+              <label className="cursor-pointer">
+                <input type="radio" value="Polovno" {...register('condition')} className="peer hidden" />
+                <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
+                  Polovno
+                </div>
+              </label>
+            </div>
+            {errors.condition && <p className="mt-1 text-xs text-red-500">{errors.condition.message}</p>}
+          </div>
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Fotografije (max 10)</label>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
+              {/* Existing Images */}
+              {existingImages.map((src, idx) => (
+                <div 
+                  key={`exist-${idx}`} 
+                  className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <Image src={src} alt="Existing" fill className="object-cover pointer-events-none" draggable={false} />
+                  <div className="absolute inset-0 z-10 bg-transparent" />
+                  <button 
+                    type="button"
+                    onClick={() => removeExisting(idx)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {/* New Previews */}
+              {newPreviews.map((src, idx) => (
+                <div 
+                  key={`new-${idx}`} 
+                  className="relative aspect-square rounded-lg overflow-hidden bg-gray-50 border border-dashed border-[#185FA5] group select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <Image src={src} alt="New Preview" fill className="object-cover opacity-70 pointer-events-none" draggable={false} />
+                  <div className="absolute inset-0 z-10 bg-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <span className="bg-white/80 px-1.5 py-0.5 rounded text-[8px] font-bold text-[#185FA5] uppercase">Novo</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => removeNew(idx)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {/* Add Button */}
+              {existingImages.length + newImageFiles.length < 10 && (
+                <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#185FA5] hover:bg-[#E6F1FB] transition-all text-gray-400 hover:text-[#185FA5]">
+                  <span className="text-2xl font-light">+</span>
+                  <span className="text-[10px] font-semibold uppercase">Dodaj</span>
+                  <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
+                </label>
+              )}
+            </div>
           </div>
 
           <button 
