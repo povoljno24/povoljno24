@@ -443,6 +443,7 @@ const t = {
     noAccount: "Don't have an account?",
     register: 'Register',
     forgotPassword: 'Forgot your password?',
+    resetPassword: 'Reset password',
     enterEmailReset: 'Enter your email address to reset your password.',
     resetLinkSent: 'Reset link sent!',
     newPassword: 'New password',
