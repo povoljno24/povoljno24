@@ -219,7 +219,7 @@ export default function Profil() {
                 {profile?.avatar_url ? (
                   <Image src={profile.avatar_url} alt="Avatar" fill className="object-cover" />
                 ) : (
-                  profile?.username ? profile.username[0].toUpperCase() : user?.email[0].toUpperCase()
+                  (profile?.username?.[0] || user?.email?.[0] || '?').toUpperCase()
                 )}
               </div>
               <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
