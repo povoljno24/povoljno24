@@ -42,11 +42,17 @@ export default function Navbar() {
 
     // Real-time subscriptions
     const msgChannel = supabase.channel('realtime_msg_counts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => user && fetchCounts(user))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async () => {
+        const { data: { user: latestUser } } = await supabase.auth.getUser();
+        if (latestUser) fetchCounts(latestUser);
+      })
       .subscribe();
       
     const notifChannel = supabase.channel('realtime_notif_counts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => user && fetchCounts(user))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, async () => {
+        const { data: { user: latestUser } } = await supabase.auth.getUser();
+        if (latestUser) fetchCounts(latestUser);
+      })
       .subscribe();
 
     return () => {
