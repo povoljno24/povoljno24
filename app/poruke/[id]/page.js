@@ -9,7 +9,10 @@ import { useLanguage } from '../../../components/LanguageContext';
 export default function ChatPage() {
   const { t } = useLanguage();
   const { id } = useParams();
-  const [listingId, otherUserId] = id.split('-');
+  // The first part is the listingId (integer), the rest is otherUserId (UUID)
+  const parts = id.split('-');
+  const listingId = parts[0];
+  const otherUserId = parts.slice(1).join('-');
   const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [listing, setListing] = useState(null);
