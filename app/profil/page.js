@@ -229,12 +229,12 @@ export default function Profil() {
             </div>
             <div>
               <h1 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
-                {profile?.full_name || profile?.username || t.userFallback}
-                {profile?.verification_level > 2 && (
+                {profile?.full_name || profile?.username || user?.user_metadata?.username || user?.email?.split('@')[0] || t.userFallback}
+                {profile?.verification_level >= 2 && (
                   <span className="text-[#1D9E75] text-sm">🛡️</span>
                 )}
               </h1>
-              <p className="text-[13px] text-gray-500">{user?.email}</p>
+              <p className="text-[13px] text-gray-500">{user?.email || user?.phone}</p>
               {profile?.bio && <p className="text-[12px] text-gray-600 mt-1 italic line-clamp-1">&quot;{profile.bio}&quot;</p>}
               {profile?.phone_verified && (
                 <div className="mt-2 flex items-center gap-1.5 text-[12px] font-semibold text-[#1D9E75] bg-[#EAF3DE] px-2 py-0.5 rounded-md border border-[#d3ecc1] w-fit">
