@@ -57,12 +57,12 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="flex items-center justify-between px-6 py-3.5 bg-white border-b border-gray-200 sticky top-0 z-50">
-      <Link href="/" className="text-xl font-semibold text-[#185FA5] hover:opacity-90 transition-opacity">
+    <nav className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white border-b border-gray-200 sticky top-0 z-50">
+      <Link href="/" className="text-lg sm:text-xl font-semibold text-[#185FA5] hover:opacity-90 transition-opacity shrink-0">
         Povoljno<span className="text-[#E24B4A]">24</span>.rs
       </Link>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-3 sm:gap-5">
         <Link href="/" className="text-sm text-gray-600 hover:text-[#185FA5] transition-colors hidden sm:block">
           {t.listings}
         </Link>
@@ -73,7 +73,7 @@ export default function Navbar() {
         {/* Language Toggle */}
         <button 
           onClick={() => setLang(lang === 'sr' ? 'en' : 'sr')}
-          className="text-[12px] font-bold text-gray-500 hover:text-[#185FA5] border border-gray-200 rounded-lg px-2 py-1 transition-colors bg-gray-50"
+          className="text-[11px] sm:text-[12px] font-bold text-gray-500 hover:text-[#185FA5] border border-gray-200 rounded-lg px-2 py-1 transition-colors bg-gray-50"
           title={t.langTooltip}
         >
           {lang === 'sr' ? 'EN' : 'SRB'}
@@ -116,7 +116,7 @@ export default function Navbar() {
             </Link>
 
             {/* Profile link */}
-            <Link href="/profil" className="text-sm text-gray-600 hover:text-[#185FA5] font-medium transition-colors">
+            <Link href="/profil" className="text-sm text-gray-600 hover:text-[#185FA5] font-medium transition-colors hidden sm:block">
               {t.profile}
             </Link>
           </>
@@ -128,7 +128,7 @@ export default function Navbar() {
 
         <Link
           href="/postoglas"
-          className="bg-[#185FA5] hover:bg-[#0C447C] text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors shadow-sm"
+          className="bg-[#185FA5] hover:bg-[#0C447C] text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors shadow-sm hidden sm:block"
         >
           {t.postAd}
         </Link>
