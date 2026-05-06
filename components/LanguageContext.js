@@ -759,12 +759,13 @@ const t = {
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [lang, setLangState] = useState('sr');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('povoljno24_lang');
-    if (saved === 'sr' || saved === 'en') setLangState(saved);
-  }, []);
+  const [lang, setLangState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('povoljno24_lang');
+      if (saved === 'sr' || saved === 'en') return saved;
+    }
+    return 'sr';
+  });
 
   const setLang = (newLang) => {
     setLangState(newLang);

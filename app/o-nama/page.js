@@ -16,8 +16,8 @@ export default function AboutUs() {
           </p>
           <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 mt-10">
             <h3 className="text-xl font-bold text-gray-900 mb-4">{t.ourMission}</h3>
-            <p className="italic">
-              "{t.missionText}"
+            <p className="text-gray-600 mb-6 italic">
+              &quot;{t.missionText}&quot;
             </p>
           </div>
         </div>

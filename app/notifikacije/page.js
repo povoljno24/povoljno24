@@ -13,11 +13,26 @@ export default function NotifikacijePage() {
   const [user, setUser] = useState(null);
   const router = useRouter();
 
+  const fetchNotifications = async (userId) => {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*, listings(title, image_url)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (!error) {
+      setNotifications(data || []);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     let channel;
     
     async function init() {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
+      const currentUser = data?.user;
+      
       if (!currentUser) {
         router.push('/login');
         return;
@@ -42,19 +57,6 @@ export default function NotifikacijePage() {
       if (channel) supabase.removeChannel(channel);
     };
   }, [router]);
-
-  async function fetchNotifications(userId) {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*, listings(title, image_url)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (!error) {
-      setNotifications(data || []);
-    }
-    setLoading(false);
-  }
 
   async function markAllAsRead() {
     if (!user) return;
