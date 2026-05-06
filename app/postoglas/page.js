@@ -9,11 +9,11 @@ import { z } from 'zod';
 import { applyWatermark } from '../../lib/watermark';
 import Image from 'next/image';
 import { useLanguage } from '../../components/LanguageContext';
-
-
+import { useToast } from '../../components/ToastContext';
 
 export default function PostOglas() {
   const { t } = useLanguage();
+  const { showToast } = useToast();
 
   const oglasSchema = z.object({
     title: z.string().min(3, t.valTitleMin),
@@ -37,7 +37,7 @@ export default function PostOglas() {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + imageFiles.length > 10) {
-      alert(t.maxImages);
+      showToast(t.maxImages, 'error');
       return;
     }
     setImageFiles(prev => [...prev, ...files]);

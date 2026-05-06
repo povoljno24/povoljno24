@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from './LanguageContext';
+import { useToast } from './ToastContext';
 
 export default function ReportButton({ listingId }) {
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,7 +18,7 @@ export default function ReportButton({ listingId }) {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      alert(t.reportMustLogin);
+      showToast(t.reportMustLogin, 'error');
       setLoading(false);
       return;
     }
@@ -28,10 +30,15 @@ export default function ReportButton({ listingId }) {
     });
 
     if (error) {
-      alert(t.reportError + error.message);
+      showToast(t.reportError + error.message, 'error');
     } else {
+      showToast(t.reportSentTitle, 'success');
       setSubmitted(true);
-      setTimeout(() => setShowModal(false), 2000);
+      setTimeout(() => {
+        setShowModal(false);
+        setSubmitted(false);
+        setReason('');
+      }, 3000);
     }
     setLoading(false);
   }
@@ -46,8 +53,14 @@ export default function ReportButton({ listingId }) {
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl w-full max-w-[400px] p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6 cursor-pointer"
+          onClick={() => setShowModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl w-full max-w-[400px] p-8 shadow-2xl animate-in fade-in zoom-in duration-200 cursor-default"
+            onClick={e => e.stopPropagation()}
+          >
             {!submitted ? (
               <>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{t.reportTitle}</h3>
@@ -90,7 +103,13 @@ export default function ReportButton({ listingId }) {
               <div className="text-center py-6">
                 <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
                 <h3 className="text-lg font-bold text-gray-900 mb-1">{t.reportSentTitle}</h3>
-                <p className="text-sm text-gray-500">{t.reportSentSub}</p>
+                <p className="text-sm text-gray-500 mb-6">{t.reportSentSub}</p>
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="w-full py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-black transition-colors"
+                >
+                  {t.reportCancel || 'Close'}
+                </button>
               </div>
             )}
           </div>

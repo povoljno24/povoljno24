@@ -3,28 +3,26 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
 import { useLanguage } from '../../components/LanguageContext';
+import { useToast } from '../../components/ToastContext';
 
 export default function ForgotPassword() {
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleReset(e) {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
-    setError('');
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (error) {
-      setError(error.message);
+      showToast(error.message, 'error');
     } else {
-      setMessage(t.resetLinkSent);
+      showToast(t.resetLinkSent, 'success');
     }
     setLoading(false);
   }
