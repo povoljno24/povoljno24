@@ -33,10 +33,10 @@ export default function Profil() {
 
       try {
         const [profileRes, listingsRes, messagesRes, favoritesRes] = await Promise.all([
-          supabase.from('profiles').select('id, username, full_name, bio, avatar_url, phone, phone_verified, verification_level').eq('id', user.id).single(),
-          supabase.from('listings').select('id, title, price, city, category, image_url, created_at, user_id, condition, views, last_bumped_at').eq('user_id', user.id).order('created_at', { ascending: false }),
-          supabase.from('messages').select('id, sender_id, receiver_id, content, created_at, is_read, listing_id').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false }),
-          supabase.from('favorites').select('listing_id, listings(id, title, price, image_url, city)').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('profiles').select('*').eq('id', user.id).single(),
+          supabase.from('listings').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('messages').select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false }),
+          supabase.from('favorites').select('*, listings(*)').eq('user_id', user.id).order('created_at', { ascending: false }),
         ]);
 
         if (profileRes.data) {
