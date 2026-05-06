@@ -22,8 +22,13 @@ export default function Profil() {
   const router = useRouter();
   useEffect(() => {
     async function loadProfile() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user;
+      
+      if (!user) {
+        router.push('/login');
+        return;
+      }
       setUser(user);
 
       const [{ data: profileData }, { data: listingsData }, { data: messagesData }, { data: favoritesData }] = await Promise.all([
@@ -250,7 +255,7 @@ export default function Profil() {
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-semibold text-gray-900">
-                {new Date(user?.created_at).getFullYear()}
+                {user?.created_at ? new Date(user.created_at).getFullYear() : '...'}
               </div>
               <div className="text-[12px] text-gray-600 mt-1">{t.memberSince}</div>
             </div>

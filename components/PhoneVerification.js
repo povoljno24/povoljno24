@@ -51,10 +51,14 @@ export default function PhoneVerification({ onVerified }) {
       setError(t.phoneVerifyCodeError);
     } else {
       // Update profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ phone: phone, phone_verified: true })
-        .eq('id', data.user.id);
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            phone: phone, 
+            phone_verified: true,
+            verification_level: 2
+          })
+          .eq('id', data.user.id);
 
       if (profileError) {
         setError(t.updateProfileError + profileError.message);
