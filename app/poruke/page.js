@@ -54,7 +54,7 @@ export default function PorukePage() {
               listing_title: listing.title || t.unknownListing,
               listing_image: listing.image_url,
               other_id: otherId,
-              other_username: profilesMap[otherId] || t.userWord,
+              other_username: profilesMap[otherId] || t.userFallback,
               last_message: msg.content,
               last_message_at: msg.created_at,
               unread_count: 0,
@@ -149,10 +149,10 @@ export default function PorukePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-0.5">
                       <div className="font-semibold text-gray-900 text-[15px] truncate">
-                        {conv.other_username || 'Korisnik'}
+                        {conv.other_username || t.userFallback}
                       </div>
                       <div className="text-[11px] text-gray-400 shrink-0">
-                        {new Date(conv.last_message_at).toLocaleDateString('sr-RS', {
+                        {new Date(conv.last_message_at).toLocaleDateString(lang === 'sr' ? 'sr-RS' : 'en-US', {
                           day: '2-digit', month: '2-digit'
                         })}
                       </div>

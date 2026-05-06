@@ -10,18 +10,20 @@ import { z } from 'zod';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
 import { applyWatermark } from '../../../../lib/watermark';
-
-const oglasSchema = z.object({
-  title: z.string().min(3, 'Naslov mora imati najmanje 3 karaktera.'),
-  description: z.string().min(10, 'Opis mora imati najmanje 10 karaktera.'),
-  price: z.preprocess((val) => Number(val), z.number().positive('Cena mora biti veća od 0.')),
-  city: z.string().min(2, 'Unesite validan grad.'),
-  category: z.string().min(1, 'Izaberite kategoriju.'),
-  condition: z.string().min(1, 'Izaberite stanje predmeta.'),
-});
+import { useLanguage } from '../../../../components/LanguageContext';
 
 export default function EditOglas({ params }) {
   const { id } = use(params);
+  const { t } = useLanguage();
+
+  const oglasSchema = z.object({
+    title: z.string().min(3, t.valTitleMin),
+    description: z.string().min(10, t.valDescMin),
+    price: z.preprocess((val) => Number(val), z.number().positive(t.valPricePos)),
+    city: z.string().min(2, t.valCity),
+    category: z.string().min(1, t.valCat),
+    condition: z.string().min(1, t.valCond),
+  });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -50,7 +52,7 @@ export default function EditOglas({ params }) {
         .single();
 
       if (error || !data) {
-        setMessage('Oglas nije pronađen.');
+        setMessage(t.noResults);
         setFetching(false);
         return;
       }
@@ -80,7 +82,7 @@ export default function EditOglas({ params }) {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + existingImages.length + newImageFiles.length > 10) {
-      alert('Maksimalno 10 slika je dozvoljeno.');
+      alert(t.maxImages);
       return;
     }
     setNewImageFiles(prev => [...prev, ...files]);
@@ -122,7 +124,7 @@ export default function EditOglas({ params }) {
           uploadedUrls.push(urlData.publicUrl);
         }
       } catch (error) {
-        setMessage('Greška pri obradi novih slika: ' + error.message);
+        setMessage(t.imageError + error.message);
         setLoading(false);
         return;
       }
@@ -143,7 +145,7 @@ export default function EditOglas({ params }) {
       .eq('id', id);
 
     if (error) {
-      setMessage('Greška: ' + error.message);
+      setMessage(t.errorPrefix + error.message);
     } else {
       // Check for price drop
       if (data.price < oldPrice) {
@@ -157,14 +159,14 @@ export default function EditOglas({ params }) {
           const notifications = fans.map(fan => ({
             user_id: fan.user_id,
             type: 'price_drop',
-            content: `Cena je pala! Oglas koji pratite "${data.title}" je sada ${data.price.toLocaleString()} RSD.`,
+            content: t.priceDropNotif.replace('{title}', data.title).replace('{price}', data.price.toLocaleString()),
             listing_id: id
           }));
           await supabase.from('notifications').insert(notifications);
         }
       }
       
-      setMessage('Oglas je uspešno izmenjen!');
+      setMessage(t.updateSuccess);
       setTimeout(() => router.push('/profil'), 1500);
     }
     setLoading(false);
@@ -172,7 +174,7 @@ export default function EditOglas({ params }) {
 
   if (fetching) return (
     <div className="flex-1 flex items-center justify-center">
-      <p className="text-gray-500">Učitavanje...</p>
+      <p className="text-gray-500">{t.loading}</p>
     </div>
   );
 
@@ -180,13 +182,13 @@ export default function EditOglas({ params }) {
     <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
       <div className="max-w-[600px] mx-auto bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
         <Link href="/profil" className="inline-block mb-6 text-sm text-gray-600 hover:text-[#185FA5] transition-colors">
-          ← Nazad na profil
+          {t.backToProfile}
         </Link>
-        <h1 className="text-xl font-semibold mb-6 text-gray-900">Izmeni oglas</h1>
+        <h1 className="text-xl font-semibold mb-6 text-gray-900">{t.editAdTitle}</h1>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Naslov oglasa</label>
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.adTitle}</label>
             <input 
               type="text" 
               {...register('title')}
@@ -196,7 +198,7 @@ export default function EditOglas({ params }) {
           </div>
 
           <div className="mb-4">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Opis</label>
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.description}</label>
             <textarea 
               {...register('description')}
               rows={4} 
@@ -207,7 +209,7 @@ export default function EditOglas({ params }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Cena (RSD)</label>
+              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.price}</label>
               <input 
                 type="number" 
                 {...register('price')}
@@ -216,7 +218,7 @@ export default function EditOglas({ params }) {
               {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
             </div>
             <div>
-              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Grad</label>
+              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.cityLabel}</label>
               <input 
                 type="text" 
                 {...register('city')}
@@ -227,44 +229,44 @@ export default function EditOglas({ params }) {
           </div>
 
           <div className="mb-6">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Kategorija</label>
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.category}</label>
             <select 
               {...register('category')}
               className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all bg-white ${errors.category ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
             >
-              <option value="">Izaberi kategoriju</option>
-              <option value="elektronika">Elektronika</option>
-              <option value="automobili">Automobili</option>
-              <option value="nekretnine">Nekretnine</option>
-              <option value="moda">Moda</option>
-              <option value="namestaj">Nameštaj</option>
-              <option value="gaming">Gaming</option>
-              <option value="alati">Alati</option>
-              <option value="knjige">Knjige</option>
+              <option value="">{t.chooseCat}</option>
+              <option value="elektronika">{t.electronics}</option>
+              <option value="automobili">{t.cars}</option>
+              <option value="nekretnine">{t.realestate}</option>
+              <option value="moda">{t.fashion}</option>
+              <option value="namestaj">{t.furniture}</option>
+              <option value="gaming">{t.gaming}</option>
+              <option value="alati">{t.tools}</option>
+              <option value="knjige">{t.books}</option>
             </select>
             {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
           </div>
 
           <div className="mb-6">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Stanje predmeta</label>
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.itemCondition}</label>
             <div className="grid grid-cols-2 gap-4">
               <label className="cursor-pointer">
                 <input type="radio" value="Novo" {...register('condition')} className="peer hidden" />
                 <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
-                  Novo
+                  {t.condNew}
                 </div>
               </label>
               <label className="cursor-pointer">
                 <input type="radio" value="Polovno" {...register('condition')} className="peer hidden" />
                 <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
-                  Polovno
+                  {t.condUsed}
                 </div>
               </label>
             </div>
             {errors.condition && <p className="mt-1 text-xs text-red-500">{errors.condition.message}</p>}
           </div>
           <div className="mb-6">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Fotografije (max 10)</label>
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.photos}</label>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
               {/* Existing Images */}
               {existingImages.map((src, idx) => (
@@ -294,7 +296,7 @@ export default function EditOglas({ params }) {
                   <Image src={src} alt="New Preview" fill className="object-cover opacity-70 pointer-events-none" draggable={false} />
                   <div className="absolute inset-0 z-10 bg-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                    <span className="bg-white/80 px-1.5 py-0.5 rounded text-[8px] font-bold text-[#185FA5] uppercase">Novo</span>
+                    <span className="bg-white/80 px-1.5 py-0.5 rounded text-[8px] font-bold text-[#185FA5] uppercase">{t.condNew}</span>
                   </div>
                   <button 
                     type="button"
@@ -309,7 +311,7 @@ export default function EditOglas({ params }) {
               {existingImages.length + newImageFiles.length < 10 && (
                 <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#185FA5] hover:bg-[#E6F1FB] transition-all text-gray-400 hover:text-[#185FA5]">
                   <span className="text-2xl font-light">+</span>
-                  <span className="text-[10px] font-semibold uppercase">Dodaj</span>
+                  <span className="text-[10px] font-semibold uppercase">{t.addPhoto}</span>
                   <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
                 </label>
               )}
@@ -321,7 +323,7 @@ export default function EditOglas({ params }) {
             disabled={loading}
             className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
           >
-            {loading ? 'Čuvanje...' : 'Sačuvaj izmene'}
+            {loading ? t.saving : t.saveChanges}
           </button>
         </form>
 

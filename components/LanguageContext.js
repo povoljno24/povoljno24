@@ -356,6 +356,25 @@ const t = {
     // Bottom Nav
     home: 'Početna',
     post: 'Postavi',
+
+    // New keys
+    errorPrefix: 'Greška: ',
+    changeAvatar: 'PROMENI',
+    phoneLabel: 'Broj telefona',
+    fullNamePlaceholder: 'Marko Marković',
+    usernamePlaceholder: 'npr. marko123',
+    bumpBtn: '🚀 Obnovi',
+    editBtn: 'Izmeni',
+    deleteBtn: 'Obriši',
+    userFallback: 'Korisnik',
+    editAdTitle: 'Izmeni oglas',
+    backToProfile: '← Nazad na profil',
+    priceDropNotif: 'Cena je pala! Oglas koji pratite "{title}" je sada {price} RSD.',
+    updateSuccess: 'Oglas je uspešno izmenjen!',
+    loadingLabel: 'Učitavanje...',
+    chooseCat: 'Izaberi kategoriju',
+    backToAds: '← Nazad na oglase',
+    langTooltip: 'Promeni jezik / Change language',
   },
   en: {
     // Navbar
@@ -711,6 +730,25 @@ const t = {
     // Bottom Nav
     home: 'Home',
     post: 'Post',
+
+    // New keys
+    errorPrefix: 'Error: ',
+    changeAvatar: 'CHANGE',
+    phoneLabel: 'Phone number',
+    fullNamePlaceholder: 'John Doe',
+    usernamePlaceholder: 'e.g. john123',
+    bumpBtn: '🚀 Bump',
+    editBtn: 'Edit',
+    deleteBtn: 'Delete',
+    userFallback: 'User',
+    editAdTitle: 'Edit ad',
+    backToProfile: '← Back to profile',
+    priceDropNotif: 'Price dropped! The ad you follow "{title}" is now {price} RSD.',
+    updateSuccess: 'Ad updated successfully!',
+    loadingLabel: 'Loading...',
+    chooseCat: 'Choose category',
+    backToAds: '← Back to ads',
+    langTooltip: 'Change language / Promeni jezik',
   }
 };
 

@@ -74,7 +74,7 @@ export default function Navbar() {
         <button 
           onClick={() => setLang(lang === 'sr' ? 'en' : 'sr')}
           className="text-[12px] font-bold text-gray-500 hover:text-[#185FA5] border border-gray-200 rounded-lg px-2 py-1 transition-colors bg-gray-50"
-          title="Promeni jezik / Change language"
+          title={t.langTooltip}
         >
           {lang === 'sr' ? 'EN' : 'SRB'}
         </button>

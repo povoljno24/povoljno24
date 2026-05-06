@@ -1,0 +1,145 @@
+﻿
+> povoljno24@0.1.0 lint
+> eslint
+
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\admin\layout.js
+  34:6  warning  React Hook useEffect has a missing dependency: 'router'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\[id]\ImageGallery.js
+  21:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  19 |   useEffect(() => {
+  20 |     if (!isOpen) {
+> 21 |       setScale(1);
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  22 |       setPosition({ x: 0, y: 0 });
+  23 |     }
+  24 |   }, [isOpen]);  react-hooks/set-state-in-effect
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\[id]\page.js
+  116:12  error  'Link' is not defined         react/jsx-no-undef
+  118:12  error  'Link' is not defined         react/jsx-no-undef
+  120:12  error  'Link' is not defined         react/jsx-no-undef
+  213:18  error  'Link' is not defined         react/jsx-no-undef
+  231:18  error  'ContactForm' is not defined  react/jsx-no-undef
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\edit\[id]\page.js
+  116:42  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  114 |           const finalFile = new File([watermarkedBlob], file.name, { type: file.type });
+  115 |           
+> 116 |           const fileName = `${user.id}-${Date.now()}-edit-${i}.${finalFile.name.split('.').pop()}`;
+      |                                          ^^^^^^^^^^ Cannot call impure function
+  117 |           const { error: uploadError } = await supabase.storage.from('listing-images').upload(fileName, finalFile);
+  118 |           if (uploadError) throw uploadError;
+  119 |             react-hooks/purity
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\page.js
+  162:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  160 |
+  161 |   useEffect(() => {
+> 162 |     loadListings('', '', '', '', '', '', 'newest', 0, false);
+      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  163 |   }, []);
+  164 |
+  165 |   // Update suggestions based on input                     react-hooks/set-state-in-effect
+  171:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  169 |         c.name.toLowerCase().includes(search.toLowerCase())
+  170 |       );
+> 171 |       setSuggestions(filtered);
+      |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  172 |     } else {
+  173 |       setSuggestions([]);
+  174 |     }  react-hooks/set-state-in-effect
+  175:6   warning  React Hook useEffect has a missing dependency: 'categories'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+  270:69  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react/no-unescaped-entities
+  270:78  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react/no-unescaped-entities
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\poruke\page.js
+  131:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\postoglas\page.js
+   77:42  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  75 |
+  76 |           const fileExt = finalFile.name.split('.').pop() || 'jpg';
+> 77 |           const fileName = `${user.id}-${Date.now()}-${i}.${fileExt}`;
+     |                                          ^^^^^^^^^^ Cannot call impure function
+  78 |           
+  79 |           const { error: uploadError } = await supabase.storage
+  80 |             .from('listing-images')  react-hooks/purity
+  218:20  error  'Image' is not defined                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react/jsx-no-undef
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\prodavac\[id]\page.js
+   58:10  error  'Link' is not defined                                            react/jsx-no-undef
+   69:16  error  'Image' is not defined                                           react/jsx-no-undef
+   83:17  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   83:31  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  130:16  error  'Link' is not defined                                            react/jsx-no-undef
+  143:26  error  'Image' is not defined                                           react/jsx-no-undef
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\app\profil\page.js
+  218:98   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  218:112  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\components\Navbar.js
+  55:6  warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\aleks\OneDrive\Desktop\povoljno24\components\NotificationDropdown.js
+  12:5  error    Error: Cannot access variable before it is declared
+
+`fetchNotifications` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  10 |
+  11 |   useEffect(() => {
+> 12 |     fetchNotifications();
+     |     ^^^^^^^^^^^^^^^^^^ `fetchNotifications` accessed before it is declared
+  13 |   }, [userId]);
+  14 |
+  15 |   async function fetchNotifications() {
+
+  13 |   }, [userId]);
+  14 |
+> 15 |   async function fetchNotifications() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 16 |     const { data, error } = await supabase
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 17 |       .from('notifications')
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 25 |     setLoading(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 26 |   }
+     | ^^^^ `fetchNotifications` is declared here
+  27 |
+  28 |   async function markAsRead(id) {
+  29 |     await supabase.from('notifications').update({ is_read: true }).eq('id', id);  react-hooks/immutability
+  13:6  warning  React Hook useEffect has a missing dependency: 'fetchNotifications'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+
+Γ£û 27 problems (22 errors, 5 warnings)
+

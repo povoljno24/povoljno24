@@ -214,13 +214,13 @@ export default function Profil() {
                 )}
               </div>
               <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                <span className="text-[10px] text-white font-bold">PROMENI</span>
+                <span className="text-[10px] text-white font-bold">{t.changeAvatar}</span>
                 <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={updating} />
               </label>
             </div>
             <div>
               <h1 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
-                {profile?.full_name || profile?.username || 'Korisnik'}
+                {profile?.full_name || profile?.username || t.userFallback}
                 {profile?.verification_level > 2 && (
                   <span className="text-[#1D9E75] text-sm">🛡️</span>
                 )}
@@ -329,20 +329,20 @@ export default function Profil() {
                         {listing.title}
                       </Link>
                       <div className="text-[13px] text-[#185FA5] font-semibold">{listing.price?.toLocaleString()} RSD</div>
-                      <div className="text-[11px] text-gray-500 mt-0.5 truncate">{listing.city} · {listing.category}</div>
+                      <div className="text-[11px] text-gray-500 mt-0.5 truncate">{listing.city} · {t[`db_${listing.category}`] || listing.category}</div>
                     </div>
                     <div className="flex flex-col gap-2 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleBumpListing(listing.id)}
                         className="text-[11px] text-[#1D9E75] bg-[#EAF3DE] hover:bg-[#d3ecc1] px-3 py-1.5 rounded-md font-bold text-center transition-colors border border-[#d3ecc1]"
                       >
-                        🚀 Obnovi
+                        {t.bumpBtn}
                       </button>
                       <Link href={`/oglas/edit/${listing.id}`} className="text-[11px] text-[#185FA5] bg-[#E6F1FB] hover:bg-[#d0e5f7] px-3 py-1.5 rounded-md font-medium text-center transition-colors">
-                        Izmeni
+                        {t.editBtn}
                       </Link>
                       <button onClick={() => handleDeleteListing(listing.id)} className="text-[11px] text-[#E24B4A] bg-[#fdf0f0] hover:bg-[#fbdada] px-3 py-1.5 rounded-md font-medium text-center transition-colors cursor-pointer border-none outline-none">
-                        Obriši
+                        {t.deleteBtn}
                       </button>
                     </div>
                   </div>
@@ -428,7 +428,7 @@ export default function Profil() {
                       value={formData.username}
                       onChange={e => setFormData({ ...formData, username: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-[#185FA5] transition-all"
-                      placeholder="Npr. marko123"
+                      placeholder={t.usernamePlaceholder}
                     />
                   </div>
                   <div>
@@ -438,7 +438,7 @@ export default function Profil() {
                       value={formData.full_name}
                       onChange={e => setFormData({ ...formData, full_name: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-[#185FA5] transition-all"
-                      placeholder="Marko Marković"
+                      placeholder={t.fullNamePlaceholder}
                     />
                   </div>
                 </div>
@@ -469,7 +469,7 @@ export default function Profil() {
                 {profile?.phone_verified ? (
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <div>
-                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Broj telefona</div>
+                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t.phoneLabel}</div>
                       <div className="text-[15px] font-bold text-gray-900">{profile.phone}</div>
                     </div>
                     <div className="bg-[#EAF3DE] text-[#3B6D11] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d3ecc1]">

@@ -5,85 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '../components/LanguageContext';
 
-const translations = {
-  sr: {
-    hero: 'Kupi i prodaj sve — brzo, sigurno, povoljno',
-    heroSub: 'Hiljade oglasa u Srbiji. Provereni prodavci. Bez prevara.',
-    searchPlaceholder: 'Šta tražiš?',
-    search: 'Pretraži',
-    allCats: 'Sve kategorije',
-    electronics: 'Elektronika',
-    cars: 'Automobili',
-    realestate: 'Nekretnine',
-    fashion: 'Moda',
-    trust1: 'Provereni prodavci',
-    trust2: 'Kupac zaštićen',
-    trust3: 'Bez skrivenih troškova',
-    trust4: 'Besplatno oglašavanje',
-    categories: 'Kategorije',
-    furniture: 'Nameštaj',
-    gaming: 'Gaming',
-    tools: 'Alati',
-    books: 'Knjige',
-    newListings: 'Novi oglasi',
-    verified: 'Proveren',
-    minPrice: 'Min Cena',
-    maxPrice: 'Max Cena',
-    sortBy: 'Sortiraj po',
-    sortNewest: 'Najnovije',
-    sortPriceAsc: 'Najjeftinije',
-    sortPriceDesc: 'Najskuplje',
-    advancedFilters: 'Napredni filteri',
-    applyFilters: 'Primeni filtere',
-    condition: 'Stanje',
-    condNew: 'Novo',
-    condUsed: 'Polovno',
-    city: 'Grad',
-    allCities: 'Svi gradovi',
-  },
-  en: {
-    hero: 'Buy and sell anything — fast, safe, affordable',
-    heroSub: 'Thousands of listings in Serbia. Verified sellers. No scams.',
-    searchPlaceholder: 'What are you looking for?',
-    search: 'Search',
-    allCats: 'All categories',
-    electronics: 'Electronics',
-    cars: 'Cars',
-    realestate: 'Real estate',
-    fashion: 'Fashion',
-    trust1: 'Verified sellers',
-    trust2: 'Buyer protected',
-    trust3: 'No hidden fees',
-    trust4: 'Free listings',
-    categories: 'Categories',
-    furniture: 'Furniture',
-    gaming: 'Gaming',
-    tools: 'Tools',
-    books: 'Books',
-    newListings: 'Latest listings',
-    verified: 'Verified',
-    minPrice: 'Min Price',
-    maxPrice: 'Max Price',
-    sortBy: 'Sort by',
-    sortNewest: 'Newest',
-    sortPriceAsc: 'Cheapest',
-    sortPriceDesc: 'Most expensive',
-    advancedFilters: 'Advanced filters',
-    applyFilters: 'Apply filters',
-    condition: 'Condition',
-    condNew: 'New',
-    condUsed: 'Used',
-    city: 'City',
-    allCities: 'All cities',
-  },
-};
+
 
 const cities = [
   'Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Priština', 'Subotica', 'Zrenjanin', 'Pančevo', 'Čačak', 'Kruševac', 'Kraljevo', 'Novi Pazar', 'Smederevo', 'Leskovac', 'Užice', 'Vranje', 'Valjevo', 'Šabac', 'Sombor', 'Požarevac', 'Pirot', 'Zaječar', 'Kikinda', 'Sremska Mitrovica', 'Jagodina', 'Vršac', 'Bor', 'Prokuplje', 'Loznica'
 ].sort();
 
 export default function Home() {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const [listings, setListings] = useState([]);
   
   // Basic search & filter states
@@ -108,7 +37,7 @@ export default function Home() {
   const [moreLoading, setMoreLoading] = useState(false);
   
   const ITEMS_PER_PAGE = 20;
-  const t = translations[lang];
+
 
   const categories = [
     { name: t.electronics, value: 'elektronika' },
@@ -135,7 +64,7 @@ export default function Home() {
     if (minP) query = query.gte('price', parseInt(minP));
     if (maxP) query = query.lte('price', parseInt(maxP));
     if (city) query = query.eq('city', city);
-    // if (condition) query = query.eq('condition', condition); // Temporarily bypassed
+    if (condition) query = query.eq('condition', condition);
     
     // Apply sorting
     if (sortParams === 'price_asc') {
@@ -491,7 +420,7 @@ export default function Home() {
                       <div className="text-[16px] font-bold text-[#185FA5]">{listing.price?.toLocaleString()} RSD</div>
                       {listing.condition && (
                         <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${listing.condition === 'Novo' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
-                          {listing.condition}
+                          {listing.condition === 'Novo' ? t.condNew : t.condUsed}
                         </span>
                       )}
                     </div>

@@ -1,0 +1,4506 @@
+﻿===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\admin\layout.js =====
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabase';
+
+export default function AdminLayout({ children }) {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function checkAdmin() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.is_admin) {
+        router.push('/');
+        return;
+      }
+
+      setIsAdmin(true);
+      setLoading(false);
+    }
+    checkAdmin();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-[#185FA5] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-500 italic">Verifikacija administratorskih prava...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 bg-[#f8fafc]">
+      <div className="bg-[#1e293b] text-white py-3 px-6 shadow-md flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <span className="text-xl">ðŸ›¡ï¸</span>
+          <span className="font-bold tracking-tight">POVOLJNO24 ADMIN PANEL</span>
+        </div>
+        <div className="text-[11px] font-bold bg-white/10 px-3 py-1.5 rounded-full uppercase tracking-widest text-blue-300">
+          Superadmin Mode
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\admin\page.js =====
+'use client';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import Image from 'next/image';
+import Link from 'next/link';
+
+export default function AdminDashboard() {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('reports'); // 'reports' | 'listings'
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  async function loadReports() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('reports')
+      .select(`
+        *,
+        listings(title, price, image_url),
+        profiles:reporter_id(username)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) alert(error.message);
+    else setReports(data || []);
+    setLoading(false);
+  }
+
+  async function handleDeleteListing(id, reportId) {
+    if (!confirm('Da li ste sigurni da Å¾elite da obriÅ¡ete ovaj oglas?')) return;
+    
+    const { error } = await supabase.from('listings').delete().eq('id', id);
+    if (error) alert(error.message);
+    else {
+      // Also resolve the report
+      await supabase.from('reports').update({ status: 'resolved' }).eq('id', reportId);
+      loadReports();
+      alert('Oglas obrisan.');
+    }
+  }
+
+  async function handleDismissReport(id) {
+    const { error } = await supabase.from('reports').update({ status: 'resolved' }).eq('id', id);
+    if (error) alert(error.message);
+    else {
+      loadReports();
+      alert('Prijava odbaÄena.');
+    }
+  }
+
+  return (
+    <div className="p-8 max-w-[1200px] mx-auto">
+      <div className="flex gap-4 mb-8">
+        <button 
+          onClick={() => setActiveTab('reports')}
+          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'reports' ? 'bg-[#185FA5] text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200'}`}
+        >
+          Prijave ({reports.filter(r => r.status === 'pending').length})
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-20 text-gray-400 font-medium italic">UÄitavanje podataka...</div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Oglas</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Razlog prijave</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Prijavio</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest text-right">Akcije</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {reports.map(report => (
+                <tr key={report.id} className={`hover:bg-gray-50/50 transition-colors ${report.status === 'resolved' ? 'opacity-50' : ''}`}>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden relative shrink-0">
+                        {report.listings?.image_url && (
+                          <Image src={report.listings.image_url} alt="" fill className="object-cover" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-gray-900 truncate max-w-[200px]">
+                          {report.listings?.title || '[Obrisano]'}
+                        </div>
+                        <div className="text-[11px] text-[#185FA5] font-semibold">{report.listings?.price?.toLocaleString()} RSD</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-[12px] font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-100 uppercase tracking-tighter">
+                      {report.reason}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-600 font-medium">@{report.profiles?.username || 'Korisnik'}</div>
+                    <div className="text-[10px] text-gray-400">{new Date(report.created_at).toLocaleDateString()}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${report.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
+                      {report.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      {report.status === 'pending' && (
+                        <>
+                          <button 
+                            onClick={() => handleDismissReport(report.id)}
+                            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                            title="Odbaci prijavu"
+                          >
+                            âœ“
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteListing(report.listing_id, report.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            title="ObriÅ¡i oglas"
+                          >
+                            ðŸ—‘ï¸
+                          </button>
+                        </>
+                      )}
+                      <Link 
+                        href={`/oglas/${report.listing_id}`} 
+                        className="p-2 text-gray-400 hover:text-[#185FA5] hover:bg-blue-50 rounded-lg transition-all"
+                        title="Pogledaj oglas"
+                      >
+                        ðŸ‘ï¸
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {reports.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-20 text-center text-gray-400 italic">Nema aktivnih prijava.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\kako-funkcionise\page.js =====
+'use client';
+import Link from 'next/link';
+import Image from 'next/image';
+
+export default function KakoFunkcionise() {
+  return (
+    <div className="flex-1 bg-white">
+      {/* Hero Section */}
+      <section className="bg-[#E6F1FB] py-20 px-6 text-center">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl font-bold text-[#0C447C] mb-6 leading-tight">
+            Kupi i prodaj pametnije, <br className="hidden sm:block" /> brÅ¾e i sigurnije
+          </h1>
+          <p className="text-lg text-[#185FA5] mb-10 max-w-2xl mx-auto">
+            DobrodoÅ¡li na Povoljno24.rs â€” platformu dizajniranu da spoji kupce i prodavce Å¡irom Srbije na najjednostavniji moguÄ‡i naÄin. Saznajte kako moÅ¾ete izvuÄ‡i maksimum iz naÅ¡eg sajta.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link href="/postoglas" className="bg-[#185FA5] hover:bg-[#0C447C] text-white px-8 py-3.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg">
+              ZapoÄni prodaju
+            </Link>
+            <Link href="/" className="bg-white hover:bg-gray-50 text-[#185FA5] border border-[#185FA5] px-8 py-3.5 rounded-xl font-semibold transition-all shadow-sm">
+              IstraÅ¾i oglase
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* For Whom Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Za koga je Povoljno24?</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              Bilo da praznite tavan, pokreÄ‡ete mali biznis, ili traÅ¾ite odliÄnu ponudu â€” na pravom ste mestu.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="bg-gray-50 p-10 rounded-3xl border border-gray-100 h-full flex flex-col justify-center transition-transform hover:-translate-y-1">
+              <div className="text-5xl mb-6">ðŸ›’</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Za Kupce</h3>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                PronaÄ‘ite sve Å¡to vam je potrebno po najpovoljnijim cenama. Od elektronike do nekretnina, naÅ¡a platforma vam omoguÄ‡ava da pretraÅ¾ujete, filtrirate i direktno komunicirate sa proverenim prodavcima bez skrivenih provizija.
+              </p>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-center gap-3"><span className="text-[#1D9E75] text-xl">âœ“</span> Veliki izbor kategorija</li>
+                <li className="flex items-center gap-3"><span className="text-[#1D9E75] text-xl">âœ“</span> Sigurna komunikacija</li>
+                <li className="flex items-center gap-3"><span className="text-[#1D9E75] text-xl">âœ“</span> Bez posrednika i provizija</li>
+              </ul>
+            </div>
+
+            <div className="bg-[#f0f7fd] p-10 rounded-3xl border border-[#d6ebfa] h-full flex flex-col justify-center transition-transform hover:-translate-y-1">
+              <div className="text-5xl mb-6">ðŸš€</div>
+              <h3 className="text-2xl font-bold text-[#0C447C] mb-4">Za Prodavce</h3>
+              <p className="text-[#185FA5] mb-6 leading-relaxed">
+                Pretvorite stvari koje vam viÅ¡e ne trebaju u novac ili proÅ¡irite svoj posao. Postavljanje oglasa je brzo, jednostavno i potpuno besplatno. VaÅ¡ oglas Ä‡e videti hiljade potencijalnih kupaca.
+              </p>
+              <ul className="space-y-3 text-[#185FA5]">
+                <li className="flex items-center gap-3"><span className="text-[#0C447C] text-xl">âœ“</span> Besplatno oglaÅ¡avanje</li>
+                <li className="flex items-center gap-3"><span className="text-[#0C447C] text-xl">âœ“</span> Ogroman doseg publike</li>
+                <li className="flex items-center gap-3"><span className="text-[#0C447C] text-xl">âœ“</span> Intuitivno upravljanje oglasima</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works steps */}
+      <section className="bg-gray-50 py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-16">Kako funkcioniÅ¡e u 3 koraka</h2>
+          
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Step 1 */}
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center relative z-10">
+              <div className="w-16 h-16 bg-[#E6F1FB] text-[#185FA5] rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Kreiraj nalog</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Registracija traje manje od minuta. Potrebna vam je samo email adresa kako biste poÄeli sa kupovinom ili prodajom.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center relative z-10">
+              <div className="w-16 h-16 bg-[#E6F1FB] text-[#185FA5] rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Postavi ili PronaÄ‘i</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Dodajte fotografije, opis i cenu za vaÅ¡ predmet, ili pretraÅ¾ite naÅ¡u bazu oglasa koristeÄ‡i napredne filtere.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center relative z-10">
+              <div className="w-16 h-16 bg-[#E6F1FB] text-[#185FA5] rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Dogovori se</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Stupite u kontakt putem naÅ¡eg bezbednog sistema za poruke. Dogovorite preuzimanje i zavrÅ¡ite transakciju.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits */}
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-12">ZaÅ¡to izabrati Povoljno24?</h2>
+          
+          <div className="grid sm:grid-cols-2 gap-8 text-left">
+            <div className="flex gap-4">
+              <div className="text-[#1D9E75] text-3xl shrink-0">ðŸ›¡ï¸</div>
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 mb-2">Sigurnost na prvom mestu</h4>
+                <p className="text-gray-600">Svi korisnici prolaze kroz proces verifikacije, a naÅ¡ sistem za prijavu sumnjivih oglasa radi 24/7 kako bi vas zaÅ¡titio.</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="text-[#1D9E75] text-3xl shrink-0">âš¡</div>
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 mb-2">Brzina i efikasnost</h4>
+                <p className="text-gray-600">ZahvaljujuÄ‡i modernom dizajnu i pametnoj pretrazi, pronalaÅ¾enje onoga Å¡to vam treba nikada nije bilo brÅ¾e.</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="text-[#1D9E75] text-3xl shrink-0">ðŸ’¬</div>
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 mb-2">Integrisane poruke</h4>
+                <p className="text-gray-600">Nema potrebe za razmenom brojeva telefona odmah. Komunicirajte bezbedno unutar platforme.</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="text-[#1D9E75] text-3xl shrink-0">ðŸ“±</div>
+              <div>
+                <h4 className="text-lg font-bold text-gray-900 mb-2">PrilagoÄ‘eno svim ureÄ‘ajima</h4>
+                <p className="text-gray-600">Kupujte i prodajte u pokretu. NaÅ¡ sajt savrÅ¡eno radi na mobilnim telefonima, tabletima i raÄunarima.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-[#185FA5] py-16 px-6 text-center text-white">
+        <h2 className="text-3xl font-bold mb-6">Spremni da poÄnete?</h2>
+        <p className="text-[#d6ebfa] text-lg mb-8 max-w-2xl mx-auto">
+          PridruÅ¾ite se hiljadama zadovoljnih korisnika i postanite deo najveÄ‡e rastuÄ‡e zajednice za kupovinu i prodaju u Srbiji.
+        </p>
+        <Link href="/register" className="inline-block bg-white text-[#185FA5] px-10 py-4 rounded-xl font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg">
+          Kreiraj besplatan nalog
+        </Link>
+      </section>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\login\page.js =====
+'use client';
+import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Unesite validnu email adresu.'),
+  password: z.string().min(6, 'Lozinka mora imati najmanje 6 karaktera.'),
+});
+
+export default function Login() {
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(loginSchema)
+  });
+
+  async function onSubmit(data) {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ 
+      email: data.email, 
+      password: data.password 
+    });
+    
+    if (error) {
+      setMessage(error.message);
+    } else {
+      router.push('/');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="flex-1 flex items-center justify-center p-6 bg-[#f5f5f5]">
+      <div className="bg-white p-8 rounded-2xl border border-gray-200 w-full max-w-[400px] shadow-sm">
+        <h1 className="text-xl font-semibold mb-6 text-gray-900 text-center">Prijavi se</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Email adresa</label>
+            <input
+              type="email"
+              {...register('email')}
+              placeholder="tvoj@email.com"
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            />
+            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Lozinka</label>
+            <input
+              type="password"
+              {...register('password')}
+              placeholder="Tvoja lozinka"
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            />
+            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+          >
+            {loading ? 'Prijavljivanje...' : 'Prijavi se'}
+          </button>
+        </form>
+
+        {message && (
+          <p className="mt-4 text-[13px] text-[#E24B4A] text-center bg-red-50 py-2 rounded-md">
+            {message}
+          </p>
+        )}
+
+        <p className="mt-6 text-[13px] text-gray-600 text-center">
+          NemaÅ¡ nalog? <Link href="/register" className="text-[#185FA5] hover:underline font-medium">Registruj se</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\edit\[id]\page.js =====
+'use client';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../../../lib/supabase';
+import { useRouter } from 'next/navigation';
+import { use } from 'react';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import Image from 'next/image';
+import imageCompression from 'browser-image-compression';
+import { applyWatermark } from '../../../../lib/watermark';
+
+const oglasSchema = z.object({
+  title: z.string().min(3, 'Naslov mora imati najmanje 3 karaktera.'),
+  description: z.string().min(10, 'Opis mora imati najmanje 10 karaktera.'),
+  price: z.preprocess((val) => Number(val), z.number().positive('Cena mora biti veÄ‡a od 0.')),
+  city: z.string().min(2, 'Unesite validan grad.'),
+  category: z.string().min(1, 'Izaberite kategoriju.'),
+  condition: z.string().min(1, 'Izaberite stanje predmeta.'),
+});
+
+export default function EditOglas({ params }) {
+  const { id } = use(params);
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImageFiles, setNewImageFiles] = useState([]);
+  const [newPreviews, setNewPreviews] = useState([]);
+  const [oldPrice, setOldPrice] = useState(null);
+  const router = useRouter();
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    resolver: zodResolver(oglasSchema)
+  });
+
+  useEffect(() => {
+    async function loadListing() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !data) {
+        setMessage('Oglas nije pronaÄ‘en.');
+        setFetching(false);
+        return;
+      }
+
+      if (data.user_id !== user.id) {
+        router.push('/');
+        return;
+      }
+
+      // Pre-populate the form
+      reset({
+        title: data.title,
+        description: data.description || '',
+        price: data.price,
+        category: data.category,
+        city: data.city,
+        condition: data.condition || 'Polovno',
+      });
+      
+      setOldPrice(data.price);
+      setExistingImages(data.images || (data.image_url ? [data.image_url] : []));
+      setFetching(false);
+    }
+    loadListing();
+  }, [id, router, reset]);
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + existingImages.length + newImageFiles.length > 10) {
+      alert('Maksimalno 10 slika je dozvoljeno.');
+      return;
+    }
+    setNewImageFiles(prev => [...prev, ...files]);
+    const previews = files.map(file => URL.createObjectURL(file));
+    setNewPreviews(prev => [...prev, ...previews]);
+  };
+
+  const removeExisting = (index) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNew = (index) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+    setNewPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  async function onSubmit(data) {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const uploadedUrls = [...existingImages];
+
+    // Upload new images
+    if (newImageFiles.length > 0) {
+      try {
+        for (let i = 0; i < newImageFiles.length; i++) {
+          const file = newImageFiles[i];
+          const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true };
+          const compressedFile = await imageCompression(file, options);
+          const watermarkedBlob = await applyWatermark(compressedFile);
+          const finalFile = new File([watermarkedBlob], file.name, { type: file.type });
+          
+          // eslint-disable-next-line react-hooks/purity
+          const fileName = `${user.id}-${Date.now()}-edit-${i}.${finalFile.name.split('.').pop()}`;
+          const { error: uploadError } = await supabase.storage.from('listing-images').upload(fileName, finalFile);
+          if (uploadError) throw uploadError;
+          
+          const { data: urlData } = supabase.storage.from('listing-images').getPublicUrl(fileName);
+          uploadedUrls.push(urlData.publicUrl);
+        }
+      } catch (error) {
+        setMessage('GreÅ¡ka pri obradi novih slika: ' + error.message);
+        setLoading(false);
+        return;
+      }
+    }
+    
+    const { error } = await supabase
+      .from('listings')
+      .update({
+        title: data.title,
+        description: data.description,
+        price: Number(data.price),
+        category: data.category,
+        city: data.city,
+        // condition: data.condition, // OMITTED to avoid schema cache error
+        image_url: uploadedUrls[0] || null,
+        images: uploadedUrls,
+      })
+      .eq('id', id);
+
+    if (error) {
+      setMessage('GreÅ¡ka: ' + error.message);
+    } else {
+      // Check for price drop
+      if (data.price < oldPrice) {
+        // Fetch all users who favorited this listing
+        const { data: fans } = await supabase
+          .from('favorites')
+          .select('user_id')
+          .eq('listing_id', id);
+
+        if (fans?.length > 0) {
+          const notifications = fans.map(fan => ({
+            user_id: fan.user_id,
+            type: 'price_drop',
+            content: `Cena je pala! Oglas koji pratite "${data.title}" je sada ${data.price.toLocaleString()} RSD.`,
+            listing_id: id
+          }));
+          await supabase.from('notifications').insert(notifications);
+        }
+      }
+      
+      setMessage('Oglas je uspeÅ¡no izmenjen!');
+      setTimeout(() => router.push('/profil'), 1500);
+    }
+    setLoading(false);
+  }
+
+  if (fetching) return (
+    <div className="flex-1 flex items-center justify-center">
+      <p className="text-gray-500">UÄitavanje...</p>
+    </div>
+  );
+
+  return (
+    <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
+      <div className="max-w-[600px] mx-auto bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+        <Link href="/profil" className="inline-block mb-6 text-sm text-gray-600 hover:text-[#185FA5] transition-colors">
+          â† Nazad na profil
+        </Link>
+        <h1 className="text-xl font-semibold mb-6 text-gray-900">Izmeni oglas</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Naslov oglasa</label>
+            <input 
+              type="text" 
+              {...register('title')}
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+            />
+            {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Opis</label>
+            <textarea 
+              {...register('description')}
+              rows={4} 
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all resize-y ${errors.description ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+            />
+            {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Cena (RSD)</label>
+              <input 
+                type="number" 
+                {...register('price')}
+                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.price ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+              />
+              {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
+            </div>
+            <div>
+              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Grad</label>
+              <input 
+                type="text" 
+                {...register('city')}
+                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.city ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+              />
+              {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city.message}</p>}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Kategorija</label>
+            <select 
+              {...register('category')}
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all bg-white ${errors.category ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            >
+              <option value="">Izaberi kategoriju</option>
+              <option value="elektronika">Elektronika</option>
+              <option value="automobili">Automobili</option>
+              <option value="nekretnine">Nekretnine</option>
+              <option value="moda">Moda</option>
+              <option value="namestaj">NameÅ¡taj</option>
+              <option value="gaming">Gaming</option>
+              <option value="alati">Alati</option>
+              <option value="knjige">Knjige</option>
+            </select>
+            {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Stanje predmeta</label>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="cursor-pointer">
+                <input type="radio" value="Novo" {...register('condition')} className="peer hidden" />
+                <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
+                  Novo
+                </div>
+              </label>
+              <label className="cursor-pointer">
+                <input type="radio" value="Polovno" {...register('condition')} className="peer hidden" />
+                <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
+                  Polovno
+                </div>
+              </label>
+            </div>
+            {errors.condition && <p className="mt-1 text-xs text-red-500">{errors.condition.message}</p>}
+          </div>
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Fotografije (max 10)</label>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
+              {/* Existing Images */}
+              {existingImages.map((src, idx) => (
+                <div 
+                  key={`exist-${idx}`} 
+                  className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <Image src={src} alt="Existing" fill className="object-cover pointer-events-none" draggable={false} />
+                  <div className="absolute inset-0 z-10 bg-transparent" />
+                  <button 
+                    type="button"
+                    onClick={() => removeExisting(idx)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
+                  >
+                    âœ•
+                  </button>
+                </div>
+              ))}
+              {/* New Previews */}
+              {newPreviews.map((src, idx) => (
+                <div 
+                  key={`new-${idx}`} 
+                  className="relative aspect-square rounded-lg overflow-hidden bg-gray-50 border border-dashed border-[#185FA5] group select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <Image src={src} alt="New Preview" fill className="object-cover opacity-70 pointer-events-none" draggable={false} />
+                  <div className="absolute inset-0 z-10 bg-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <span className="bg-white/80 px-1.5 py-0.5 rounded text-[8px] font-bold text-[#185FA5] uppercase">Novo</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => removeNew(idx)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
+                  >
+                    âœ•
+                  </button>
+                </div>
+              ))}
+              {/* Add Button */}
+              {existingImages.length + newImageFiles.length < 10 && (
+                <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#185FA5] hover:bg-[#E6F1FB] transition-all text-gray-400 hover:text-[#185FA5]">
+                  <span className="text-2xl font-light">+</span>
+                  <span className="text-[10px] font-semibold uppercase">Dodaj</span>
+                  <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
+                </label>
+              )}
+            </div>
+          </div>
+
+          <button 
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+          >
+            {loading ? 'ÄŒuvanje...' : 'SaÄuvaj izmene'}
+          </button>
+        </form>
+
+        {message && (
+          <p className={`mt-4 text-[13px] text-center py-2 rounded-md ${message.includes('uspeÅ¡no') ? 'text-[#3B6D11] bg-[#EAF3DE]' : 'text-[#E24B4A] bg-red-50'}`}>
+            {message}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\[id]\ContactForm.js =====
+'use client';
+import { useState } from 'react';
+import { supabase } from '../../../lib/supabase';
+
+export default function ContactForm({ listingId, receiverId }) {
+  const [message, setMessage] = useState('');
+  const [msgSent, setMsgSent] = useState(false);
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const [msgError, setMsgError] = useState('');
+
+  async function handleSendMessage() {
+    setSendingMsg(true);
+    setMsgError('');
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      setMsgError('Morate biti prijavljeni da biste poslali poruku.');
+      setSendingMsg(false);
+      return;
+    }
+    
+    if (!message.trim()) {
+      setMsgError('Poruka ne moÅ¾e biti prazna.');
+      setSendingMsg(false);
+      return;
+    }
+    
+    const { error } = await supabase.from('messages').insert({
+      listing_id: listingId,
+      sender_id: user.id,
+      receiver_id: receiverId,
+      content: message,
+      is_read: false,
+    });
+    
+    if (error) {
+      setMsgError('GreÅ¡ka: ' + error.message);
+    } else {
+      // Redirect to the new chat thread
+      window.location.href = `/poruke/${listingId}-${receiverId}`;
+    }
+    setSendingMsg(false);
+  }
+
+  if (msgSent) {
+    return (
+      <div className="bg-[#EAF3DE] border border-[#d3ecc1] rounded-lg p-4 text-center">
+        <p className="text-[#3B6D11] text-sm font-medium">âœ“ Poruka je uspeÅ¡no poslata prodavcu!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <textarea
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        placeholder="NapiÅ¡i poruku prodavcu..."
+        rows={4}
+        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] transition-all resize-y"
+      />
+      <button
+        onClick={handleSendMessage}
+        disabled={sendingMsg}
+        className={`w-full py-3.5 text-white rounded-xl text-[15px] font-semibold transition-colors ${sendingMsg ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+      >
+        {sendingMsg ? 'Slanje...' : 'PoÅ¡alji poruku'}
+      </button>
+      {msgError && <p className="text-[#E24B4A] text-[13px] text-center">{msgError}</p>}
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\[id]\FavoriteButton.js =====
+'use client';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../../lib/supabase';
+
+export default function FavoriteButton({ listingId }) {
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    async function checkFavorite() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      setUserId(user.id);
+
+      const { data } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('listing_id', listingId)
+        .maybeSingle();
+
+      setIsFavorited(!!data);
+      setLoading(false);
+    }
+    checkFavorite();
+  }, [listingId]);
+
+  async function toggleFavorite() {
+    if (!userId) {
+      window.location.href = '/login';
+      return;
+    }
+    setLoading(true);
+    if (isFavorited) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', userId)
+        .eq('listing_id', listingId);
+      setIsFavorited(false);
+    } else {
+      await supabase
+        .from('favorites')
+        .insert({ user_id: userId, listing_id: listingId });
+      setIsFavorited(true);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <button
+      onClick={toggleFavorite}
+      disabled={loading}
+      title={isFavorited ? 'Ukloni iz saÄuvanih' : 'SaÄuvaj oglas'}
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[13px] font-semibold transition-all duration-200 cursor-pointer disabled:opacity-50
+        ${isFavorited
+          ? 'bg-red-50 border-red-300 text-red-500 hover:bg-red-100'
+          : 'bg-white border-gray-300 text-gray-600 hover:border-[#185FA5] hover:text-[#185FA5] hover:bg-[#E6F1FB]'
+        }`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill={isFavorited ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth={isFavorited ? 0 : 2}
+        className="w-4 h-4 transition-all duration-200"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+        />
+      </svg>
+      {isFavorited ? 'SaÄuvano' : 'SaÄuvaj'}
+    </button>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\[id]\ImageGallery.js =====
+'use client';
+import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
+
+export default function ImageGallery({ images = [], title }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [touchStart, setTouchStart] = useState(0);
+  const containerRef = useRef(null);
+  
+  // Filter out any null/undefined images
+  const validImages = images.filter(Boolean);
+  const currentImageUrl = validImages[currentIndex];
+
+  const closeLightbox = () => {
+    setIsOpen(false);
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleZoom = (delta) => {
+    setScale(prev => Math.min(Math.max(prev + delta, 1), 5));
+  };
+
+  const handlePrev = (e) => {
+    e?.stopPropagation();
+    setCurrentIndex(prev => (prev === 0 ? validImages.length - 1 : prev - 1));
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleNext = (e) => {
+    e?.stopPropagation();
+    setCurrentIndex(prev => (prev === validImages.length - 1 ? 0 : prev + 1));
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = (e) => {
+    if (scale > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging && scale > 1) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e) => {
+    if (isOpen) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.2 : 0.2;
+      handleZoom(delta);
+    }
+  };
+
+  const onTouchStart = (e) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const onTouchEnd = (e) => {
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+    
+    if (Math.abs(diff) > 50) { // Threshold for swipe
+      if (diff > 0) handleNext();
+      else handlePrev();
+    }
+  };
+
+  if (validImages.length === 0) {
+    return (
+      <div className="h-[200px] flex items-center justify-center text-6xl bg-gray-50 opacity-30">
+        ðŸ“¦
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="relative bg-gray-900 overflow-hidden select-none group/main">
+        {/* Main Display Area */}
+        <div 
+          className="relative w-full h-[450px] cursor-zoom-in overflow-hidden"
+          onClick={() => setIsOpen(true)}
+          onContextMenu={(e) => e.preventDefault()}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <div 
+            className="absolute inset-0 blur-2xl opacity-40 scale-110 pointer-events-none transition-all duration-700"
+            style={{ backgroundImage: `url(${currentImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+          />
+          <Image 
+            src={currentImageUrl} 
+            alt={title} 
+            fill 
+            className="object-contain relative z-10 transition-all duration-500 group-hover/main:scale-[1.01] pointer-events-none"
+            priority 
+            draggable={false}
+          />
+          
+          {/* Protection layer */}
+          <div className="absolute inset-0 z-20 bg-transparent" />
+          
+          {/* Zoom Hint */}
+          <div className="absolute inset-0 bg-black/0 group-hover/main:bg-black/10 transition-colors z-30 flex items-center justify-center">
+            <div className="bg-white/90 px-4 py-2 rounded-full text-[12px] font-semibold text-gray-800 opacity-0 group-hover/main:opacity-100 transition-opacity transform translate-y-2 group-hover/main:translate-y-0 shadow-sm pointer-events-none">
+              PoveÄ‡aj sliku ðŸ”
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Arrows (Only if multiple images) */}
+        {validImages.length > 1 && (
+          <>
+            <button 
+              onClick={handlePrev}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center transition-all opacity-0 group-hover/main:opacity-100 backdrop-blur-sm border border-white/10"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button 
+              onClick={handleNext}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center transition-all opacity-0 group-hover/main:opacity-100 backdrop-blur-sm border border-white/10"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            
+            {/* Page Indicator */}
+            <div className="absolute bottom-4 right-4 z-40 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md text-white text-[10px] font-bold border border-white/10">
+              {currentIndex + 1} / {validImages.length}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnail Bar */}
+      {validImages.length > 1 && (
+        <div className="bg-white p-3 flex gap-2 overflow-x-auto scrollbar-hide border-b border-gray-100">
+          {validImages.map((img, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              onContextMenu={(e) => e.preventDefault()}
+              className={`relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 transition-all ${currentIndex === idx ? 'ring-2 ring-[#185FA5] opacity-100 shadow-md' : 'opacity-60 hover:opacity-100'}`}
+            >
+              <Image src={img} alt={`${title} ${idx}`} fill className="object-cover pointer-events-none" draggable={false} />
+              <div className="absolute inset-0 z-10 bg-transparent" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/98 flex flex-col items-center justify-center animate-in fade-in duration-200"
+          onContextMenu={(e) => e.preventDefault()}
+          onWheel={handleWheel}
+        >
+          {/* Controls Bar */}
+          <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-[120] bg-gradient-to-b from-black/80 to-transparent">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={closeLightbox}
+                className="p-2 text-white/70 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+              </button>
+              <div className="text-white text-sm font-semibold tracking-wide truncate max-w-[200px] sm:max-w-md">{title}</div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center bg-white/10 rounded-lg p-1 border border-white/10">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleZoom(-0.5); }}
+                  className="p-2 text-white hover:bg-white/10 rounded-md transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+                <div className="w-12 text-center text-white text-[11px] font-bold">{Math.round(scale * 100)}%</div>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleZoom(0.5); }}
+                  className="p-2 text-white hover:bg-white/10 rounded-md transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                </button>
+              </div>
+              <button 
+                className="p-2 text-white hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-all"
+                onClick={closeLightbox}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          
+          {/* Main Image Container */}
+          <div 
+            ref={containerRef}
+            className={`relative w-full h-full flex items-center justify-center overflow-hidden ${scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
+            onClick={(e) => scale === 1 && closeLightbox()}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            {/* Navigation in Lightbox */}
+            {validImages.length > 1 && scale === 1 && (
+              <>
+                <button 
+                  onClick={handlePrev}
+                  className="absolute left-6 top-1/2 -translate-y-1/2 z-[130] w-14 h-14 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all border border-white/5"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <button 
+                  onClick={handleNext}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 z-[130] w-14 h-14 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all border border-white/5"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              </>
+            )}
+
+            <div 
+              className="relative transition-transform duration-200 ease-out flex items-center justify-center w-[90%] h-[80%]"
+              style={{ 
+                transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+              }}
+            >
+              <Image 
+                src={currentImageUrl} 
+                alt={title} 
+                fill 
+                className="object-contain pointer-events-none select-none"
+                draggable={false}
+                unoptimized 
+              />
+              <div className="absolute inset-0 z-[105] bg-transparent" />
+            </div>
+          </div>
+
+          {/* Bottom Info */}
+          <div className="absolute bottom-6 flex flex-col items-center gap-2">
+            <div className="text-white/60 text-[12px] font-medium tracking-widest bg-white/5 px-4 py-1 rounded-full backdrop-blur-sm">
+              {currentIndex + 1} / {validImages.length}
+            </div>
+            <div className="text-white/20 text-[10px] hidden sm:block">
+              ToÄkiÄ‡ za zumiranje â€¢ Klikni i prevuci za pomeranje
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\[id]\layout.js =====
+import { createBrowserClient } from '@supabase/ssr';
+
+export async function generateMetadata({ params }) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
+  
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (!listing) {
+    return {
+      title: 'Oglas nije pronaÄ‘en',
+    };
+  }
+
+  return {
+    title: listing.title,
+    description: listing.description ? listing.description.substring(0, 160) : `Kupite ${listing.title} na Povoljno24.rs. Cena: ${listing.price} RSD.`,
+    openGraph: {
+      title: listing.title,
+      description: listing.description ? listing.description.substring(0, 160) : `Kupite ${listing.title} na Povoljno24.rs.`,
+      images: listing.image_url ? [listing.image_url] : [],
+    },
+  };
+}
+
+export default function OglasLayout({ children }) {
+  return <>{children}</>;
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\oglas\[id]\page.js =====
+import { supabaseServer } from '../../../lib/supabase-server';
+import FavoriteButton from './FavoriteButton';
+import ImageGallery from './ImageGallery';
+import StarRating from '../../../components/StarRating';
+import ReportButton from '../../../components/ReportButton';
+import Link from 'next/link';
+import ContactForm from './ContactForm';
+
+async function getListing(id) {
+  const { data, error } = await supabaseServer
+    .from('listings')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error || !data) {
+    console.error('[getListing] id:', id, 'error:', error?.message);
+    return null;
+  }
+  return data;
+}
+
+async function getSellerProfile(userId) {
+  const [{ data: profile }, { data: ratings }] = await Promise.all([
+    supabaseServer
+      .from('profiles')
+      .select('username, verification_level, created_at, phone, phone_verified')
+      .eq('id', userId)
+      .single(),
+    supabaseServer
+      .from('ratings')
+      .select('score')
+      .eq('ratee_id', userId)
+  ]);
+  
+  const avgRating = ratings?.length > 0 
+    ? ratings.reduce((acc, r) => acc + r.score, 0) / ratings.length 
+    : 0;
+
+  return { ...profile, avgRating, reviewCount: ratings?.length || 0 };
+}
+
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const listing = await getListing(id);
+  if (!listing) {
+    return {
+      title: 'Oglas nije pronaÄ‘en | Povoljno24',
+      description: 'TraÅ¾eni oglas viÅ¡e ne postoji ili je obrisan.',
+    };
+  }
+  return {
+    title: `${listing.title} | Povoljno24`,
+    description: listing.description
+      ? listing.description.substring(0, 160)
+      : `Kupite ${listing.title} povoljno na Povoljno24.`,
+    openGraph: {
+      title: `${listing.title} - ${listing.price?.toLocaleString()} RSD u ${listing.city}`,
+      description: listing.description
+        ? listing.description.substring(0, 160)
+        : `Kupite ${listing.title} povoljno na Povoljno24. Najbolja ponuda u gradu ${listing.city}.`,
+      url: `https://povoljno24.rs/oglas/${listing.id}`,
+      siteName: 'Povoljno24',
+      images: [{ url: listing.image_url || '/default-og.png', width: 800, height: 600, alt: listing.title }],
+      locale: 'sr_RS',
+      type: 'website',
+    },
+    alternates: {
+      canonical: `https://povoljno24.rs/oglas/${listing.id}`,
+    },
+  };
+}
+
+export default async function OglasPage({ params }) {
+  const { id } = await params;
+  const listing = await getListing(id);
+
+  if (!listing) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-gray-500">Oglas nije pronaÄ‘en.</p>
+      </div>
+    );
+  }
+
+  const seller = await getSellerProfile(listing.user_id);
+
+  return (
+    <div className="flex-1 bg-[#f5f5f5]">
+      <div className="max-w-[900px] mx-auto my-8 px-6">
+        {/* Structured Data (Schema.org) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org/",
+              "@type": "Product",
+              "name": listing.title,
+              "image": listing.images || [listing.image_url],
+              "description": listing.description,
+              "brand": {
+                "@type": "Brand",
+                "name": "Povoljno24"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": `https://povoljno24.rs/oglas/${listing.id}`,
+                "priceCurrency": "RSD",
+                "price": listing.price,
+                "itemCondition": listing.condition === 'Novo' ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
+                "availability": "https://schema.org/InStock",
+                "areaServed": {
+                  "@type": "City",
+                  "name": listing.city
+                }
+              }
+            })
+          }}
+        />
+
+        {/* Breadcrumbs */}
+        <nav className="flex items-center gap-2 mb-6 text-[12px] text-gray-400 font-medium overflow-x-auto whitespace-nowrap pb-2 sm:pb-0">
+          <Link href="/" className="hover:text-[#185FA5] transition-colors">PoÄetna</Link>
+          <span className="opacity-30">/</span>
+          <Link href={`/?category=${listing.category}`} className="hover:text-[#185FA5] transition-colors capitalize">{listing.category}</Link>
+          <span className="opacity-30">/</span>
+          <Link href={`/?city=${listing.city}`} className="hover:text-[#185FA5] transition-colors">{listing.city}</Link>
+          <span className="opacity-30">/</span>
+          <span className="text-gray-600 truncate max-w-[150px]">{listing.title}</span>
+        </nav>
+
+        {/* Two-column layout on larger screens */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+
+          {/* LEFT: Listing Details */}
+          <div className="space-y-4">
+            {/* Image Section */}
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+              <ImageGallery images={listing.images || [listing.image_url]} title={listing.title} />
+
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-3 gap-4">
+                  <h1 className="text-2xl font-bold text-gray-900 leading-tight">{listing.title}</h1>
+                  <span className="text-[10px] font-semibold bg-[#EAF3DE] text-[#3B6D11] rounded-full px-2.5 py-1 shrink-0 mt-1 border border-[#d3ecc1]">
+                    âœ“ Proveren
+                  </span>
+                </div>
+
+                <div className="text-[30px] font-extrabold text-[#185FA5] mb-5">
+                  {listing.price?.toLocaleString()} RSD
+                </div>
+
+                <div className="flex flex-wrap gap-2 mb-5">
+                  <span className="text-[12px] bg-gray-50 px-3 py-1.5 rounded-lg text-gray-600 font-medium border border-gray-100">ðŸ“ {listing.city}</span>
+                  <span className="text-[12px] bg-gray-50 px-3 py-1.5 rounded-lg text-gray-600 font-medium border border-gray-100">ðŸ·ï¸ {listing.category}</span>
+                  {listing.condition && (
+                    <span className={`text-[12px] px-3 py-1.5 rounded-lg font-bold border ${listing.condition === 'Novo' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'}`}>
+                      âœ¨ {listing.condition}
+                    </span>
+                  )}
+                  <span className="text-[12px] bg-gray-50 px-3 py-1.5 rounded-lg text-gray-600 font-medium border border-gray-100">
+                    ðŸ• {new Date(listing.created_at).toLocaleDateString('sr-RS')}
+                  </span>
+                </div>
+
+                <FavoriteButton listingId={listing.id} />
+
+                <div className="border-t border-gray-100 mt-5 pt-5">
+                  <h2 className="text-sm font-semibold mb-3 text-gray-900">Opis</h2>
+                  <p className="text-[14px] text-gray-600 leading-relaxed whitespace-pre-wrap">
+                    {listing.description || 'Nema opisa.'}
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-50">
+                  <ReportButton listingId={listing.id} />
+                  <div className="text-[11px] text-gray-400">ID: {String(listing.id).substring(0, 8)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: Seller + Contact (sticky on large screens) */}
+          <div className="space-y-4 lg:sticky lg:top-24">
+
+            {/* Seller Card */}
+            {seller && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Prodavac</div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-full bg-[#E6F1FB] flex items-center justify-center text-lg font-bold text-[#185FA5] shrink-0">
+                    {seller.username ? seller.username[0].toUpperCase() : '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 text-[15px] truncate">{seller.username || 'Korisnik'}</div>
+                    <div className="flex items-center gap-2">
+                      <StarRating rating={seller.avgRating} size="sm" />
+                      <span className="text-[10px] text-gray-400">({seller.reviewCount})</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-semibold bg-[#EAF3DE] text-[#3B6D11] px-2 py-0.5 rounded-full border border-[#d3ecc1] shrink-0">
+                    âœ“ Proveren
+                  </span>
+                </div>
+                
+                {seller.phone_verified && (
+                  <div className="mb-4 p-3 bg-[#EAF3DE] rounded-xl border border-[#d3ecc1] flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-bold text-[#3B6D11] uppercase tracking-wider mb-0.5">Telefon</div>
+                      <div className="text-[14px] font-bold text-gray-900">{seller.phone}</div>
+                    </div>
+                    <div className="bg-[#3B6D11] text-white p-1 rounded-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
+                <Link
+                  href={`/prodavac/${listing.user_id}`}
+                  className="w-full text-center block text-[12px] font-semibold text-[#185FA5] bg-[#E6F1FB] hover:bg-[#d0e5f7] px-4 py-2.5 rounded-lg transition-colors"
+                >
+                  Svi oglasi prodavca â†’
+                </Link>
+              </div>
+            )}
+
+            {/* Contact Form â€” PROMINENT */}
+            <div className="bg-white rounded-2xl border-2 border-[#185FA5] shadow-md overflow-hidden">
+              <div className="bg-[#185FA5] px-5 py-3.5 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} className="w-4 h-4 shrink-0">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                </svg>
+                <h2 className="text-white font-semibold text-[14px]">Kontaktiraj prodavca</h2>
+              </div>
+              <div className="p-5">
+                <ContactForm listingId={listing.id} receiverId={listing.user_id} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\poruke\[id]\page.js =====
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { supabase } from '../../../lib/supabase';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import StarRating from '../../../components/StarRating';
+
+export default function ChatPage() {
+  const { id } = useParams();
+  const [listingId, otherUserId] = id.split('-');
+  const [user, setUser] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [listing, setListing] = useState(null);
+  const [otherUser, setOtherUser] = useState(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  // Rating state
+  const [showRatingForm, setShowRatingForm] = useState(false);
+  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [hasRated, setHasRated] = useState(false);
+
+  const messagesEndRef = useRef(null);
+  const router = useRouter();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    async function init() {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) { router.push('/login'); return; }
+      setUser(currentUser);
+
+      // Fetch Listing & Other User Info
+      const [listingRes, profileRes] = await Promise.all([
+        supabase.from('listings').select('*').eq('id', listingId).single(),
+        supabase.from('profiles').select('username').eq('id', otherUserId).single(),
+      ]);
+
+      setListing(listingRes.data);
+      setOtherUser(profileRes.data);
+
+      // Fetch Initial Messages
+      const { data: initialMessages } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('listing_id', listingId)
+        .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUser.id})`)
+        .order('created_at', { ascending: true });
+
+      setMessages(initialMessages || []);
+      
+      // Check if already rated
+      const { data: existingRating } = await supabase
+        .from('ratings')
+        .select('id')
+        .eq('rater_id', currentUser.id)
+        .eq('ratee_id', otherUserId)
+        .eq('listing_id', listingId)
+        .maybeSingle();
+      
+      if (existingRating) setHasRated(true);
+
+      setLoading(false);
+      
+      // Mark as read
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('listing_id', listingId)
+        .eq('receiver_id', currentUser.id)
+        .eq('sender_id', otherUserId)
+        .eq('is_read', false);
+    }
+
+    init();
+  }, [id, router, listingId, otherUserId]);
+
+  useEffect(() => {
+    if (!user || !listingId || !otherUserId) return;
+
+    // Subscribe to REALTIME
+    const channel = supabase
+      .channel(`chat-${id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `listing_id=eq.${listingId}`
+      }, (payload) => {
+        const newMsg = payload.new;
+        // Verify if message belongs to this conversation
+        const isFromOther = newMsg.sender_id === otherUserId && newMsg.receiver_id === user.id;
+        const isFromMe = newMsg.sender_id === user.id && newMsg.receiver_id === otherUserId;
+        
+        if (isFromOther || isFromMe) {
+          setMessages(prev => {
+            // Avoid duplicates
+            if (prev.find(m => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+          // If from other, mark as read immediately
+          if (isFromOther) {
+            supabase.from('messages').update({ is_read: true }).eq('id', newMsg.id);
+          }
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, user, listingId, otherUserId]);
+
+  useEffect(scrollToBottom, [messages]);
+
+  async function handleSendMessage(e) {
+    e.preventDefault();
+    if (!newMessage.trim() || sending) return;
+
+    setSending(true);
+    const content = newMessage.trim();
+    setNewMessage('');
+
+    const { error } = await supabase.from('messages').insert({
+      listing_id: listingId,
+      sender_id: user.id,
+      receiver_id: otherUserId,
+      content,
+      is_read: false
+    });
+
+    if (error) {
+      alert('GreÅ¡ka pri slanju poruke: ' + error.message);
+    } else {
+      // Create notification for receiver
+      await supabase.from('notifications').insert({
+        user_id: otherUserId,
+        type: 'message',
+        content: `Nova poruka od ${user.user_metadata?.username || 'korisnika'}: "${content.substring(0, 30)}${content.length > 30 ? '...' : ''}"`,
+        listing_id: listingId
+      });
+    }
+    setSending(false);
+  }
+
+  async function handleSubmitRating() {
+    if (!user) return;
+    setSubmittingRating(true);
+
+    const { error } = await supabase.from('ratings').insert({
+      rater_id: user.id,
+      ratee_id: otherUserId,
+      listing_id: listingId,
+      score: ratingScore,
+      comment: ratingComment
+    });
+
+    if (error) {
+      alert('GreÅ¡ka pri oceni: ' + error.message);
+    } else {
+      setHasRated(true);
+      setShowRatingForm(false);
+      // Optional: send a message that user has been rated
+      await supabase.from('messages').insert({
+        listing_id: listingId,
+        sender_id: user.id,
+        receiver_id: otherUserId,
+        content: `Korisnik vas je ocenio sa ${ratingScore} zvezdica.`,
+        is_read: false
+      });
+    }
+    setSubmittingRating(false);
+  }
+
+  if (loading) return (
+    <div className="flex-1 flex items-center justify-center bg-[#f5f5f5]">
+      <div className="w-8 h-8 border-2 border-[#185FA5] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+
+  return (
+    <div className="flex-1 flex flex-col bg-[#f5f5f5] h-[calc(100vh-64px)]">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
+        <Link href="/poruke" className="p-2 -ml-2 text-gray-400 hover:text-[#185FA5] transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+        </Link>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-gray-900 truncate">{otherUser?.username || 'Korisnik'}</div>
+          <Link href={`/oglas/${listingId}`} className="text-[12px] text-[#185FA5] font-medium truncate block hover:underline">
+            Oglas: {listing?.title}
+          </Link>
+        </div>
+        
+        {listing?.user_id === otherUserId && !hasRated && (
+          <button 
+            onClick={() => setShowRatingForm(true)}
+            className="text-[11px] font-bold text-white bg-[#1D9E75] hover:bg-[#157a5a] px-3 py-1.5 rounded-lg transition-colors shrink-0"
+          >
+            Oceni prodavca
+          </button>
+        )}
+      </div>
+
+      {/* Rating Form Modal */}
+      {showRatingForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-[400px] shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Oceni prodavca</h3>
+            <div className="mb-4">
+              <label className="text-[13px] text-gray-500 block mb-2">VaÅ¡a ocena</label>
+              <StarRating rating={ratingScore} onRate={setRatingScore} size="lg" interactive={true} />
+            </div>
+            <div className="mb-6">
+              <label className="text-[13px] text-gray-500 block mb-2">Komentar (opciono)</label>
+              <textarea 
+                value={ratingComment}
+                onChange={e => setRatingComment(e.target.value)}
+                placeholder="Kakvo je bilo iskustvo sa ovim prodavcem?"
+                rows={3}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75] transition-all resize-none"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowRatingForm(false)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                OtkaÅ¾i
+              </button>
+              <button 
+                onClick={handleSubmitRating}
+                disabled={submittingRating}
+                className="flex-1 py-2.5 rounded-xl bg-[#1D9E75] text-white text-sm font-semibold hover:bg-[#157a5a] transition-colors disabled:opacity-50"
+              >
+                {submittingRating ? 'Slanje...' : 'PoÅ¡alji ocenu'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {messages.map((msg, idx) => {
+          const isMe = msg.sender_id === user.id;
+          return (
+            <div key={msg.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 text-[14px] shadow-sm
+                ${isMe 
+                  ? 'bg-[#185FA5] text-white rounded-tr-none' 
+                  : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'}`}>
+                {msg.content}
+                <div className={`text-[10px] mt-1 opacity-60 text-right ${isMe ? 'text-white' : 'text-gray-400'}`}>
+                  {new Date(msg.created_at).toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="bg-white border-t border-gray-200 p-4 pb-8 sm:pb-4">
+        <form onSubmit={handleSendMessage} className="max-w-[700px] mx-auto flex gap-2">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={e => setNewMessage(e.target.value)}
+            placeholder="NapiÅ¡ite poruku..."
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] transition-all"
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim() || sending}
+            className={`p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center
+              ${!newMessage.trim() || sending 
+                ? 'bg-gray-100 text-gray-400' 
+                : 'bg-[#185FA5] text-white hover:bg-[#0C447C] active:scale-95'}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform rotate-90" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\poruke\page.js =====
+'use client';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+export default function PorukePage() {
+  const [user, setUser] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function loadConversations() {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) { router.push('/login'); return; }
+      setUser(currentUser);
+
+      // Fetch all messages involving the user
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching messages:', error);
+      } else if (messages) {
+        // Manually fetch related profiles and listings
+        const profileIds = [...new Set(messages.flatMap(m => [m.sender_id, m.receiver_id]))];
+        const listingIds = [...new Set(messages.map(m => m.listing_id))];
+
+        const [{ data: profilesData }, { data: listingsData }] = await Promise.all([
+          supabase.from('profiles').select('id, username').in('id', profileIds),
+          supabase.from('listings').select('id, title, image_url').in('id', listingIds)
+        ]);
+
+        const profilesMap = (profilesData || []).reduce((acc, p) => ({ ...acc, [p.id]: p.username }), {});
+        const listingsMap = (listingsData || []).reduce((acc, l) => ({ ...acc, [l.id]: l }), {});
+
+        // Group messages into conversations
+        const groups = {};
+        messages.forEach(msg => {
+          const otherId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+          const convId = `${msg.listing_id}-${otherId}`;
+          const listing = listingsMap[msg.listing_id] || {};
+          
+          if (!groups[convId]) {
+            groups[convId] = {
+              id: convId,
+              listing_id: msg.listing_id,
+              listing_title: listing.title || 'Nepoznat oglas',
+              listing_image: listing.image_url,
+              other_id: otherId,
+              other_username: profilesMap[otherId] || 'Korisnik',
+              last_message: msg.content,
+              last_message_at: msg.created_at,
+              unread_count: 0,
+              messages: []
+            };
+          }
+          
+          if (!msg.is_read && msg.receiver_id === currentUser.id) {
+            groups[convId].unread_count++;
+          }
+          groups[convId].messages.push(msg);
+        });
+
+        setConversations(Object.values(groups).sort((a, b) => 
+          new Date(b.last_message_at) - new Date(a.last_message_at)
+        ));
+      }
+
+      setLoading(false);
+    }
+    loadConversations();
+  }, [router]);
+
+  if (loading) return (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-8 h-8 border-2 border-[#185FA5] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p className="text-[13px] text-gray-500">UÄitavanje razgovora...</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
+      <div className="max-w-[700px] mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Poruke</h1>
+            <p className="text-[13px] text-gray-500 mt-0.5">
+              VaÅ¡i razgovori sa kupcima i prodavcima
+            </p>
+          </div>
+          <Link
+            href="/profil"
+            className="text-sm text-gray-500 hover:text-[#185FA5] transition-colors"
+          >
+            â† Profil
+          </Link>
+        </div>
+
+        {/* Conversations List */}
+        {conversations.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-100 p-14 text-center shadow-sm">
+            <div className="text-4xl mb-3 opacity-30">ðŸ“­</div>
+            <p className="text-[15px] font-medium text-gray-700 mb-1">
+              Nema zapoÄetih razgovora
+            </p>
+            <p className="text-sm text-gray-400 mb-6">
+              PronaÄ‘i oglas koji te zanima i poÅ¡alji poruku prodavcu.
+            </p>
+            <Link
+              href="/"
+              className="inline-block bg-[#185FA5] hover:bg-[#0C447C] text-white px-6 py-2.5 rounded-lg text-[13px] font-semibold transition-colors"
+            >
+              Pregledaj oglase
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {conversations.map(conv => (
+              <Link 
+                key={conv.id}
+                href={`/poruke/${conv.id}`}
+                className="block group"
+              >
+                <div className={`bg-white rounded-xl p-4 border transition-all group-hover:shadow-md group-hover:border-[#185FA5] flex gap-4 items-center
+                  ${conv.unread_count > 0 ? 'border-[#185FA5] shadow-sm' : 'border-gray-200'}`}>
+                  
+                  {/* Listing Image Thumbnail */}
+                  <div className="w-14 h-14 rounded-lg bg-gray-900 overflow-hidden shrink-0 relative flex items-center justify-center border border-gray-100 shadow-sm">
+                    {conv.listing_image ? (
+                      <img src={conv.listing_image} alt={conv.listing_title} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xl opacity-30">ðŸ“¦</span>
+                    )}
+                    {conv.unread_count > 0 && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#E24B4A] rounded-full border-2 border-white"></div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <div className="font-semibold text-gray-900 text-[15px] truncate">
+                        {conv.other_username || 'Korisnik'}
+                      </div>
+                      <div className="text-[11px] text-gray-400 shrink-0">
+                        {new Date(conv.last_message_at).toLocaleDateString('sr-RS', {
+                          day: '2-digit', month: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-[13px] text-[#185FA5] font-medium mb-1 truncate">
+                      {conv.listing_title}
+                    </div>
+                    <p className={`text-[13px] truncate ${conv.unread_count > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
+                      {conv.last_message}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\postoglas\page.js =====
+'use client';
+import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
+import { useRouter } from 'next/navigation';
+import imageCompression from 'browser-image-compression';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { applyWatermark } from '../../lib/watermark';
+import Image from 'next/image';
+
+const oglasSchema = z.object({
+  title: z.string().min(3, 'Naslov mora imati najmanje 3 karaktera.'),
+  description: z.string().min(10, 'Opis mora imati najmanje 10 karaktera.'),
+  price: z.preprocess((val) => Number(val), z.number().positive('Cena mora biti veÄ‡a od 0.')),
+  city: z.string().min(2, 'Unesite validan grad.'),
+  category: z.string().min(1, 'Izaberite kategoriju.'),
+  condition: z.string().min(1, 'Izaberite stanje predmeta.'),
+});
+
+export default function PostOglas() {
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [previews, setPreviews] = useState([]);
+  const router = useRouter();
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(oglasSchema)
+  });
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + imageFiles.length > 10) {
+      alert('Maksimalno 10 slika je dozvoljeno.');
+      return;
+    }
+    setImageFiles(prev => [...prev, ...files]);
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeImage = (index) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  async function onSubmit(data) {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      setMessage('Morate biti prijavljeni da biste postavili oglas.');
+      setLoading(false);
+      return;
+    }
+
+    const uploadedUrls = [];
+
+    if (imageFiles.length > 0) {
+      try {
+        for (let i = 0; i < imageFiles.length; i++) {
+          const file = imageFiles[i];
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          };
+          const compressedFile = await imageCompression(file, options);
+
+          // Apply Watermark
+          const watermarkedBlob = await applyWatermark(compressedFile);
+          
+          // Convert Blob back to File for naming
+          const finalFile = new File([watermarkedBlob], compressedFile.name, { type: compressedFile.type });
+
+          const fileExt = finalFile.name.split('.').pop() || 'jpg';
+          // eslint-disable-next-line react-hooks/purity
+          const fileName = `${user.id}-${Date.now()}-${i}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('listing-images')
+            .upload(fileName, finalFile);
+            
+          if (uploadError) throw uploadError;
+          
+          const { data: urlData } = supabase.storage
+            .from('listing-images')
+            .getPublicUrl(fileName);
+          
+          uploadedUrls.push(urlData.publicUrl);
+        }
+      } catch (error) {
+        setMessage('GreÅ¡ka pri obradi slika: ' + error.message);
+        setLoading(false);
+        return;
+      }
+    }
+
+    const { error } = await supabase.from('listings').insert({
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      category: data.category,
+      city: data.city,
+      // condition: data.condition, // OMITTED to avoid schema cache error
+      user_id: user.id,
+      is_verified: false,
+      image_url: uploadedUrls[0] || null,
+      images: uploadedUrls,
+    });
+
+    if (error) {
+      setMessage('GreÅ¡ka: ' + error.message);
+    } else {
+      setMessage('Oglas je uspeÅ¡no postavljen!');
+      setTimeout(() => router.push('/profil'), 1500);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
+      <div className="max-w-[600px] mx-auto bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+        <h1 className="text-xl font-semibold mb-6 text-gray-900">Postavi oglas</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Naslov oglasa</label>
+            <input 
+              type="text" 
+              {...register('title')}
+              placeholder="npr. iPhone 14 Pro, 256GB"
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+            />
+            {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Opis</label>
+            <textarea 
+              {...register('description')}
+              placeholder="OpiÅ¡i Å¡ta prodajeÅ¡..."
+              rows={4} 
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all resize-y ${errors.description ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+            />
+            {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Cena (RSD)</label>
+              <input 
+                type="number" 
+                {...register('price')}
+                placeholder="npr. 15000"
+                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.price ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+              />
+              {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
+            </div>
+            <div>
+              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Grad</label>
+              <input 
+                type="text" 
+                {...register('city')}
+                placeholder="npr. Beograd"
+                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.city ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+              />
+              {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city.message}</p>}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Kategorija</label>
+            <select 
+              {...register('category')}
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all bg-white ${errors.category ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            >
+              <option value="">Izaberi kategoriju</option>
+              <option value="elektronika">Elektronika</option>
+              <option value="automobili">Automobili</option>
+              <option value="nekretnine">Nekretnine</option>
+              <option value="moda">Moda</option>
+              <option value="namestaj">NameÅ¡taj</option>
+              <option value="gaming">Gaming</option>
+              <option value="alati">Alati</option>
+              <option value="knjige">Knjige</option>
+            </select>
+            {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Stanje predmeta</label>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="cursor-pointer">
+                <input type="radio" value="Novo" {...register('condition')} className="peer hidden" />
+                <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
+                  Novo
+                </div>
+              </label>
+              <label className="cursor-pointer">
+                <input type="radio" value="Polovno" {...register('condition')} className="peer hidden" />
+                <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
+                  Polovno
+                </div>
+              </label>
+            </div>
+            {errors.condition && <p className="mt-1 text-xs text-red-500">{errors.condition.message}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Fotografije (max 10)</label>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
+              {previews.map((src, idx) => (
+                <div 
+                  key={idx} 
+                  className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group select-none"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <Image src={src} alt="Preview" fill className="object-cover pointer-events-none" draggable={false} />
+                  <div className="absolute inset-0 z-10 bg-transparent" />
+                  <button 
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
+                  >
+                    âœ•
+                  </button>
+                </div>
+              ))}
+              {previews.length < 10 && (
+                <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#185FA5] hover:bg-[#E6F1FB] transition-all text-gray-400 hover:text-[#185FA5]">
+                  <span className="text-2xl font-light">+</span>
+                  <span className="text-[10px] font-semibold uppercase">Dodaj</span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden" 
+                  />
+                </label>
+              )}
+            </div>
+            <p className="text-[11px] text-gray-500 italic">PreporuÄujemo kvalitetne fotografije iz viÅ¡e uglova.</p>
+          </div>
+
+          <button 
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+          >
+            {loading ? 'Postavljam...' : 'Postavi oglas'}
+          </button>
+        </form>
+
+        {message && (
+          <p className={`mt-4 text-[13px] text-center py-2 rounded-md ${message.includes('uspeÅ¡no') ? 'text-[#3B6D11] bg-[#EAF3DE]' : 'text-[#E24B4A] bg-red-50'}`}>
+            {message}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\prodavac\[id]\page.js =====
+import { supabaseServer } from '../../../lib/supabase-server';
+import { notFound } from 'next/navigation';
+import StarRating from '../../../components/StarRating';
+import ReviewList from '../../../components/ReviewList';
+import Link from 'next/link';
+import Image from 'next/image';
+
+async function getSellerData(id) {
+  const [{ data: profile, error: profileError }, { data: listings, error: listingsError }, { data: ratings }] = await Promise.all([
+    supabaseServer
+      .from('profiles')
+      .select('id, username, full_name, bio, avatar_url, created_at, phone, phone_verified, verification_level')
+      .eq('id', id)
+      .single(),
+    supabaseServer
+      .from('listings')
+      .select('id, title, price, city, category, image_url, created_at, user_id')
+      .eq('user_id', id)
+      .order('created_at', { ascending: false }),
+    supabaseServer
+      .from('ratings')
+      .select('score')
+      .eq('ratee_id', id)
+  ]);
+
+  if (profileError) console.error('[getSellerData] profile error:', profileError.message);
+  if (listingsError) console.error('[getSellerData] listings error:', listingsError.message);
+
+  const avgRating = ratings?.length > 0 
+    ? ratings.reduce((acc, r) => acc + r.score, 0) / ratings.length 
+    : 0;
+
+  return { 
+    profile, 
+    listings: listings || [], 
+    avgRating, 
+    reviewCount: ratings?.length || 0 
+  };
+}
+
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const { profile } = await getSellerData(id);
+  const name = profile?.username || 'Prodavac';
+  return {
+    title: `${name} | Povoljno24`,
+    description: `Pogledajte sve aktivne oglase prodavca ${name} na Povoljno24.`,
+  };
+}
+
+export default async function SellerPage({ params }) {
+  const { id } = await params;
+  const { profile, listings, avgRating, reviewCount } = await getSellerData(id);
+
+  if (!profile) notFound();
+
+  const joinYear = profile.created_at
+    ? new Date(profile.created_at).getFullYear()
+    : 'â€”';
+
+  return (
+    <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
+      <div className="max-w-[900px] mx-auto">
+        <Link
+          href="/"
+          className="inline-block mb-6 text-sm text-gray-600 hover:text-[#185FA5] transition-colors"
+        >
+          â† Nazad na oglase
+        </Link>
+
+        {/* Seller Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-8 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          <div className="w-20 h-20 rounded-full bg-[#E6F1FB] overflow-hidden flex items-center justify-center text-3xl font-bold text-[#185FA5] shrink-0 border-2 border-white shadow relative">
+            {profile.avatar_url ? (
+              <Image src={profile.avatar_url} alt={profile.username} fill className="object-cover" />
+            ) : (
+              profile.username ? profile.username[0].toUpperCase() : '?'
+            )}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+              {profile.full_name || profile.username || 'Korisnik'}
+              {profile.verification_level > 2 && (
+                <span className="text-[#1D9E75] text-sm" title="Proveren Älan">ðŸ›¡ï¸</span>
+              )}
+            </h1>
+            {profile.bio && (
+              <p className="text-sm text-gray-600 mt-1 mb-2 leading-relaxed italic">
+                &quot;{profile.bio}&quot;
+              </p>
+            )}
+            <div className="flex flex-wrap gap-4 mt-3">
+              <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                <span className="text-[#1D9E75] font-bold text-base">
+                  {profile.verification_level || 1}
+                </span>
+                <span>Nivo verifikacije</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                <span className="font-semibold text-gray-800">{listings.length}</span>
+                <span>aktivnih oglasa</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                <span>ÄŒlan od</span>
+                <span className="font-semibold text-gray-800">{joinYear}.</span>
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-2">
+              <StarRating rating={avgRating} size="sm" />
+              <span className="text-[12px] text-gray-500">({reviewCount} ocena)</span>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold bg-[#EAF3DE] text-[#3B6D11] px-2.5 py-1 rounded-full border border-[#d3ecc1] shrink-0">
+            âœ“ Proveren prodavac
+          </span>
+          {profile.phone_verified && (
+            <span className="text-[11px] font-semibold bg-[#E6F1FB] text-[#185FA5] px-2.5 py-1 rounded-full border border-[#d0e5f7] shrink-0">
+              ðŸ“± Telefon verifikovan
+            </span>
+          )}
+        </div>
+
+        {/* Listings Grid */}
+        <h2 className="text-base font-semibold text-gray-900 mb-4">
+          Oglasi prodavca
+        </h2>
+        {listings.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+            <div className="text-4xl mb-3 opacity-40">ðŸ“¦</div>
+            <p className="text-gray-500 text-sm">Ovaj prodavac nema aktivnih oglasa.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
+            {listings.map(listing => (
+              <Link key={listing.id} href={`/oglas/${listing.id}`} className="block group h-full">
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-[#185FA5] transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1">
+                  <div 
+                    className="h-[160px] bg-gray-900 relative flex items-center justify-center overflow-hidden shrink-0 border-b border-gray-100 select-none"
+                  >
+                    {listing.image_url ? (
+                      <>
+                        {/* Blurred background */}
+                        <div 
+                          className="absolute inset-0 blur-md opacity-40 scale-110 pointer-events-none"
+                          style={{ backgroundImage: `url(${listing.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                        />
+                        <Image 
+                          src={listing.image_url} 
+                          alt={listing.title} 
+                          fill 
+                          className="object-contain relative z-10 group-hover:scale-105 transition-transform duration-500 pointer-events-none" 
+                          draggable={false}
+                        />
+                        {/* Invisible protection layer */}
+                        <div className="absolute inset-0 z-20 bg-transparent" />
+                      </>
+                    ) : (
+                      <span className="text-3xl opacity-30 relative z-10 text-white">ðŸ“¦</span>
+                    )}
+                  </div>
+                  <div className="p-3.5 flex flex-col flex-1">
+                    <div className="text-[14px] font-medium text-gray-800 mb-1 line-clamp-2 leading-snug group-hover:text-[#185FA5] transition-colors">
+                      {listing.title}
+                    </div>
+                    <div className="text-[16px] font-bold text-[#185FA5] mt-auto pt-2">
+                      {listing.price?.toLocaleString()} RSD
+                    </div>
+                    <div className="text-[11px] text-gray-500 mt-2 pt-2 border-t border-gray-50 flex items-center gap-1">
+                      ðŸ“ {listing.city}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Reviews Section */}
+        <div className="mt-12">
+          <h2 className="text-base font-semibold text-gray-900 mb-4">
+            Utisci kupaca
+          </h2>
+          <ReviewList userId={id} />
+        </div>
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\profil\page.js =====
+"use client";
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabase';
+import Image from 'next/image';
+import Link from 'next/link';
+import PhoneVerification from '../../components/PhoneVerification';
+
+export default function Profil() {
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [listings, setListings] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [activeTab, setActiveTab] = useState('listings');
+  const [updating, setUpdating] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({ username: '', full_name: '', bio: '' });
+  const router = useRouter();
+  useEffect(() => {
+    async function loadProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setUser(user);
+
+      const [{ data: profileData }, { data: listingsData }, { data: messagesData }, { data: favoritesData }] = await Promise.all([
+        supabase.from('profiles').select('id, username, full_name, bio, avatar_url, phone, phone_verified, verification_level').eq('id', user.id).single(),
+        supabase.from('listings').select('id, title, price, city, category, image_url, created_at, user_id, condition, views, last_bumped_at').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('messages').select('id, sender_id, receiver_id, content, created_at, is_read, listing_id').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false }),
+        supabase.from('favorites').select('listing_id, listings(id, title, price, image_url, city)').eq('user_id', user.id).order('created_at', { ascending: false }),
+      ]);
+
+      setProfile(profileData);
+      if (profileData) {
+        setFormData({
+          username: profileData.username || '',
+          full_name: profileData.full_name || '',
+          phone: profileData.phone || '',
+          bio: profileData.bio || ''
+        });
+      }
+
+      setListings(listingsData || []);
+      
+      setMessages(messagesData || []);
+
+      const favData = favoritesData || [];
+      const formattedFavs = favData.map(f => ({
+        id: f.listing_id,
+        ...f.listings
+      }));
+      setFavorites(formattedFavs);
+
+      // Mark messages as read
+      const unreadIds = (messagesData || []).filter(m => !m.is_read && m.receiver_id === user.id).map(m => m.id);
+      if (unreadIds.length > 0) {
+        await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
+      }
+
+      setLoading(false);
+    }
+    loadProfile();
+  }, []);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push('/');
+  }
+
+  async function handleDeleteListing(id) {
+    if (!confirm('Da li ste sigurni da Å¾elite da obriÅ¡ete ovaj oglas?')) return;
+    setListings(listings.filter(l => l.id !== id));
+    const { error } = await supabase.from('listings').delete().eq('id', id);
+    if (error) {
+      alert('GreÅ¡ka pri brisanju: ' + error.message);
+      window.location.reload();
+    }
+  }
+
+  async function handleBumpListing(id) {
+    const listing = listings.find(l => l.id === id);
+    const lastBump = listing.last_bumped_at || listing.created_at;
+    const hoursSinceBump = (new Date() - new Date(lastBump)) / (1000 * 60 * 60);
+
+    if (hoursSinceBump < 24) {
+      const remainingHours = Math.ceil(24 - hoursSinceBump);
+      alert(`Ovaj oglas moÅ¾ete ponovo obnoviti za ${remainingHours}h.`);
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from('listings')
+      .update({
+        created_at: now,
+        last_bumped_at: now
+      })
+      .eq('id', id);
+
+    if (error) {
+      alert('GreÅ¡ka pri obnavljanju: ' + error.message);
+    } else {
+      const updatedListings = listings.map(l =>
+        l.id === id ? { ...l, created_at: now, last_bumped_at: now } : l
+      ).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      setListings(updatedListings);
+      alert('Oglas je uspeÅ¡no obnovljen i pomeren na vrh!');
+    }
+  }
+
+  async function handleUpdateProfile(e) {
+    e.preventDefault();
+    setUpdating(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        username: formData.username,
+        full_name: formData.full_name,
+        bio: formData.bio,
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      alert('GreÅ¡ka pri aÅ¾uriranju: ' + error.message);
+    } else {
+      setProfile(prev => ({ ...prev, ...formData }));
+      alert('Profil je uspeÅ¡no aÅ¾uriran!');
+    }
+    setUpdating(false);
+  }
+
+  async function handleAvatarUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUpdating(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const avatarUrl = urlData.publicUrl;
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => ({ ...prev, avatar_url: avatarUrl }));
+      alert('Slika profila je uspeÅ¡no promenjena!');
+    } catch (error) {
+      alert('GreÅ¡ka pri uploadu slike: ' + error.message);
+    }
+    setUpdating(false);
+  }
+
+  async function handlePasswordReset() {
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) alert(error.message);
+    else alert('Link za resetovanje lozinke je poslat na vaÅ¡ email.');
+  }
+
+  const unreadCount = messages.filter(m => !m.is_read).length;
+
+  const tabs = [
+    { key: 'listings', label: 'Moji oglasi', count: listings.length },
+    { key: 'favorites', label: 'SaÄuvano', count: favorites.length },
+    { key: 'messages', label: 'Poruke', count: unreadCount || messages.length },
+    { key: 'settings', label: 'PodeÅ¡avanja', count: 0 },
+  ];
+
+  if (loading) return (
+    <div className="flex-1 flex items-center justify-center">
+      <p className="text-gray-500">UÄitavanje...</p>
+    </div>
+  );
+
+  return (
+    <div className="flex-1 bg-[#f5f5f5]">
+      <div className="max-w-[700px] mx-auto my-8 px-6">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-600 bg-transparent border border-gray-300 px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+          >
+            Odjavi se
+          </button>
+        </div>
+
+        {/* Profile Header */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6 shadow-sm">
+          <div className="flex items-center gap-5 mb-6">
+            <div className="relative group">
+              <div className="w-16 h-16 rounded-full bg-[#E6F1FB] overflow-hidden flex items-center justify-center text-2xl font-semibold text-[#185FA5] shrink-0 border border-gray-100">
+                {profile?.avatar_url ? (
+                  <Image src={profile.avatar_url} alt="Avatar" fill className="object-cover" />
+                ) : (
+                  profile?.username ? profile.username[0].toUpperCase() : user?.email[0].toUpperCase()
+                )}
+              </div>
+              <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <span className="text-[10px] text-white font-bold">PROMENI</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={updating} />
+              </label>
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                {profile?.full_name || profile?.username || 'Korisnik'}
+                {profile?.verification_level > 2 && (
+                  <span className="text-[#1D9E75] text-sm">ðŸ›¡ï¸</span>
+                )}
+              </h1>
+              <p className="text-[13px] text-gray-500">{user?.email}</p>
+              {profile?.bio && <p className="text-[12px] text-gray-600 mt-1 italic line-clamp-1">&quot;{profile.bio}&quot;</p>}
+              {profile?.phone_verified && (
+                <div className="mt-2 flex items-center gap-1.5 text-[12px] font-semibold text-[#1D9E75] bg-[#EAF3DE] px-2 py-0.5 rounded-md border border-[#d3ecc1] w-fit">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  {profile.phone}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-semibold text-[#185FA5]">{listings.length}</div>
+              <div className="text-[12px] text-gray-600 mt-1">Aktivnih oglasa</div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-semibold text-[#1D9E75]">
+                {profile?.verification_level || 1}
+              </div>
+              <div className="text-[12px] text-gray-600 mt-1">Nivo verifikacije</div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-semibold text-gray-900">
+                {new Date(user?.created_at).getFullYear()}
+              </div>
+              <div className="text-[12px] text-gray-600 mt-1">ÄŒlan od</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1 mb-5 shadow-sm">
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-[13px] font-semibold transition-all cursor-pointer border-none
+                ${activeTab === tab.key
+                  ? 'bg-[#185FA5] text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center
+                  ${activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab: My Listings */}
+        {activeTab === 'listings' && (
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-base font-semibold text-gray-900">Moji oglasi</h2>
+              <Link
+                href="/postoglas"
+                className="text-[12px] font-semibold text-white bg-[#185FA5] hover:bg-[#0C447C] px-4 py-2 rounded-lg transition-colors"
+              >
+                + Novi oglas
+              </Link>
+            </div>
+            {listings.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
+                <p className="text-gray-500 text-sm mb-4">JoÅ¡ nemaÅ¡ aktivnih oglasa.</p>
+                <Link href="/postoglas" className="inline-block bg-[#185FA5] hover:bg-[#0C447C] text-white px-5 py-2.5 rounded-lg text-[13px] transition-colors font-medium">
+                  Postavi prvi oglas
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {listings.map(listing => (
+                  <div key={listing.id} className="bg-white rounded-xl border border-gray-200 p-4 flex gap-4 items-center hover:shadow-md transition-all group">
+                    <Link
+                      href={`/oglas/${listing.id}`}
+                      className="w-16 h-16 rounded-lg bg-gray-900 overflow-hidden shrink-0 relative flex items-center justify-center border border-gray-100 shadow-sm group-hover:border-[#185FA5] transition-colors select-none"
+                      onContextMenu={(e) => e.preventDefault()}
+                    >
+                      {listing.image_url ? (
+                        <>
+                          <Image
+                            src={listing.image_url}
+                            alt={listing.title}
+                            fill
+                            className="object-contain pointer-events-none"
+                            draggable={false}
+                          />
+                          {/* Invisible protection layer */}
+                          <div className="absolute inset-0 z-10 bg-transparent" />
+                        </>
+                      ) : (
+                        <span className="text-2xl opacity-30 text-white">ðŸ“¦</span>
+                      )}
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/oglas/${listing.id}`} className="text-sm font-semibold text-gray-900 mb-1 truncate block hover:text-[#185FA5] transition-colors">
+                        {listing.title}
+                      </Link>
+                      <div className="text-[13px] text-[#185FA5] font-semibold">{listing.price?.toLocaleString()} RSD</div>
+                      <div className="text-[11px] text-gray-500 mt-0.5 truncate">{listing.city} Â· {listing.category}</div>
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleBumpListing(listing.id)}
+                        className="text-[11px] text-[#1D9E75] bg-[#EAF3DE] hover:bg-[#d3ecc1] px-3 py-1.5 rounded-md font-bold text-center transition-colors border border-[#d3ecc1]"
+                      >
+                        ðŸš€ Obnovi
+                      </button>
+                      <Link href={`/oglas/edit/${listing.id}`} className="text-[11px] text-[#185FA5] bg-[#E6F1FB] hover:bg-[#d0e5f7] px-3 py-1.5 rounded-md font-medium text-center transition-colors">
+                        Izmeni
+                      </Link>
+                      <button onClick={() => handleDeleteListing(listing.id)} className="text-[11px] text-[#E24B4A] bg-[#fdf0f0] hover:bg-[#fbdada] px-3 py-1.5 rounded-md font-medium text-center transition-colors cursor-pointer border-none outline-none">
+                        ObriÅ¡i
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Tab: Favorites */}
+        {activeTab === 'favorites' && (
+          <>
+            <h2 className="text-base font-semibold mb-4 text-gray-900">SaÄuvani oglasi</h2>
+            {favorites.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
+                <div className="text-4xl mb-3 opacity-30">ðŸ¤</div>
+                <p className="text-gray-500 text-sm mb-4">Nisi saÄuvao/la nijedan oglas.</p>
+                <Link href="/" className="inline-block bg-[#185FA5] hover:bg-[#0C447C] text-white px-5 py-2.5 rounded-lg text-[13px] transition-colors font-medium">
+                  Pregledaj oglase
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {favorites.map(listing => (
+                  <div key={listing.id} className="bg-white rounded-xl border border-gray-200 p-4 flex gap-4 items-center hover:shadow-md transition-all group">
+                    <Link href={`/oglas/${listing.id}`} className="w-16 h-16 rounded-lg bg-gray-900 overflow-hidden shrink-0 relative flex items-center justify-center border border-gray-100 shadow-sm group-hover:border-[#185FA5] transition-colors">
+                      {listing.image_url ? (
+                        <Image src={listing.image_url} alt={listing.title} fill className="object-contain" />
+                      ) : (
+                        <span className="text-2xl opacity-30 text-white">ðŸ“¦</span>
+                      )}
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/oglas/${listing.id}`} className="text-sm font-semibold text-gray-900 mb-1 truncate block hover:text-[#185FA5] transition-colors">
+                        {listing.title}
+                      </Link>
+                      <div className="text-[13px] text-[#185FA5] font-semibold">{listing.price?.toLocaleString()} RSD</div>
+                      <div className="text-[11px] text-gray-500 mt-0.5 truncate">ðŸ“ {listing.city} Â· {listing.category}</div>
+                    </div>
+                    <Link
+                      href={`/oglas/${listing.id}`}
+                      className="shrink-0 text-[11px] text-[#185FA5] bg-[#E6F1FB] hover:bg-[#d0e5f7] px-3 py-1.5 rounded-md font-medium transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      Pogledaj
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Tab: Messages */}
+        {activeTab === 'messages' && (
+          <>
+            <h2 className="text-base font-semibold mb-4 text-gray-900">Poruke</h2>
+            <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center shadow-sm">
+              <div className="text-4xl mb-3 opacity-30">ðŸ’¬</div>
+              <p className="text-gray-700 font-medium mb-1">Inbox poruka</p>
+              <p className="text-sm text-gray-500 mb-5">
+                Pregledaj sve primljene i poslate poruke na jednom mestu.
+              </p>
+              <Link
+                href="/poruke"
+                className="inline-block bg-[#185FA5] hover:bg-[#0C447C] text-white px-6 py-2.5 rounded-lg text-[13px] font-semibold transition-colors"
+              >
+                Otvori inbox â†’
+              </Link>
+            </div>
+          </>
+        )}
+
+        {/* Tab: Settings */}
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+              <h2 className="text-base font-semibold text-gray-900 mb-6">PodeÅ¡avanja profila</h2>
+
+              <form onSubmit={handleUpdateProfile} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">KorisniÄko ime</label>
+                    <input
+                      type="text"
+                      value={formData.username}
+                      onChange={e => setFormData({ ...formData, username: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-[#185FA5] transition-all"
+                      placeholder="Npr. marko123"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Ime i Prezime</label>
+                    <input
+                      type="text"
+                      value={formData.full_name}
+                      onChange={e => setFormData({ ...formData, full_name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-[#185FA5] transition-all"
+                      placeholder="Marko MarkoviÄ‡"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Biografija (Bio)</label>
+                  <textarea
+                    value={formData.bio}
+                    onChange={e => setFormData({ ...formData, bio: e.target.value })}
+                    rows={3}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 text-sm outline-none focus:border-[#185FA5] transition-all resize-none"
+                    placeholder="Reci neÅ¡to o sebi kupcima..."
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="bg-[#185FA5] hover:bg-[#0C447C] text-white px-8 py-2.5 rounded-lg text-[13px] font-semibold transition-all disabled:bg-gray-300"
+                >
+                  {updating ? 'ÄŒuvanje...' : 'SaÄuvaj izmene'}
+                </button>
+              </form>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+              <h3 className="text-base font-semibold text-gray-900 mb-6">Sigurnost i Verifikacija</h3>
+
+              <div className="space-y-6">
+                {profile?.phone_verified ? (
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div>
+                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Broj telefona</div>
+                      <div className="text-[15px] font-bold text-gray-900">{profile.phone}</div>
+                    </div>
+                    <div className="bg-[#EAF3DE] text-[#3B6D11] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d3ecc1]">
+                      VERIFIKOVAN
+                    </div>
+                  </div>
+                ) : (
+                  <PhoneVerification onVerified={(phone) => setProfile(prev => ({ ...prev, phone, phone_verified: true }))} />
+                )}
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <div>
+                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Lozinka</div>
+                    <div className="text-[13px] text-gray-600">Poslednji put promenjena: Nedavno</div>
+                  </div>
+                  <button
+                    onClick={handlePasswordReset}
+                    className="text-[12px] font-bold text-[#185FA5] hover:underline"
+                  >
+                    Promeni lozinku â†’
+                  </button>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
+                  <button
+                    onClick={handleLogout}
+                    className="text-[13px] text-red-500 font-semibold hover:bg-red-50 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Odjavi se sa svih ureÄ‘aja
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\register\page.js =====
+'use client';
+import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const registerSchema = z.object({
+  username: z.string().min(3, 'KorisniÄko ime mora imati najmanje 3 karaktera.'),
+  email: z.string().email('Unesite validnu email adresu.'),
+  password: z.string().min(6, 'Lozinka mora imati najmanje 6 karaktera.'),
+});
+
+export default function Register() {
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(registerSchema)
+  });
+
+  async function onSubmit(data) {
+    setLoading(true);
+    const { data: authData, error } = await supabase.auth.signUp({ 
+      email: data.email, 
+      password: data.password 
+    });
+    
+    if (error) {
+      setMessage(error.message);
+    } else if (authData.user) {
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: authData.user.id,
+        username: data.username,
+        email: data.email,
+      });
+      if (profileError) {
+        setMessage('GreÅ¡ka pri kreiranju profila: ' + profileError.message);
+      } else {
+        setMessage('UspeÅ¡no! Proveri email da potvrdiÅ¡ nalog.');
+      }
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="flex-1 flex items-center justify-center p-6 bg-[#f5f5f5]">
+      <div className="bg-white p-8 rounded-2xl border border-gray-200 w-full max-w-[400px] shadow-sm">
+        <h1 className="text-xl font-semibold mb-6 text-gray-900 text-center">Kreiraj nalog</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">KorisniÄko ime</label>
+            <input
+              type="text"
+              {...register('username')}
+              placeholder="npr. marko123"
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.username ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            />
+            {errors.username && <p className="mt-1 text-xs text-red-500">{errors.username.message}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Email adresa</label>
+            <input
+              type="email"
+              {...register('email')}
+              placeholder="tvoj@email.com"
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            />
+            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+          </div>
+
+          <div className="mb-6">
+            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">Lozinka</label>
+            <input
+              type="password"
+              {...register('password')}
+              placeholder="Minimum 6 karaktera"
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+            />
+            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+          >
+            {loading ? 'Kreiranje...' : 'Registruj se'}
+          </button>
+        </form>
+
+        {message && (
+          <p className={`mt-4 text-[13px] text-center py-2 rounded-md ${message.includes('UspeÅ¡no') ? 'text-[#3B6D11] bg-[#EAF3DE]' : 'text-[#E24B4A] bg-red-50'}`}>
+            {message}
+          </p>
+        )}
+
+        <p className="mt-6 text-[13px] text-gray-600 text-center">
+          VeÄ‡ imaÅ¡ nalog? <Link href="/login" className="text-[#185FA5] hover:underline font-medium">Prijavi se</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\globals.css =====
+@import "tailwindcss";
+
+body {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\layout.js =====
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata = {
+  title: {
+    template: '%s | Povoljno24.rs',
+    default: 'Povoljno24.rs - Kupi i prodaj sve brzo i sigurno',
+  },
+  description: 'NajveÄ‡a platforma za kupovinu i prodaju u Srbiji. Hiljade oglasa iz kategorija: elektronika, automobili, nekretnine, moda i joÅ¡ mnogo toga. Bezbedna trgovina i provereni prodavci.',
+  keywords: ['oglasi', 'kupovina', 'prodaja', 'srbija', 'povoljno24', 'polovni automobili', 'nekretnine', 'mali oglasi', 'besplatni oglasi', 'beograd', 'novi sad', 'niÅ¡', 'kupujem prodajem', 'polovni telefoni'],
+  openGraph: {
+    title: 'Povoljno24.rs - Kupi i prodaj sve',
+    description: 'NajveÄ‡a platforma za kupovinu i prodaju u Srbiji.',
+    url: 'https://povoljno24.rs',
+    siteName: 'Povoljno24.rs',
+    locale: 'sr_RS',
+    type: 'website',
+  },
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html
+      lang="sr"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col bg-[#f5f5f5] text-[#1a1a1a]">
+        <Navbar />
+        <main className="flex-1 flex flex-col pb-20 sm:pb-0">
+          {children}
+        </main>
+        <Footer />
+        <BottomNav />
+      </body>
+    </html>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\page.js =====
+'use client';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import Link from 'next/link';
+import Image from 'next/image';
+
+const translations = {
+  sr: {
+    hero: 'Kupi i prodaj sve â€” brzo, sigurno, povoljno',
+    heroSub: 'Hiljade oglasa u Srbiji. Provereni prodavci. Bez prevara.',
+    searchPlaceholder: 'Å ta traÅ¾iÅ¡?',
+    search: 'PretraÅ¾i',
+    allCats: 'Sve kategorije',
+    electronics: 'Elektronika',
+    cars: 'Automobili',
+    realestate: 'Nekretnine',
+    fashion: 'Moda',
+    trust1: 'Provereni prodavci',
+    trust2: 'Kupac zaÅ¡tiÄ‡en',
+    trust3: 'Bez skrivenih troÅ¡kova',
+    trust4: 'Besplatno oglaÅ¡avanje',
+    categories: 'Kategorije',
+    furniture: 'NameÅ¡taj',
+    gaming: 'Gaming',
+    tools: 'Alati',
+    books: 'Knjige',
+    newListings: 'Novi oglasi',
+    verified: 'Proveren',
+    minPrice: 'Min Cena',
+    maxPrice: 'Max Cena',
+    sortBy: 'Sortiraj po',
+    sortNewest: 'Najnovije',
+    sortPriceAsc: 'Najjeftinije',
+    sortPriceDesc: 'Najskuplje',
+    advancedFilters: 'Napredni filteri',
+    applyFilters: 'Primeni filtere',
+  },
+  en: {
+    hero: 'Buy and sell anything â€” fast, safe, affordable',
+    heroSub: 'Thousands of listings in Serbia. Verified sellers. No scams.',
+    searchPlaceholder: 'What are you looking for?',
+    search: 'Search',
+    allCats: 'All categories',
+    electronics: 'Electronics',
+    cars: 'Cars',
+    realestate: 'Real estate',
+    fashion: 'Fashion',
+    trust1: 'Verified sellers',
+    trust2: 'Buyer protected',
+    trust3: 'No hidden fees',
+    trust4: 'Free listings',
+    categories: 'Categories',
+    furniture: 'Furniture',
+    gaming: 'Gaming',
+    tools: 'Tools',
+    books: 'Books',
+    newListings: 'Latest listings',
+    verified: 'Verified',
+    minPrice: 'Min Price',
+    maxPrice: 'Max Price',
+    sortBy: 'Sort by',
+    sortNewest: 'Newest',
+    sortPriceAsc: 'Cheapest',
+    sortPriceDesc: 'Most expensive',
+    advancedFilters: 'Advanced filters',
+    applyFilters: 'Apply filters',
+    condition: 'Condition',
+    condNew: 'New',
+    condUsed: 'Used',
+    city: 'City',
+    allCities: 'All cities',
+  },
+};
+
+const cities = [
+  'Beograd', 'Novi Sad', 'NiÅ¡', 'Kragujevac', 'PriÅ¡tina', 'Subotica', 'Zrenjanin', 'PanÄevo', 'ÄŒaÄak', 'KruÅ¡evac', 'Kraljevo', 'Novi Pazar', 'Smederevo', 'Leskovac', 'UÅ¾ice', 'Vranje', 'Valjevo', 'Å abac', 'Sombor', 'PoÅ¾arevac', 'Pirot', 'ZajeÄar', 'Kikinda', 'Sremska Mitrovica', 'Jagodina', 'VrÅ¡ac', 'Bor', 'Prokuplje', 'Loznica'
+].sort();
+
+export default function Home() {
+  const [lang, setLang] = useState('sr');
+  const [listings, setListings] = useState([]);
+  
+  // Basic search & filter states
+  const [search, setSearch] = useState('');
+  const [filterCat, setFilterCat] = useState('');
+  
+  // Advanced filter states
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [filterCity, setFilterCity] = useState('');
+  const [filterCondition, setFilterCondition] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Pagination & Loading states
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [moreLoading, setMoreLoading] = useState(false);
+  
+  const ITEMS_PER_PAGE = 20;
+  const t = translations[lang];
+
+  const categories = [
+    { name: t.electronics, value: 'elektronika' },
+    { name: t.cars, value: 'automobili' },
+    { name: t.realestate, value: 'nekretnine' },
+    { name: t.fashion, value: 'moda' },
+    { name: t.furniture, value: 'namestaj' },
+    { name: t.gaming, value: 'gaming' },
+    { icon: 'ðŸ”§', name: t.tools, value: 'alati' },
+    { name: t.books, value: 'knjige' },
+  ];
+
+  async function loadListings(searchTerm, category, minP, maxP, city, condition, sortParams, pageNum = 0, append = false) {
+    if (!append) setLoading(true);
+    else setMoreLoading(true);
+    
+    let query = supabase
+      .from('listings')
+      .select('id, title, price, city, category, image_url, created_at, user_id', { count: 'exact' });
+      
+    // Apply filters
+    if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);
+    if (category) query = query.eq('category', category);
+    if (minP) query = query.gte('price', parseInt(minP));
+    if (maxP) query = query.lte('price', parseInt(maxP));
+    if (city) query = query.eq('city', city);
+    // if (condition) query = query.eq('condition', condition); // Temporarily bypassed
+    
+    // Apply sorting
+    if (sortParams === 'price_asc') {
+      query = query.order('price', { ascending: true });
+    } else if (sortParams === 'price_desc') {
+      query = query.order('price', { ascending: false });
+    } else {
+      // default: newest
+      query = query.order('created_at', { ascending: false });
+    }
+    
+    // Apply pagination
+    query = query.range(pageNum * ITEMS_PER_PAGE, (pageNum + 1) * ITEMS_PER_PAGE - 1);
+    
+    const { data, count } = await query;
+    
+    if (append) {
+      setListings(prev => [...prev, ...(data || [])]);
+    } else {
+      setListings(data || []);
+    }
+    
+    setHasMore(count ? (pageNum + 1) * ITEMS_PER_PAGE < count : false);
+    setPage(pageNum);
+    setLoading(false);
+    setMoreLoading(false);
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadListings('', '', '', '', '', '', 'newest', 0, false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update suggestions based on input
+  useEffect(() => {
+    if (search.length > 0) {
+      const filtered = categories.filter(c => 
+        c.name.toLowerCase().includes(search.toLowerCase())
+      );
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSuggestions(filtered);
+    } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSuggestions([]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  const handleSearch = () => {
+    setShowSuggestions(false);
+    loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false);
+  };
+
+  const clearFilters = () => {
+    setFilterCat('');
+    setSearch('');
+    setMinPrice('');
+    setMaxPrice('');
+    setFilterCity('');
+    setFilterCondition('');
+    setSortBy('newest');
+    loadListings('', '', '', '', '', '', 'newest', 0, false);
+  };
+
+  return (
+    <div>
+      {/* Hero */}
+      <section className="bg-[#E6F1FB] pt-12 pb-10 px-6 text-center">
+        <h1 className="text-3xl font-semibold text-[#0C447C] mb-2">{t.hero}</h1>
+        <p className="text-[15px] text-[#185FA5] mb-6">{t.heroSub}</p>
+        
+        <div className="max-w-[700px] mx-auto relative">
+          {/* Main Search Bar */}
+          <div className="flex bg-white rounded-xl border border-gray-300 overflow-hidden shadow-sm relative z-20">
+            <select 
+              value={filterCat} 
+              onChange={e => setFilterCat(e.target.value)} 
+              className="border-none outline-none py-3 px-4 text-[13px] text-gray-600 bg-gray-50 border-r border-gray-200 cursor-pointer hidden sm:block"
+            >
+              <option value="">{t.allCats}</option>
+              {categories.map(c => (
+                <option key={c.value} value={c.value}>{c.name}</option>
+              ))}
+            </select>
+            <select 
+              value={filterCity} 
+              onChange={e => setFilterCity(e.target.value)} 
+              className="border-none outline-none py-3 px-4 text-[13px] text-gray-600 bg-gray-50 border-r border-gray-200 cursor-pointer hidden md:block"
+            >
+              <option value="">{t.allCities}</option>
+              {cities.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+            <input 
+              type="text" 
+              value={search} 
+              onChange={e => setSearch(e.target.value)} 
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()} 
+              placeholder={t.searchPlaceholder} 
+              className="flex-1 border-none outline-none py-3 px-4 text-sm w-full" 
+            />
+            <button 
+              onClick={handleSearch} 
+              className="bg-[#185FA5] hover:bg-[#0C447C] text-white transition-colors border-none py-3 px-5 sm:px-8 text-[13px] sm:text-[14px] font-semibold cursor-pointer shrink-0"
+            >
+              {t.search}
+            </button>
+          </div>
+
+          {/* Search Suggestions Dropdown */}
+          {showSuggestions && (search.length > 0 || suggestions.length > 0) && (
+            <div className="absolute top-[52px] left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl z-50 text-left overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+              {suggestions.length > 0 && (
+                <div className="p-2 border-b border-gray-50">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1">Kategorije</div>
+                  {suggestions.map(s => (
+                    <button 
+                      key={s.value}
+                      onClick={() => {
+                        setFilterCat(s.value);
+                        setSearch('');
+                        loadListings('', s.value, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors group"
+                    >
+                      <span className="opacity-60 group-hover:opacity-100">ðŸ“</span>
+                      <span className="text-gray-700">{s.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="p-2">
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1">Pretraga</div>
+                <button 
+                  onClick={handleSearch}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors group"
+                >
+                  <span className="opacity-60 group-hover:opacity-100">ðŸ”</span>
+                  <span className="text-gray-700 font-medium">TraÅ¾i &quot;{search}&quot;</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Advanced Filters Toggle */}
+          <div className="flex justify-end mt-2">
+            <button 
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-[12px] font-medium text-[#185FA5] hover:underline bg-white/50 backdrop-blur-sm px-3 py-1 rounded-full border border-blue-100/50 shadow-sm sm:bg-transparent sm:border-none sm:shadow-none sm:px-0 sm:py-0 cursor-pointer flex items-center gap-1"
+            >
+              <span className="text-base">{showAdvanced ? 'âˆ’' : 'ï¼‹'}</span> {t.advancedFilters}
+            </button>
+          </div>
+
+          {/* Advanced Filters Panel - Full screen on mobile, dropdown on desktop */}
+          {showAdvanced && (
+            <div className="fixed inset-0 sm:relative sm:inset-auto z-[100] sm:z-10 bg-white sm:bg-white sm:rounded-xl sm:border border-gray-200 p-6 sm:p-4 mt-0 sm:mt-2 shadow-2xl sm:shadow-sm text-left flex flex-col sm:grid sm:grid-cols-3 gap-6 sm:gap-4 animate-in slide-in-from-bottom sm:slide-in-from-top-2 duration-300 sm:duration-200">
+              <div className="flex items-center justify-between sm:hidden mb-2">
+                <h3 className="text-xl font-bold text-gray-900">{t.advancedFilters}</h3>
+                <button 
+                  onClick={() => setShowAdvanced(false)}
+                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl text-gray-500"
+                >
+                  Ã—
+                </button>
+              </div>
+              
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.minPrice} (RSD)</label>
+                <input 
+                  type="number" 
+                  value={minPrice} 
+                  onChange={e => setMinPrice(e.target.value)} 
+                  placeholder="0" 
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.maxPrice} (RSD)</label>
+                <input 
+                  type="number" 
+                  value={maxPrice} 
+                  onChange={e => setMaxPrice(e.target.value)} 
+                  placeholder="100000" 
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.sortBy}</label>
+                <select 
+                  value={sortBy} 
+                  onChange={e => setSortBy(e.target.value)} 
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50 cursor-pointer appearance-none"
+                >
+                  <option value="newest">{t.sortNewest}</option>
+                  <option value="price_asc">{t.sortPriceAsc}</option>
+                  <option value="price_desc">{t.sortPriceDesc}</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.city}</label>
+                <select 
+                  value={filterCity} 
+                  onChange={e => setFilterCity(e.target.value)} 
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50 cursor-pointer appearance-none"
+                >
+                  <option value="">{t.allCities}</option>
+                  {cities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.condition}</label>
+                <div className="flex bg-gray-50 p-1.5 rounded-xl border border-gray-200 h-[46px]">
+                  <button 
+                    onClick={() => setFilterCondition(filterCondition === 'Novo' ? '' : 'Novo')}
+                    className={`flex-1 rounded-lg text-sm font-bold transition-all ${filterCondition === 'Novo' ? 'bg-[#185FA5] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    {t.condNew}
+                  </button>
+                  <button 
+                    onClick={() => setFilterCondition(filterCondition === 'Polovno' ? '' : 'Polovno')}
+                    className={`flex-1 rounded-lg text-sm font-bold transition-all ${filterCondition === 'Polovno' ? 'bg-[#185FA5] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    {t.condUsed}
+                  </button>
+                </div>
+              </div>
+              <div className="mt-auto sm:mt-0 sm:col-span-3 flex flex-col sm:flex-row gap-3 sm:justify-end">
+                <button 
+                  onClick={() => { clearFilters(); setShowAdvanced(false); }}
+                  className="sm:hidden w-full py-4 rounded-xl text-sm font-bold text-gray-500 bg-gray-100"
+                >
+                  Resetuj sve
+                </button>
+                <button 
+                  onClick={() => { handleSearch(); setShowAdvanced(false); }}
+                  className="w-full sm:w-auto bg-[#185FA5] hover:bg-[#0C447C] text-white py-4 sm:py-2.5 px-10 rounded-xl text-sm sm:text-[13px] font-bold transition-all shadow-xl active:scale-95"
+                >
+                  {t.applyFilters}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex justify-center gap-7 mt-6 flex-wrap">
+          {[t.trust1, t.trust2, t.trust3, t.trust4].map(item => (
+            <div key={item} className="flex items-center gap-1.5 text-[12px] font-medium text-[#185FA5]">
+              <div className="w-2 h-2 rounded-full bg-[#1D9E75]"></div>
+              {item}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section className="py-8 px-6 bg-white">
+        <h2 className="text-base font-semibold mb-4 text-gray-800 max-w-[1200px] mx-auto">{t.categories}</h2>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3 max-w-[1200px] mx-auto">
+          {[
+            { icon:'ðŸ“±', name: t.electronics, value:'elektronika' },
+            { icon:'ðŸš—', name: t.cars, value:'automobili' },
+            { icon:'ðŸ ', name: t.realestate, value:'nekretnine' },
+            { icon:'ðŸ‘—', name: t.fashion, value:'moda' },
+            { icon:'ðŸ›‹ï¸', name: t.furniture, value:'namestaj' },
+            { icon:'ðŸŽ®', name: t.gaming, value:'gaming' },
+            { icon:'ðŸ”§', name: t.tools, value:'alati' },
+            { icon:'ðŸ“š', name: t.books, value:'knjige' },
+          ].map(cat => (
+            <div 
+              key={cat.name} 
+              onClick={() => { 
+                setFilterCat(cat.value); 
+                loadListings(search, cat.value, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false); 
+              }} 
+              className={`rounded-xl py-4 px-3 text-center cursor-pointer transition-all ${filterCat === cat.value ? 'bg-[#E6F1FB] border-[#185FA5] border shadow-sm' : 'bg-gray-50 border border-gray-100 hover:bg-gray-100 hover:border-gray-200'}`}
+            >
+              <div className="text-2xl mb-1.5">{cat.icon}</div>
+              <div className={`text-[12px] font-medium ${filterCat === cat.value ? 'text-[#185FA5]' : 'text-gray-600'}`}>{cat.name}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Listings */}
+      <section className="pt-2 pb-12 px-6 bg-transparent max-w-[1200px] mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-base font-semibold text-gray-800">{t.newListings}</h2>
+          {(filterCat || search || minPrice || maxPrice || filterCity || filterCondition || sortBy !== 'newest') && (
+            <button 
+              onClick={clearFilters} 
+              className="text-[13px] font-medium text-[#E24B4A] hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1"
+            >
+              <span>Ã—</span> Ukloni sve filtere
+            </button>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(155px,1fr))] sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+          {loading ? (
+            Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col h-[260px] animate-pulse">
+                <div className="h-[140px] bg-gray-200 shrink-0"></div>
+                <div className="p-3.5 flex flex-col flex-1 gap-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-5 bg-gray-200 rounded w-1/2 mt-auto"></div>
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : listings.length === 0 ? (
+            <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <div className="text-4xl mb-3 opacity-50">ðŸ”</div>
+              <p className="text-[15px] font-medium text-gray-800 mb-1">Nema rezultata</p>
+              <p className="text-sm text-gray-500">PokuÅ¡ajte da promenite filtere ili kriterijum pretrage.</p>
+              <button 
+                onClick={clearFilters}
+                className="mt-4 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[13px] font-medium transition-colors"
+              >
+                PrikaÅ¾i sve oglase
+              </button>
+            </div>
+          ) : (
+            listings.map(listing => (
+              <Link key={listing.id} href={`/oglas/${listing.id}`} className="block group h-full">
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-[#185FA5] transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1">
+                  <div 
+                    className="h-[160px] bg-gray-900 relative flex items-center justify-center overflow-hidden shrink-0 border-b border-gray-100 select-none"
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
+                    {listing.image_url ? (
+                      <>
+                        {/* Blurred background */}
+                        <div 
+                          className="absolute inset-0 blur-md opacity-40 scale-110 pointer-events-none"
+                          style={{ backgroundImage: `url(${listing.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                        />
+                        <Image 
+                          src={listing.image_url} 
+                          alt={listing.title} 
+                          fill 
+                          className="object-contain relative z-10 group-hover:scale-105 transition-transform duration-500 pointer-events-none" 
+                          draggable={false}
+                        />
+                        {/* Invisible protection layer */}
+                        <div className="absolute inset-0 z-20 bg-transparent" />
+                      </>
+                    ) : (
+                      <span className="opacity-40 text-3xl">ðŸ“¦</span>
+                    )}
+                  </div>
+                  <div className="p-3.5 flex flex-col flex-1">
+                    <div className="text-[14px] font-medium text-gray-800 mb-1 line-clamp-2 leading-snug group-hover:text-[#185FA5] transition-colors">{listing.title}</div>
+                    <div className="flex items-center justify-between mt-auto pt-2">
+                      <div className="text-[16px] font-bold text-[#185FA5]">{listing.price?.toLocaleString()} RSD</div>
+                      {listing.condition && (
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${listing.condition === 'Novo' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
+                          {listing.condition}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
+                      <span className="text-[11px] text-gray-500 truncate pr-2 flex items-center gap-1">
+                        ðŸ“ {listing.city}
+                      </span>
+                      {listing.is_verified && (
+                        <span className="text-[10px] font-semibold bg-[#EAF3DE] text-[#3B6D11] rounded px-1.5 py-0.5 whitespace-nowrap shrink-0 border border-[#d3ecc1]">
+                          {t.verified}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+        
+        {hasMore && !loading && listings.length > 0 && (
+          <div className="flex justify-center mt-10">
+            <button 
+              onClick={() => loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, page + 1, true)}
+              disabled={moreLoading}
+              className={`bg-white border border-gray-300 text-gray-700 hover:bg-[#E6F1FB] hover:text-[#185FA5] hover:border-[#185FA5] px-8 py-3 rounded-xl font-semibold shadow-sm transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 ${moreLoading ? 'opacity-70' : ''}`}
+            >
+              {moreLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-[#185FA5] rounded-full animate-spin"></div>
+                  UÄitavam...
+                </>
+              ) : (
+                'UÄitaj joÅ¡ oglasa'
+              )}
+            </button>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\robots.js =====
+export default function robots() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://povoljno24.rs';
+
+  return {
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: ['/profil', '/postoglas', '/oglas/edit/'],
+    },
+    sitemap: `${baseUrl}/sitemap.xml`,
+  };
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\app\sitemap.js =====
+import { supabaseServer } from '../lib/supabase-server';
+
+export default async function sitemap() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://povoljno24.rs';
+
+  // Get all listings
+  const { data: listings } = await supabaseServer
+    .from('listings')
+    .select('id, updated_at')
+    .order('created_at', { ascending: false });
+
+  const listingUrls = (listings || []).map((listing) => ({
+    url: `${baseUrl}/oglas/${listing.id}`,
+    lastModified: listing.updated_at || new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  return [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'always',
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/kako-funkcionise`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    ...listingUrls,
+  ];
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\components\BottomNav.js =====
+'use client';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+export default function BottomNav() {
+  const pathname = usePathname();
+
+  const navItems = [
+    { label: 'PoÄetna', icon: 'ðŸ ', path: '/' },
+    { label: 'Poruke', icon: 'ðŸ’¬', path: '/poruke' },
+    { label: 'Postavi', icon: 'âž•', path: '/postoglas' },
+    { label: 'Profil', icon: 'ðŸ‘¤', path: '/profil' },
+  ];
+
+  return (
+    <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-[100] pb-safe">
+      <div className="flex justify-around items-center h-16 px-2">
+        {navItems.map((item) => {
+          const isActive = pathname === item.path;
+          return (
+            <Link 
+              key={item.path} 
+              href={item.path}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all ${isActive ? 'text-[#185FA5]' : 'text-gray-400'}`}
+            >
+              <span className={`text-xl ${isActive ? 'scale-110' : 'opacity-70'} transition-transform`}>{item.icon}</span>
+              <span className={`text-[10px] font-bold uppercase tracking-tight ${isActive ? 'opacity-100' : 'opacity-60'}`}>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\components\Footer.js =====
+import Link from 'next/link';
+
+export default function Footer() {
+  return (
+    <footer className="bg-gray-100 border-t border-gray-200 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 mt-auto">
+      <span className="text-sm text-gray-500">Â© {new Date().getFullYear()} Povoljno24.rs</span>
+      <div className="flex gap-4">
+        <Link href="#" className="text-xs text-gray-600 hover:text-[#185FA5] transition-colors">O nama</Link>
+        <Link href="#" className="text-xs text-gray-600 hover:text-[#185FA5] transition-colors">PomoÄ‡</Link>
+        <Link href="#" className="text-xs text-gray-600 hover:text-[#185FA5] transition-colors">Uslovi koriÅ¡Ä‡enja</Link>
+        <Link href="#" className="text-xs text-gray-600 hover:text-[#185FA5] transition-colors">Kontakt</Link>
+      </div>
+    </footer>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\components\Navbar.js =====
+'use client';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import NotificationDropdown from './NotificationDropdown';
+
+export default function Navbar() {
+  const [user, setUser] = useState(null);
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
+  const [notifCount, setNotifCount] = useState(0);
+  const [showNotifs, setShowNotifs] = useState(false);
+
+  async function fetchCounts(currentUser) {
+    if (!currentUser) return;
+    const [msgRes, notifRes] = await Promise.all([
+      supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser.id).eq('is_read', false),
+      supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).eq('is_read', false)
+    ]);
+    setUnreadMsgCount(msgRes.count || 0);
+    setNotifCount(notifRes.count || 0);
+  }
+
+  useEffect(() => {
+    async function init() {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser);
+      fetchCounts(currentUser);
+    }
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) fetchCounts(currentUser);
+      else {
+        setUnreadMsgCount(0);
+        setNotifCount(0);
+      }
+    });
+
+    // Real-time subscriptions
+    const msgChannel = supabase.channel('realtime_msg_counts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => user && fetchCounts(user))
+      .subscribe();
+      
+    const notifChannel = supabase.channel('realtime_notif_counts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => user && fetchCounts(user))
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(msgChannel);
+      supabase.removeChannel(notifChannel);
+    };
+  }, []);
+
+  return (
+    <nav className="flex items-center justify-between px-6 py-3.5 bg-white border-b border-gray-200 sticky top-0 z-50">
+      <Link href="/" className="text-xl font-semibold text-[#185FA5] hover:opacity-90 transition-opacity">
+        Povoljno<span className="text-[#E24B4A]">24</span>.rs
+      </Link>
+
+      <div className="flex items-center gap-5">
+        <Link href="/" className="text-sm text-gray-600 hover:text-[#185FA5] transition-colors hidden sm:block">
+          Oglasi
+        </Link>
+        <Link href="/kako-funkcionise" className="text-sm text-gray-600 hover:text-[#185FA5] transition-colors hidden sm:block">
+          Kako funkcioniÅ¡e
+        </Link>
+
+        {user ? (
+          <>
+            {/* Notifications bell */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifs(!showNotifs)}
+                className="p-1.5 text-gray-500 hover:text-[#185FA5] transition-colors bg-transparent border-none cursor-pointer flex items-center justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                </svg>
+                {notifCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 bg-[#185FA5] text-white text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full shadow-sm animate-pulse">
+                    {notifCount}
+                  </span>
+                )}
+              </button>
+              {showNotifs && <NotificationDropdown userId={user.id} onClose={() => setShowNotifs(false)} />}
+            </div>
+
+            {/* Messages bell icon */}
+            <Link
+              href="/poruke"
+              title="Poruke"
+              className="relative p-1.5 text-gray-500 hover:text-[#185FA5] transition-colors flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+              </svg>
+              {unreadMsgCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 bg-[#E24B4A] text-white text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full shadow-sm">
+                  {unreadMsgCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Profile link */}
+            <Link href="/profil" className="text-sm text-gray-600 hover:text-[#185FA5] font-medium transition-colors">
+              Profil
+            </Link>
+          </>
+        ) : (
+          <Link href="/login" className="text-sm text-gray-600 hover:text-[#185FA5] font-medium transition-colors">
+            Prijavi se
+          </Link>
+        )}
+
+        <Link
+          href="/postoglas"
+          className="bg-[#185FA5] hover:bg-[#0C447C] text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors shadow-sm"
+        >
+          Postavi oglas
+        </Link>
+      </div>
+    </nav>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\components\NotificationDropdown.js =====
+'use client';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import Link from 'next/link';
+import Image from 'next/image';
+
+export default function NotificationDropdown({ userId, onClose }) {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function fetchNotifications() {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*, listings(title, image_url)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      if (error.code === 'PGRST205' || error.code === 'PGRST200') {
+        setNotifications([]);
+      } else {
+        console.error(error);
+      }
+    } else {
+      setNotifications(data || []);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchNotifications();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  async function markAsRead(id) {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+  }
+
+  return (
+    <div className="absolute top-10 right-0 w-[300px] bg-white border border-gray-200 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in duration-200 origin-top-right">
+      <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <h3 className="text-[13px] font-bold text-gray-900 uppercase tracking-widest">ObaveÅ¡tenja</h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">Ã—</button>
+      </div>
+
+      <div className="max-h-[350px] overflow-y-auto">
+        {loading ? (
+          <div className="p-10 text-center text-gray-400 text-sm italic">UÄitavanje...</div>
+        ) : notifications.length === 0 ? (
+          <div className="p-10 text-center">
+            <div className="text-3xl mb-2 opacity-20">ðŸ””</div>
+            <p className="text-sm text-gray-500">Nema novih obaveÅ¡tenja.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {notifications.map((n) => (
+              <Link 
+                key={n.id}
+                href={n.type === 'message' ? `/poruke` : `/oglas/${n.listing_id}`}
+                onClick={() => markAsRead(n.id)}
+                className={`flex gap-3 p-4 hover:bg-gray-50 transition-colors ${!n.is_read ? 'bg-blue-50/30' : ''}`}
+              >
+                <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden relative border border-gray-100">
+                  {n.listings?.image_url ? (
+                    <Image src={n.listings.image_url} alt="" fill className="object-cover" />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-xl">{n.type === 'message' ? 'ðŸ’¬' : 'ðŸ“‰'}</div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] text-gray-900 font-medium leading-snug line-clamp-2">
+                    {n.content}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1">{new Date(n.created_at).toLocaleDateString('sr-RS')}</p>
+                </div>
+                {!n.is_read && <div className="w-2 h-2 rounded-full bg-[#185FA5] mt-1 shrink-0" />}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Link 
+        href="/notifikacije" 
+        onClick={onClose}
+        className="block p-3 text-center text-[12px] font-bold text-[#185FA5] hover:bg-gray-50 transition-colors border-t border-gray-100"
+      >
+        Vidi sva obaveÅ¡tenja
+      </Link>
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\components\PhoneVerification.js =====
+'use client';
+import { useState } from 'react';
+import { supabase } from '../lib/supabase';
+
+export default function PhoneVerification({ onVerified }) {
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [step, setStep] = useState(1); // 1: Enter Phone, 2: Enter Code
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  async function handleSendCode(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    // Format check: ensure it starts with +
+    if (!phone.startsWith('+')) {
+      setError('Broj mora poÄeti sa + (npr. +3816...)');
+      setLoading(false);
+      return;
+    }
+
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      phone: phone,
+    });
+
+    if (otpError) {
+      setError('GreÅ¡ka: ' + otpError.message);
+    } else {
+      setStep(2);
+    }
+    setLoading(false);
+  }
+
+  async function handleVerifyCode(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      phone: phone,
+      token: code,
+      type: 'sms',
+    });
+
+    if (verifyError) {
+      setError('NetaÄan ili istekao kod.');
+    } else {
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ phone: phone, phone_verified: true })
+        .eq('id', data.user.id);
+
+      if (profileError) {
+        setError('GreÅ¡ka pri aÅ¾uriranju profila: ' + profileError.message);
+      } else {
+        setSuccess(true);
+        if (onVerified) onVerified(phone);
+      }
+    }
+    setLoading(false);
+  }
+
+  if (success) {
+    return (
+      <div className="bg-[#EAF3DE] border border-[#d3ecc1] rounded-2xl p-6 text-center">
+        <div className="text-3xl mb-2">âœ…</div>
+        <h3 className="text-lg font-bold text-[#3B6D11] mb-1">UspeÅ¡no verifikovano!</h3>
+        <p className="text-sm text-[#3B6D11]/80">VaÅ¡ broj {phone} je sada povezan sa profilom.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+      <h3 className="text-lg font-bold text-gray-900 mb-4">Verifikacija broja telefona</h3>
+      
+      {step === 1 ? (
+        <form onSubmit={handleSendCode} className="space-y-4">
+          <p className="text-sm text-gray-500">Unesite vaÅ¡ broj mobilnog telefona u internacionalnom formatu.</p>
+          <div>
+            <label className="text-[12px] font-semibold text-gray-400 uppercase mb-1.5 block">Broj telefona</label>
+            <input 
+              type="tel"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              placeholder="+381 60 123 4567"
+              required
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] transition-all"
+            />
+          </div>
+          <button 
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-[#185FA5] hover:bg-[#0C447C] text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+          >
+            {loading ? 'Slanje koda...' : 'PoÅ¡alji SMS kod'}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleVerifyCode} className="space-y-4">
+          <p className="text-sm text-gray-500">Unesite 6-cifreni kod koji smo vam poslali na <strong>{phone}</strong>.</p>
+          <div>
+            <label className="text-[12px] font-semibold text-gray-400 uppercase mb-1.5 block">SMS Kod</label>
+            <input 
+              type="text"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              placeholder="123456"
+              maxLength={6}
+              required
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-center font-bold tracking-widest outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75] transition-all"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button 
+              type="button"
+              onClick={() => setStep(1)}
+              className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
+            >
+              Nazad
+            </button>
+            <button 
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-3 bg-[#1D9E75] hover:bg-[#157a5a] text-white rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
+            >
+              {loading ? 'Verifikacija...' : 'Potvrdi kod'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {error && <p className="mt-4 text-xs text-[#E24B4A] text-center bg-red-50 py-2 rounded-lg">{error}</p>}
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\components\ReportButton.js =====
+'use client';
+import { useState } from 'react';
+import { supabase } from '../lib/supabase';
+
+export default function ReportButton({ listingId }) {
+  const [showModal, setShowModal] = useState(false);
+  const [reason, setReason] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  async function handleReport() {
+    if (!reason) return;
+    setLoading(true);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert('Morate biti prijavljeni da biste prijavili oglas.');
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.from('reports').insert({
+      reporter_id: user.id,
+      listing_id: listingId,
+      reason
+    });
+
+    if (error) {
+      alert('GreÅ¡ka: ' + error.message);
+    } else {
+      setSubmitted(true);
+      setTimeout(() => setShowModal(false), 2000);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <>
+      <button 
+        onClick={() => setShowModal(true)}
+        className="text-[11px] text-gray-400 hover:text-red-500 transition-colors bg-transparent border-none cursor-pointer flex items-center gap-1 mt-4"
+      >
+        ðŸš© Prijavi oglas
+      </button>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl w-full max-w-[400px] p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+            {!submitted ? (
+              <>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Prijavi oglas</h3>
+                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                  Da li ste primetili neÅ¡to sumnjivo? Prijavite ovaj oglas naÅ¡im moderatorima.
+                </p>
+
+                <div className="space-y-3 mb-8">
+                  {[
+                    'Prevara / Scam',
+                    'NetaÄne informacije',
+                    'Neprimeren sadrÅ¾aj',
+                    'VeÄ‡ prodato',
+                    'Duplikat oglasa'
+                  ].map(r => (
+                    <label key={r} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors group">
+                      <input 
+                        type="radio" 
+                        name="reason" 
+                        value={r} 
+                        onChange={e => setReason(e.target.value)}
+                        className="w-4 h-4 text-[#185FA5]"
+                      />
+                      <span className="text-sm text-gray-700 font-medium group-hover:text-gray-900">{r}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Odustani
+                  </button>
+                  <button 
+                    onClick={handleReport}
+                    disabled={!reason || loading}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 disabled:bg-gray-300 transition-all active:scale-95"
+                  >
+                    {loading ? 'Slanje...' : 'PoÅ¡alji prijavu'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-6">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">âœ“</div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Prijava poslata</h3>
+                <p className="text-sm text-gray-500">Hvala vam Å¡to nam pomaÅ¾ete da Povoljno24 ostane sigurno mesto.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\components\ReviewList.js =====
+'use client';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import StarRating from './StarRating';
+
+export default function ReviewList({ userId }) {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchReviews() {
+      const { data, error } = await supabase
+        .from('ratings')
+        .select(`
+          *,
+          rater:profiles!rater_id(username)
+        `)
+        .eq('ratee_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!error) {
+        setReviews(data || []);
+      }
+      setLoading(false);
+    }
+    if (userId) fetchReviews();
+  }, [userId]);
+
+  if (loading) return <div className="animate-pulse space-y-3">
+    {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-100 rounded-xl"></div>)}
+  </div>;
+
+  if (reviews.length === 0) return (
+    <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+      <p className="text-sm text-gray-500">Ovaj korisnik joÅ¡ uvek nema ocena.</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {reviews.map((review) => (
+        <div key={review.id} className="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+          <div className="flex justify-between items-start mb-2">
+            <div className="font-semibold text-sm text-gray-900">{review.rater?.username || 'Korisnik'}</div>
+            <div className="text-[11px] text-gray-400">
+              {new Date(review.created_at).toLocaleDateString('sr-RS')}
+            </div>
+          </div>
+          <StarRating rating={review.score} size="sm" />
+          <p className="text-[13px] text-gray-600 mt-2 leading-relaxed">
+            {review.comment}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\components\StarRating.js =====
+'use client';
+import { useState } from 'react';
+
+export default function StarRating({ rating = 0, onRate = null, size = 'md', interactive = false }) {
+  const [hover, setHover] = useState(0);
+  
+  const sizes = {
+    sm: 'w-3 h-3',
+    md: 'w-4 h-4',
+    lg: 'w-6 h-6',
+  };
+
+  const currentSize = sizes[size] || sizes.md;
+
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          disabled={!interactive}
+          onClick={() => onRate && onRate(star)}
+          onMouseEnter={() => interactive && setHover(star)}
+          onMouseLeave={() => interactive && setHover(0)}
+          className={`bg-transparent border-none p-0 flex items-center justify-center ${interactive ? 'cursor-pointer transition-transform hover:scale-110' : 'cursor-default'}`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill={star <= (hover || rating) ? '#FFC107' : '#E0E0E0'}
+            className={currentSize}
+          >
+            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+          </svg>
+        </button>
+      ))}
+      {rating > 0 && !interactive && (
+        <span className="ml-1.5 text-[13px] font-bold text-gray-700">{rating.toFixed(1)}</span>
+      )}
+    </div>
+  );
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\lib\supabase-server.js =====
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// This client is strictly for public server-side read operations where auth is not needed.
+// For operations requiring user auth, use the createServerClient from @supabase/ssr.
+export const supabaseServer = createClient(supabaseUrl, supabaseAnonKey);
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\lib\supabase.js =====
+import { createBrowserClient } from '@supabase/ssr'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\lib\watermark.js =====
+/**
+ * Applies a "Povoljno24.rs" watermark to an image file.
+ * Returns a new Blob (processed image).
+ */
+export async function applyWatermark(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set dimensions
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        // Draw original image
+        ctx.drawImage(img, 0, 0);
+
+        // Styling for watermark
+        const fontSize = Math.max(16, Math.floor(canvas.width / 15));
+        ctx.font = `bold ${fontSize}px Inter, system-ui, sans-serif`;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Tiled watermark pattern across the whole image
+        const stepX = fontSize * 5;
+        const stepY = fontSize * 3;
+        
+        ctx.save();
+        ctx.rotate(-Math.PI / 6); // Slight angle
+        
+        // Loop through the canvas area (expanded to cover rotated space)
+        for (let x = -canvas.width; x < canvas.width * 2; x += stepX) {
+          for (let y = -canvas.height; y < canvas.height * 2; y += stepY) {
+            ctx.fillText('Povoljno24.rs', x, y);
+          }
+        }
+        ctx.restore();
+
+        // One prominent one in the center
+        ctx.font = `bold ${fontSize * 1.5}px Inter, system-ui, sans-serif`;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.fillText('Povoljno24.rs', canvas.width / 2, canvas.height / 2);
+
+        // Convert back to blob
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, file.type, 0.90);
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+}
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\eslint.config.mjs =====
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\next.config.mjs =====
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'mbluydruyogrgaxaztpi.supabase.co',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\postcss.config.mjs =====
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+===== C:\Users\aleks\OneDrive\Desktop\povoljno24\proxy.js =====
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse } from 'next/server'
+
+export async function proxy(request) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Protect /profil, /postoglas, /admin and /poruke
+  const protectedRoutes = ['/profil', '/postoglas', '/poruke', '/admin']
+  const isProtectedRoute = protectedRoutes.some((path) => request.nextUrl.pathname.startsWith(path))
+
+  if (isProtectedRoute && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  return supabaseResponse
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}

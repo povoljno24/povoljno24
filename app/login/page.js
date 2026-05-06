@@ -49,7 +49,7 @@ export default function Login() {
             <input
               type="email"
               {...register('email')}
-              placeholder="tvoj@email.com"
+              placeholder={t.emailPlaceholder}
               className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
             />
             {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}

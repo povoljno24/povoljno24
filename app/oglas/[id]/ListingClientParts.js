@@ -23,7 +23,7 @@ export function ListingBreadcrumbs({ listing }) {
 }
 
 export function ListingDetails({ listing }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   return (
     <div className="p-6">
       <div className="flex justify-between items-start mb-3 gap-4">

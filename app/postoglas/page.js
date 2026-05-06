@@ -96,7 +96,7 @@ export default function PostOglas() {
           uploadedUrls.push(urlData.publicUrl);
         }
       } catch (error) {
-        setMessage(t.imageError + error.message);
+        setMessage(t.errorPrefix + error.message);
         setLoading(false);
         return;
       }
@@ -116,7 +116,7 @@ export default function PostOglas() {
     });
 
     if (error) {
-      setMessage('Greška: ' + error.message);
+      setMessage(t.errorPrefix + error.message);
     } else {
       setMessage(t.postSuccess);
       setTimeout(() => router.push('/profil'), 1500);
@@ -236,7 +236,7 @@ export default function PostOglas() {
               {previews.length < 10 && (
                 <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#185FA5] hover:bg-[#E6F1FB] transition-all text-gray-400 hover:text-[#185FA5]">
                   <span className="text-2xl font-light">+</span>
-                  <span className="text-[10px] font-semibold uppercase">Dodaj</span>
+                  <span className="text-[10px] font-semibold uppercase">{t.addPhoto}</span>
                   <input 
                     type="file" 
                     accept="image/*" 
