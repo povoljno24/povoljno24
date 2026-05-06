@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../components/LanguageContext';
 
 export default function PorukePage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [user, setUser] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
