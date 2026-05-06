@@ -14,6 +14,8 @@ export default function NotifikacijePage() {
   const router = useRouter();
 
   useEffect(() => {
+    let channel;
+    
     async function init() {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!currentUser) {
@@ -24,7 +26,7 @@ export default function NotifikacijePage() {
       fetchNotifications(currentUser.id);
 
       // Subscribe to real-time changes
-      const channel = supabase.channel('notif_page_changes')
+      channel = supabase.channel('notif_page_changes')
         .on('postgres_changes', { 
           event: '*', 
           schema: 'public', 
@@ -32,10 +34,13 @@ export default function NotifikacijePage() {
           filter: `user_id=eq.${currentUser.id}`
         }, () => fetchNotifications(currentUser.id))
         .subscribe();
-
-      return () => supabase.removeChannel(channel);
     }
+    
     init();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [router]);
 
   async function fetchNotifications(userId) {
