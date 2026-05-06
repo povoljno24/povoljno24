@@ -205,7 +205,7 @@ export default function ChatPage() {
           </Link>
         </div>
         
-        {listing?.user_id === otherUserId && !hasRated && (
+        {listing?.user_id === otherUserId && !hasRated && user.id !== otherUserId && (
           <button 
             onClick={() => setShowRatingForm(true)}
             className="text-[11px] font-bold text-white bg-[#1D9E75] hover:bg-[#157a5a] px-3 py-1.5 rounded-lg transition-colors shrink-0"
