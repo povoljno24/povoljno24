@@ -64,6 +64,11 @@ export default function Login() {
               className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
             />
             {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+            <div className="flex justify-end mt-2">
+              <Link href="/forgot-password" size="sm" className="text-[12px] text-[#185FA5] hover:underline font-medium">
+                {t.forgotPassword}
+              </Link>
+            </div>
           </div>
 
           <button

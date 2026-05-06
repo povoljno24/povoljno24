@@ -59,6 +59,13 @@ const t = {
     loggingIn: 'Prijavljivanje...',
     noAccount: 'Nemaš nalog?',
     register: 'Registruj se',
+    forgotPassword: 'Zaboravili ste lozinku?',
+    resetPassword: 'Resetuj lozinku',
+    enterEmailReset: 'Unesite email adresu za resetovanje lozinke.',
+    resetLinkSent: 'Link za resetovanje lozinke je poslat!',
+    newPassword: 'Nova lozinka',
+    updatePassword: 'Ažuriraj lozinku',
+    passwordUpdated: 'Lozinka je uspešno ažurirana!',
 
     // Register
     registerTitle: 'Kreiraj nalog',
@@ -435,6 +442,12 @@ const t = {
     loggingIn: 'Signing in...',
     noAccount: "Don't have an account?",
     register: 'Register',
+    forgotPassword: 'Forgot your password?',
+    enterEmailReset: 'Enter your email address to reset your password.',
+    resetLinkSent: 'Reset link sent!',
+    newPassword: 'New password',
+    updatePassword: 'Update password',
+    passwordUpdated: 'Password updated successfully!',
 
     // Register
     registerTitle: 'Create account',
