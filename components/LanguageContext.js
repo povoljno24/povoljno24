@@ -759,21 +759,28 @@ const t = {
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [lang, setLangState] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('povoljno24_lang');
-      if (saved === 'sr' || saved === 'en') return saved;
-    }
-    return 'sr';
-  });
+  const [lang, setLangState] = useState('sr');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('povoljno24_lang');
+    if (saved === 'sr' || saved === 'en') setLangState(saved);
+    setMounted(true);
+  }, []);
 
   const setLang = (newLang) => {
     setLangState(newLang);
     localStorage.setItem('povoljno24_lang', newLang);
   };
 
+  const contextValue = { 
+    lang: mounted ? lang : 'sr', 
+    setLang, 
+    t: t[mounted ? lang : 'sr'] 
+  };
+
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t: t[lang] }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );

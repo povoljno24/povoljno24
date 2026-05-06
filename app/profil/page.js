@@ -31,44 +31,48 @@ export default function Profil() {
       }
       setUser(user);
 
-      const [{ data: profileData }, { data: listingsData }, { data: messagesData }, { data: favoritesData }] = await Promise.all([
-        supabase.from('profiles').select('id, username, full_name, bio, avatar_url, phone, phone_verified, verification_level').eq('id', user.id).single(),
-        supabase.from('listings').select('id, title, price, city, category, image_url, created_at, user_id, condition, views, last_bumped_at').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('messages').select('id, sender_id, receiver_id, content, created_at, is_read, listing_id').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false }),
-        supabase.from('favorites').select('listing_id, listings(id, title, price, image_url, city)').eq('user_id', user.id).order('created_at', { ascending: false }),
-      ]);
+      try {
+        const [profileRes, listingsRes, messagesRes, favoritesRes] = await Promise.all([
+          supabase.from('profiles').select('id, username, full_name, bio, avatar_url, phone, phone_verified, verification_level').eq('id', user.id).single(),
+          supabase.from('listings').select('id, title, price, city, category, image_url, created_at, user_id, condition, views, last_bumped_at').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('messages').select('id, sender_id, receiver_id, content, created_at, is_read, listing_id').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false }),
+          supabase.from('favorites').select('listing_id, listings(id, title, price, image_url, city)').eq('user_id', user.id).order('created_at', { ascending: false }),
+        ]);
 
-      setProfile(profileData);
-      if (profileData) {
-        setFormData({
-          username: profileData.username || '',
-          full_name: profileData.full_name || '',
-          phone: profileData.phone || '',
-          bio: profileData.bio || ''
-        });
+        if (profileRes.data) {
+          setProfile(profileRes.data);
+          setFormData({
+            username: profileRes.data.username || '',
+            full_name: profileRes.data.full_name || '',
+            phone: profileRes.data.phone || '',
+            bio: profileRes.data.bio || ''
+          });
+        }
+
+        setListings(listingsRes.data || []);
+        setMessages(messagesRes.data || []);
+
+        const favData = favoritesRes.data || [];
+        const formattedFavs = favData
+          .filter(f => f.listings)
+          .map(f => ({
+            id: f.listing_id,
+            ...f.listings
+          }));
+        setFavorites(formattedFavs);
+
+        const unreadIds = (messagesRes.data || []).filter(m => !m.is_read && m.receiver_id === user.id).map(m => m.id);
+        if (unreadIds.length > 0) {
+          await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
+        }
+      } catch (err) {
+        console.error('Profile load error:', err);
+      } finally {
+        setLoading(false);
       }
-
-      setListings(listingsData || []);
-      
-      setMessages(messagesData || []);
-
-      const favData = favoritesData || [];
-      const formattedFavs = favData.map(f => ({
-        id: f.listing_id,
-        ...f.listings
-      }));
-      setFavorites(formattedFavs);
-
-      // Mark messages as read
-      const unreadIds = (messagesData || []).filter(m => !m.is_read && m.receiver_id === user.id).map(m => m.id);
-      if (unreadIds.length > 0) {
-        await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
-      }
-
-      setLoading(false);
     }
     loadProfile();
-  }, []);
+  }, [router]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
