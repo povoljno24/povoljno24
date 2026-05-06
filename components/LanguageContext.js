@@ -375,6 +375,8 @@ const t = {
     chooseCat: 'Izaberi kategoriju',
     backToAds: '← Nazad na oglase',
     langTooltip: 'Promeni jezik / Change language',
+    notificationsSub: 'Pratite promene cena i nove poruke.',
+    markAllAsRead: 'Označi sve kao pročitano',
   },
   en: {
     // Navbar
@@ -749,6 +751,8 @@ const t = {
     chooseCat: 'Choose category',
     backToAds: '← Back to ads',
     langTooltip: 'Change language / Promeni jezik',
+    notificationsSub: 'Track price drops and new messages.',
+    markAllAsRead: 'Mark all as read',
   }
 };
 
