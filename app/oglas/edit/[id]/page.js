@@ -243,6 +243,15 @@ export default function EditOglas({ params }) {
               <option value="gaming">{t.gaming}</option>
               <option value="alati">{t.tools}</option>
               <option value="knjige">{t.books}</option>
+              <option value="usluge">{t.services}</option>
+              <option value="posao">{t.jobs}</option>
+              <option value="sport">{t.sports}</option>
+              <option value="kucni_ljubimci">{t.pets}</option>
+              <option value="deca">{t.kids}</option>
+              <option value="muzika">{t.music}</option>
+              <option value="poljoprivreda">{t.agriculture}</option>
+              <option value="umetnost">{t.art}</option>
+              <option value="ostalo">{t.other}</option>
             </select>
             {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
           </div>

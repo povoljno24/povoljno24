@@ -26,7 +26,7 @@ export default function Navbar() {
     async function init() {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       setUser(currentUser);
-      fetchCounts(currentUser);
+      if (currentUser) fetchCounts(currentUser);
     }
     init();
 
@@ -40,27 +40,38 @@ export default function Navbar() {
       }
     });
 
-    // Real-time subscriptions
-    const msgChannel = supabase.channel('realtime_msg_counts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async () => {
-        const { data: { user: latestUser } } = await supabase.auth.getUser();
-        if (latestUser) fetchCounts(latestUser);
-      })
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Real-time subscriptions - Filtered to current user
+    const msgChannel = supabase.channel(`msg_counts_${user.id}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'messages',
+        filter: `receiver_id=eq.${user.id}` 
+      }, () => fetchCounts(user))
       .subscribe();
       
-    const notifChannel = supabase.channel('realtime_notif_counts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, async () => {
-        const { data: { user: latestUser } } = await supabase.auth.getUser();
-        if (latestUser) fetchCounts(latestUser);
-      })
+    const notifChannel = supabase.channel(`notif_counts_${user.id}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, () => fetchCounts(user))
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(notifChannel);
     };
-  }, []);
+  }, [user]);
 
   return (
     <nav className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -79,7 +90,7 @@ export default function Navbar() {
         {/* Language Toggle */}
         <button 
           onClick={() => setLang(lang === 'sr' ? 'en' : 'sr')}
-          className="text-[11px] sm:text-[12px] font-bold text-gray-500 hover:text-[#185FA5] border border-gray-200 rounded-lg px-2 py-1 transition-colors bg-gray-50"
+          className="text-[11px] sm:text-[12px] font-bold text-gray-500 hover:text-[#185FA5] border border-gray-200 rounded-lg py-1 w-[38px] sm:w-[44px] flex items-center justify-center transition-colors bg-gray-50"
           title={t.langTooltip}
         >
           {lang === 'sr' ? 'EN' : 'SRB'}

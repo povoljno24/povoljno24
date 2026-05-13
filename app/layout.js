@@ -39,6 +39,11 @@ export default function RootLayout({ children }) {
       lang="sr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="preconnect" href="https://mbluydruyogrgaxztpi.supabase.co" />
+        <link rel="dns-prefetch" href="https://mbluydruyogrgaxztpi.supabase.co" />
+        <link rel="preconnect" href="https://mbluydruyogrgaxztpi.supabase.co" crossorigin />
+      </head>
       <body className="min-h-full flex flex-col bg-[#f5f5f5] text-[#1a1a1a]">
         <LanguageProvider>
           <ToastProvider>

@@ -55,17 +55,6 @@ export default function ForgotPassword() {
           </button>
         </form>
 
-        {message && (
-          <p className="mt-4 text-[13px] text-green-600 text-center bg-green-50 py-2 rounded-md font-medium">
-            {message}
-          </p>
-        )}
-
-        {error && (
-          <p className="mt-4 text-[13px] text-red-600 text-center bg-red-50 py-2 rounded-md font-medium">
-            {error}
-          </p>
-        )}
 
         <p className="mt-6 text-[13px] text-gray-600 text-center">
           <Link href="/login" className="text-[#185FA5] hover:underline font-medium">← {t.back}</Link>

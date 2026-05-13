@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 const t = {
   sr: {
@@ -24,6 +24,15 @@ const t = {
     gaming: 'Gaming',
     tools: 'Alati',
     books: 'Knjige',
+    services: 'Usluge',
+    jobs: 'Poslovi',
+    sports: 'Sport i rekreacija',
+    pets: 'Kućni ljubimci',
+    kids: 'Za decu',
+    music: 'Muzički instrumenti',
+    agriculture: 'Poljoprivreda',
+    art: 'Umetnost i kolekcije',
+    other: 'Ostalo',
     trust1: 'Provereni prodavci',
     trust2: 'Kupac zaštićen',
     trust3: 'Bez skrivenih troškova',
@@ -255,6 +264,15 @@ const t = {
     db_gaming: 'Gaming',
     db_alati: 'Alati',
     db_knjige: 'Knjige',
+    db_usluge: 'Usluge',
+    db_posao: 'Poslovi',
+    db_sport: 'Sport i rekreacija',
+    db_kucni_ljubimci: 'Kućni ljubimci',
+    db_deca: 'Za decu',
+    db_muzika: 'Muzički instrumenti',
+    db_poljoprivreda: 'Poljoprivreda',
+    db_umetnost: 'Umetnost i kolekcije',
+    db_ostalo: 'Ostalo',
     db_novo: 'Novo',
     db_polovno: 'Polovno',
 
@@ -407,6 +425,15 @@ const t = {
     gaming: 'Gaming',
     tools: 'Tools',
     books: 'Books',
+    services: 'Services',
+    jobs: 'Jobs',
+    sports: 'Sports & Recreation',
+    pets: 'Pets',
+    kids: 'Baby & Kids',
+    music: 'Musical Instruments',
+    agriculture: 'Agriculture',
+    art: 'Art & Collectibles',
+    other: 'Other',
     trust1: 'Verified sellers',
     trust2: 'Buyer protected',
     trust3: 'No hidden fees',
@@ -638,6 +665,15 @@ const t = {
     db_gaming: 'Gaming',
     db_alati: 'Tools',
     db_knjige: 'Books',
+    db_usluge: 'Services',
+    db_posao: 'Jobs',
+    db_sport: 'Sports & Recreation',
+    db_kucni_ljubimci: 'Pets',
+    db_deca: 'Baby & Kids',
+    db_muzika: 'Musical Instruments',
+    db_poljoprivreda: 'Agriculture',
+    db_umetnost: 'Art & Collectibles',
+    db_ostalo: 'Other',
     db_novo: 'New',
     db_polovno: 'Used',
 
@@ -782,16 +818,17 @@ export function LanguageProvider({ children }) {
     setMounted(true);
   }, []);
 
-  const setLang = (newLang) => {
+  const setLang = useCallback((newLang) => {
     setLangState(newLang);
     localStorage.setItem('povoljno24_lang', newLang);
-  };
+  }, []);
 
-  const contextValue = { 
+  const contextValue = useMemo(() => ({ 
     lang: mounted ? lang : 'sr', 
     setLang, 
-    t: t[mounted ? lang : 'sr'] 
-  };
+    t: t[mounted ? lang : 'sr'],
+    mounted
+  }), [mounted, lang, setLang]);
 
   return (
     <LanguageContext.Provider value={contextValue}>
