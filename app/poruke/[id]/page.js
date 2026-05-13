@@ -129,8 +129,13 @@ export default function ChatPage() {
     if (!newMessage.trim() || sending) return;
 
     setSending(true);
-    const content = newMessage.trim();
+    let content = newMessage.trim();
     setNewMessage('');
+
+    // Adversarial input sanitization: Prevent users from manually typing system message prefixes to spoof state milestones
+    if (content.startsWith('📦 [SISTEM]') || content.startsWith('✅ [SISTEM]')) {
+      content = "[Korisnik] " + content;
+    }
 
     const { data, error } = await supabase.from('messages').insert({
       listing_id: listingId,
@@ -160,6 +165,12 @@ export default function ChatPage() {
 
   async function handleActionSent() {
     if (!user || sending) return;
+    // Strict ownership runtime gate: Verify that the executing account owns the targeted listing asset
+    if (listing?.user_id !== user.id) {
+      alert("Bezbednosna provera: Samo vlasnik oglasa može označiti slanje pošiljke.");
+      return;
+    }
+
     setSending(true);
     const content = "📦 [SISTEM] Prodavac je označio predmet kao poslat.";
     const { data, error } = await supabase.from('messages').insert({
@@ -183,6 +194,12 @@ export default function ChatPage() {
 
   async function handleActionReceived() {
     if (!user || sending) return;
+    // Strict ownership runtime gate: Verify that the executing account is the interlocutor/buyer
+    if (listing?.user_id === user.id) {
+      alert("Bezbednosna provera: Samo kupac može potvrditi prijem pošiljke.");
+      return;
+    }
+
     setSending(true);
     const content = "✅ [SISTEM] Kupac je potvrdio prijem predmeta. Transakcija je uspešno završena!";
     const { data, error } = await supabase.from('messages').insert({
