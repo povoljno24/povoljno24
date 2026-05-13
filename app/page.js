@@ -29,6 +29,8 @@ export default function Home() {
   const [maxPrice, setMaxPrice] = useState('');
   const [filterCity, setFilterCity] = useState('');
   const [filterCondition, setFilterCondition] = useState('');
+  const [filterPhoto, setFilterPhoto] = useState(false);
+  const [filterVerified, setFilterVerified] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -64,7 +66,7 @@ export default function Home() {
     { name: t.other, value: 'ostalo' },
   ];
 
-  async function loadListings(searchTerm, category, minP, maxP, city, condition, sortParams, pageNum = 0, append = false) {
+  async function loadListings(searchTerm, category, minP, maxP, city, condition, sortParams, photoOnly = false, verifiedOnly = false, pageNum = 0, append = false) {
     if (!append) setLoading(true);
     else setMoreLoading(true);
     
@@ -79,6 +81,8 @@ export default function Home() {
     if (maxP) query = query.lte('price', parseInt(maxP));
     if (city) query = query.eq('city', city);
     if (condition) query = query.eq('condition', condition);
+    if (photoOnly) query = query.not('image_url', 'is', null);
+    if (verifiedOnly) query = query.eq('is_verified', true);
     
     // Apply sorting
     if (sortParams === 'price_asc') {
@@ -130,7 +134,7 @@ export default function Home() {
 
   const handleSearch = () => {
     setShowSuggestions(false);
-    loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false);
+    loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, filterPhoto, filterVerified, 0, false);
   };
 
   const clearFilters = () => {
@@ -140,8 +144,10 @@ export default function Home() {
     setMaxPrice('');
     setFilterCity('');
     setFilterCondition('');
+    setFilterPhoto(false);
+    setFilterVerified(false);
     setSortBy('newest');
-    loadListings('', '', '', '', '', '', 'newest', 0, false);
+    loadListings('', '', '', '', '', '', 'newest', false, false, 0, false);
   };
 
   return (
@@ -201,7 +207,7 @@ export default function Home() {
                       onClick={() => {
                         setFilterCat(s.value);
                         setSearch('');
-                        loadListings('', s.value, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false);
+                        loadListings('', s.value, minPrice, maxPrice, filterCity, filterCondition, sortBy, filterPhoto, filterVerified, 0, false);
                       }}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors group"
                     >
@@ -241,6 +247,10 @@ export default function Home() {
               setFilterCity={setFilterCity}
               filterCondition={filterCondition}
               setFilterCondition={setFilterCondition}
+              filterPhoto={filterPhoto}
+              setFilterPhoto={setFilterPhoto}
+              filterVerified={filterVerified}
+              setFilterVerified={setFilterVerified}
               handleSearch={handleSearch}
               clearFilters={clearFilters}
               cities={cities}
@@ -270,7 +280,7 @@ export default function Home() {
                 onClick={() => { 
                   const nextCat = isSelected ? '' : cat.value;
                   setFilterCat(nextCat); 
-                  loadListings(search, nextCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, 0, false); 
+                  loadListings(search, nextCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, filterPhoto, filterVerified, 0, false); 
                 }} 
                 className={`rounded-full py-2.5 px-4 text-[13px] font-medium cursor-pointer transition-all border outline-none ${
                   isSelected 
@@ -289,7 +299,7 @@ export default function Home() {
       <section className="pt-2 pb-12 px-6 bg-transparent max-w-[1200px] mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-base font-semibold text-gray-800">{t.newListings}</h2>
-          {(filterCat || search || minPrice || maxPrice || filterCity || filterCondition || sortBy !== 'newest') && (
+          {(filterCat || search || minPrice || maxPrice || filterCity || filterCondition || filterPhoto || filterVerified || sortBy !== 'newest') && (
             <button 
               onClick={clearFilters} 
               className="text-[13px] font-medium text-[#E24B4A] hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1"
@@ -393,7 +403,7 @@ export default function Home() {
         {hasMore && !loading && listings.length > 0 && (
           <div className="flex justify-center mt-10">
             <button 
-              onClick={() => loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, page + 1, true)}
+              onClick={() => loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, filterPhoto, filterVerified, page + 1, true)}
               disabled={moreLoading}
               className={`bg-white border border-gray-300 text-gray-700 hover:bg-[#E6F1FB] hover:text-[#185FA5] hover:border-[#185FA5] px-8 py-3 rounded-xl font-semibold shadow-sm transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 ${moreLoading ? 'opacity-70' : ''}`}
             >
