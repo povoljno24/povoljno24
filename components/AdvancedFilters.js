@@ -89,28 +89,38 @@ export default function AdvancedFilters({
           </button>
         </div>
       </div>
+
+      {/* Row 2 Column 3 empty spacer to complete the middle grid line cleanly */}
+      <div className="hidden sm:block"></div>
+
+      {/* Row 3 Column 1 */}
       <div>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.other || 'Dodatno'}</label>
-        <div className="flex flex-col gap-1.5 justify-center h-[46px]">
-          <button 
-            type="button"
-            onClick={() => setFilterPhoto(!filterPhoto)}
-            className={`w-full py-1.5 px-3 rounded-lg text-left text-[12px] font-semibold transition-all flex items-center justify-between border ${filterPhoto ? 'bg-[#185FA5]/10 text-[#185FA5] border-[#185FA5]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-          >
-            <span className="flex items-center gap-1.5 truncate">📸 {t.onlyWithPhoto || 'Samo sa slikom'}</span>
-            <span className={`w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 ${filterPhoto ? 'bg-[#185FA5] border-[#185FA5] text-white text-[9px] font-bold' : 'border-gray-300 bg-white'}`}>{filterPhoto ? '✓' : ''}</span>
-          </button>
-          <button 
-            type="button"
-            onClick={() => setFilterVerified(!filterVerified)}
-            className={`w-full py-1.5 px-3 rounded-lg text-left text-[12px] font-semibold transition-all flex items-center justify-between border ${filterVerified ? 'bg-[#185FA5]/10 text-[#185FA5] border-[#185FA5]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-          >
-            <span className="flex items-center gap-1.5 truncate">🛡️ {t.onlyVerified || 'Samo provereni'}</span>
-            <span className={`w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 ${filterVerified ? 'bg-[#185FA5] border-[#185FA5] text-white text-[9px] font-bold' : 'border-gray-300 bg-white'}`}>{filterVerified ? '✓' : ''}</span>
-          </button>
-        </div>
+        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Slike</label>
+        <button 
+          type="button"
+          onClick={() => setFilterPhoto(!filterPhoto)}
+          className={`w-full h-[46px] px-4 rounded-xl text-left text-[13px] font-bold transition-all flex items-center justify-between border ${filterPhoto ? 'bg-[#185FA5] text-white border-[#185FA5] shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+        >
+          <span className="flex items-center gap-2 truncate">📸 {t.onlyWithPhoto || 'Samo sa slikom'}</span>
+          <span className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 transition-colors ${filterPhoto ? 'bg-white text-[#185FA5] text-[11px] font-extrabold border-white' : 'border-gray-300 bg-white text-transparent'}`}>✓</span>
+        </button>
       </div>
-      <div className="mt-auto sm:mt-0 sm:col-span-3 flex flex-col sm:flex-row gap-3 sm:justify-end">
+
+      {/* Row 3 Column 2 */}
+      <div>
+        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Sigurnost</label>
+        <button 
+          type="button"
+          onClick={() => setFilterVerified(!filterVerified)}
+          className={`w-full h-[46px] px-4 rounded-xl text-left text-[13px] font-bold transition-all flex items-center justify-between border ${filterVerified ? 'bg-[#185FA5] text-white border-[#185FA5] shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+        >
+          <span className="flex items-center gap-2 truncate">🛡️ {t.onlyVerified || 'Samo provereni'}</span>
+          <span className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 transition-colors ${filterVerified ? 'bg-white text-[#185FA5] text-[11px] font-extrabold border-white' : 'border-gray-300 bg-white text-transparent'}`}>✓</span>
+        </button>
+      </div>
+
+      {/* Row 3 Column 3 - Apply filters button aligned flush right at the bottom */}
+      <div className="mt-auto sm:mt-0 sm:col-span-1 flex flex-col sm:flex-row gap-3 sm:justify-end items-end">
         <button 
           type="button"
           onClick={() => { clearFilters(); setShowAdvanced(false); }}
@@ -121,7 +131,7 @@ export default function AdvancedFilters({
         <button 
           type="button"
           onClick={() => { handleSearch(); setShowAdvanced(false); }}
-          className="w-full sm:w-auto bg-[#185FA5] hover:bg-[#0C447C] text-white py-4 sm:py-2.5 px-10 rounded-xl text-sm sm:text-[13px] font-bold transition-all shadow-xl active:scale-95"
+          className="w-full sm:w-auto bg-[#185FA5] hover:bg-[#0C447C] text-white py-4 sm:py-0 sm:h-[46px] px-10 rounded-xl text-sm sm:text-[13px] font-bold transition-all shadow-xl active:scale-95 flex items-center justify-center"
         >
           {t.applyFilters}
         </button>
