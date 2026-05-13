@@ -132,17 +132,21 @@ export default function ChatPage() {
     const content = newMessage.trim();
     setNewMessage('');
 
-    const { error } = await supabase.from('messages').insert({
+    const { data, error } = await supabase.from('messages').insert({
       listing_id: listingId,
       sender_id: user.id,
       receiver_id: otherUserId,
       content,
       is_read: false
-    });
+    }).select().single();
 
     if (error) {
       alert(t.sendError + error.message);
-    } else {
+    } else if (data) {
+      setMessages(prev => {
+        if (prev.find(m => m.id === data.id)) return prev;
+        return [...prev, data];
+      });
       // Create notification for receiver
       await supabase.from('notifications').insert({
         user_id: otherUserId,
@@ -158,14 +162,22 @@ export default function ChatPage() {
     if (!user || sending) return;
     setSending(true);
     const content = "📦 [SISTEM] Prodavac je označio predmet kao poslat.";
-    const { error } = await supabase.from('messages').insert({
+    const { data, error } = await supabase.from('messages').insert({
       listing_id: listingId,
       sender_id: user.id,
       receiver_id: otherUserId,
       content,
       is_read: false
-    });
-    if (error) alert(t.sendError + error.message);
+    }).select().single();
+
+    if (error) {
+      alert(t.sendError + error.message);
+    } else if (data) {
+      setMessages(prev => {
+        if (prev.find(m => m.id === data.id)) return prev;
+        return [...prev, data];
+      });
+    }
     setSending(false);
   }
 
@@ -173,14 +185,22 @@ export default function ChatPage() {
     if (!user || sending) return;
     setSending(true);
     const content = "✅ [SISTEM] Kupac je potvrdio prijem predmeta. Transakcija je uspešno završena!";
-    const { error } = await supabase.from('messages').insert({
+    const { data, error } = await supabase.from('messages').insert({
       listing_id: listingId,
       sender_id: user.id,
       receiver_id: otherUserId,
       content,
       is_read: false
-    });
-    if (error) alert(t.sendError + error.message);
+    }).select().single();
+
+    if (error) {
+      alert(t.sendError + error.message);
+    } else if (data) {
+      setMessages(prev => {
+        if (prev.find(m => m.id === data.id)) return prev;
+        return [...prev, data];
+      });
+    }
     setSending(false);
   }
 
