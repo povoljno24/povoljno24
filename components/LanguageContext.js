@@ -11,7 +11,7 @@ const t = {
     postAd: 'Postavi oglas',
 
     // Home / Search
-    hero: 'Kupi i prodaj sve — brzo, sigurno, povoljno',
+    hero: 'Kupi i prodaj sve brzo, sigurno, povoljno',
     heroSub: 'Hiljade oglasa u Srbiji. Provereni prodavci. Bez prevara.',
     searchPlaceholder: 'Šta tražiš?',
     search: 'Pretraži',
@@ -226,7 +226,7 @@ const t = {
     phoneVerifyFormatError: 'Broj mora početi sa + (npr. +3816...)',
     phoneVerifySendCode: 'Pošalji SMS kod',
     phoneVerifySendingCode: 'Slanje koda...',
-    phoneVerifyEnterCode: 'Unesite 6-cifreni kod koji smo vam poslali na',
+    phoneVerifyEnterCode: 'Unesite kod koji smo vam poslali na',
     phoneVerifySmsCode: 'SMS Kod',
     phoneVerifyConfirm: 'Potvrdi kod',
     phoneVerifyVerifying: 'Verifikacija...',
@@ -310,11 +310,11 @@ const t = {
 
     // Kako funkcionise
     hifTitle: 'Kupi i prodaj pametnije, brže i sigurnije',
-    hifSub: 'Dobrodošli na Povoljno24.rs — platformu dizajniranu da spoji kupce i prodavce širom Srbije na najjednostavniji mogući način. Saznajte kako možete izvući maksimum iz našeg sajta.',
+    hifSub: 'Dobrodošli na Povoljno24.rs, platformu dizajniranu da spoji kupce i prodavce širom Srbije na najjednostavniji mogući način. Saznajte kako možete izvući maksimum iz našeg sajta.',
     startSelling: 'Započni prodaju',
     exploreAds: 'Istraži oglase',
     forWhom: 'Za koga je Povoljno24?',
-    forWhomSub: 'Bilo da praznite tavan, pokrećete mali biznis, ili tražite odličnu ponudu — na pravom ste mestu.',
+    forWhomSub: 'Bilo da praznite tavan, pokrećete mali biznis, ili tražite odličnu ponudu, na pravom ste mestu.',
     forBuyers: 'Za Kupce',
     forBuyersSub: 'Pronađite sve što vam je potrebno po najpovoljnijim cenama. Od elektronike do nekretnina, naša platforma vam omogućava da pretražujete, filtrirate i direktno komunicirate sa proverenim prodavcima bez skrivenih provizija.',
     forBuyersList: ['Veliki izbor kategorija', 'Sigurna komunikacija', 'Bez posrednika i provizija'],
@@ -412,7 +412,7 @@ const t = {
     postAd: 'Post an ad',
 
     // Home / Search
-    hero: 'Buy and sell anything — fast, safe, affordable',
+    hero: 'Buy and sell anything fast, safe, affordable',
     heroSub: 'Thousands of listings in Serbia. Verified sellers. No scams.',
     searchPlaceholder: 'What are you looking for?',
     search: 'Search',
@@ -627,7 +627,7 @@ const t = {
     phoneVerifyFormatError: 'Number must start with + (e.g. +3816...)',
     phoneVerifySendCode: 'Send SMS code',
     phoneVerifySendingCode: 'Sending code...',
-    phoneVerifyEnterCode: 'Enter the 6-digit code we sent to',
+    phoneVerifyEnterCode: 'Enter the verification code we sent to',
     phoneVerifySmsCode: 'SMS Code',
     phoneVerifyConfirm: 'Confirm code',
     phoneVerifyVerifying: 'Verifying...',
@@ -711,11 +711,11 @@ const t = {
 
     // Kako funkcionise
     hifTitle: 'Buy and sell smarter, faster and safer',
-    hifSub: 'Welcome to Povoljno24.rs — a platform designed to connect buyers and sellers across Serbia in the simplest way possible. Find out how to get the most out of our site.',
+    hifSub: 'Welcome to Povoljno24.rs, a platform designed to connect buyers and sellers across Serbia in the simplest way possible. Find out how to get the most out of our site.',
     startSelling: 'Start selling',
     exploreAds: 'Explore listings',
     forWhom: 'Who is Povoljno24 for?',
-    forWhomSub: 'Whether you are clearing out the attic, starting a small business, or looking for a great deal — you are in the right place.',
+    forWhomSub: 'Whether you are clearing out the attic, starting a small business, or looking for a great deal, you are in the right place.',
     forBuyers: 'For Buyers',
     forBuyersSub: 'Find everything you need at the best prices. From electronics to real estate, our platform lets you search, filter and communicate directly with verified sellers with no hidden fees.',
     forBuyersList: ['Wide range of categories', 'Secure communication', 'No middlemen or commissions'],
@@ -739,7 +739,7 @@ const t = {
     whyMobile: 'Works on all devices',
     whyMobileSub: 'Buy and sell on the go. Our site works perfectly on mobile phones, tablets and computers.',
     ctaTitle: 'Ready to get started?',
-    ctaSub: 'Join thousands of satisfied users and become part of the largest growing buy-and-sell community in Serbia.',
+    ctaSub: 'Join thousands of satisfied users and become part of the largest growing buy and sell community in Serbia.',
     ctaBtn: 'Create a free account',
 
     // Footer
@@ -749,8 +749,8 @@ const t = {
     contact: 'Contact',
 
     // Footer Pages Content
-    aboutText1: 'Povoljno24 is the leading buy-and-sell platform in Serbia, founded with the goal of connecting people in a secure and simple way.',
-    aboutText2: 'Our team works daily to improve the user experience, implementing state-of-the-art technologies and protection systems to ensure every transaction is successful.',
+    aboutText1: 'Povoljno24 is the leading buy and sell platform in Serbia, founded with the goal of connecting people in a secure and simple way.',
+    aboutText2: 'Our team works daily to improve the user experience, implementing modern technologies and protection systems to ensure every transaction is successful.',
     ourMission: 'Our Mission',
     missionText: 'To create a digital environment where everyone can trade with confidence, contributing to the local economy and sustainable consumption.',
     

@@ -10,7 +10,7 @@ export function SellerPageClient({ profile, listings, avgRating, reviewCount, id
 
   const joinYear = profile.created_at
     ? new Date(profile.created_at).getFullYear()
-    : '—';
+    : '';
 
   return (
     <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
