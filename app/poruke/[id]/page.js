@@ -44,7 +44,7 @@ export default function ChatPage() {
       // Fetch Listing & Other User Info
       const [listingRes, profileRes] = await Promise.all([
         supabase.from('listings').select('*').eq('id', listingId).single(),
-        supabase.from('profiles').select('username').eq('id', otherUserId).single(),
+        supabase.from('profiles').select('username, verification_level').eq('id', otherUserId).single(),
       ]);
 
       setListing(listingRes.data);
@@ -154,6 +154,36 @@ export default function ChatPage() {
     setSending(false);
   }
 
+  async function handleActionSent() {
+    if (!user || sending) return;
+    setSending(true);
+    const content = "📦 [SISTEM] Prodavac je označio predmet kao poslat.";
+    const { error } = await supabase.from('messages').insert({
+      listing_id: listingId,
+      sender_id: user.id,
+      receiver_id: otherUserId,
+      content,
+      is_read: false
+    });
+    if (error) alert(t.sendError + error.message);
+    setSending(false);
+  }
+
+  async function handleActionReceived() {
+    if (!user || sending) return;
+    setSending(true);
+    const content = "✅ [SISTEM] Kupac je potvrdio prijem predmeta. Transakcija je uspešno završena!";
+    const { error } = await supabase.from('messages').insert({
+      listing_id: listingId,
+      sender_id: user.id,
+      receiver_id: otherUserId,
+      content,
+      is_read: false
+    });
+    if (error) alert(t.sendError + error.message);
+    setSending(false);
+  }
+
   async function handleSubmitRating() {
     if (!user) return;
     setSubmittingRating(true);
@@ -189,6 +219,11 @@ export default function ChatPage() {
     </div>
   );
 
+  const hasSent = messages.some(m => m.content.startsWith('📦 [SISTEM]'));
+  const hasReceived = messages.some(m => m.content.startsWith('✅ [SISTEM]'));
+  const isSeller = listing?.user_id === user?.id;
+  const isBuyer = listing && listing?.user_id !== user?.id;
+
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5] h-[calc(100vh-64px)]">
       {/* Header */}
@@ -199,7 +234,14 @@ export default function ChatPage() {
           </svg>
         </Link>
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-gray-900 truncate">{otherUser?.username || t.userWord}</div>
+          <Link href={`/prodavac/${otherUserId}`} className="inline-flex items-center gap-2 font-bold text-gray-900 truncate hover:text-[#185FA5] transition-colors group">
+            <span>{otherUser?.username || t.userWord}</span>
+            {otherUser?.verification_level > 0 && (
+              <span className="text-[10px] font-semibold bg-[#EAF3DE] text-[#3B6D11] px-1.5 py-0.5 rounded border border-[#d3ecc1] shrink-0 group-hover:bg-[#d9ebd0] transition-colors" title="Verifikovan nivo">
+                🛡️ Nivo {otherUser.verification_level}
+              </span>
+            )}
+          </Link>
           <Link href={`/oglas/${listingId}`} className="text-[12px] text-[#185FA5] font-medium truncate block hover:underline">
             {t.listingLabel}{listing?.title}
           </Link>
@@ -213,6 +255,45 @@ export default function ChatPage() {
             {t.rateSeller}
           </button>
         )}
+      </div>
+
+      {/* Transaction Lifecycle Status Controller Banner */}
+      <div className="bg-amber-50/80 border-b border-amber-100 px-6 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left shadow-inner shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-base">{hasReceived ? '🎉' : hasSent ? '🚚' : '🤝'}</span>
+          <div className="text-[12px] text-amber-900 leading-tight">
+            <span className="font-bold">Status dogovora: </span>
+            {hasReceived ? (
+              <span className="text-[#1D9E75] font-extrabold">Paket je uspešno preuzet. Završeno!</span>
+            ) : hasSent ? (
+              <span className="text-amber-800 font-semibold">Predmet je poslat. Čeka se potvrda kupca o preuzimanju.</span>
+            ) : (
+              <span className="text-gray-600">U toku pregovori. Prodavac može označiti slanje po dogovoru.</span>
+            )}
+          </div>
+        </div>
+
+        {/* Action Triggers */}
+        <div className="flex items-center gap-2 shrink-0">
+          {isSeller && !hasSent && (
+            <button
+              onClick={handleActionSent}
+              disabled={sending}
+              className="bg-[#185FA5] hover:bg-[#0C447C] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            >
+              📦 Označi kao poslato
+            </button>
+          )}
+          {isBuyer && hasSent && !hasReceived && (
+            <button
+              onClick={handleActionReceived}
+              disabled={sending}
+              className="bg-[#1D9E75] hover:bg-[#157a5a] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm active:scale-95 disabled:opacity-50 animate-pulse"
+            >
+              ✅ Potvrdi prijem paketa
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Rating Form Modal */}
@@ -256,6 +337,27 @@ export default function ChatPage() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((msg, idx) => {
+          // Intercept system event notifications
+          if (msg.content.startsWith('📦 [SISTEM]') || msg.content.startsWith('✅ [SISTEM]')) {
+            const isDelivery = msg.content.startsWith('✅ [SISTEM]');
+            const cleanText = msg.content.replace('📦 [SISTEM] ', '').replace('✅ [SISTEM] ', '');
+            return (
+              <div key={msg.id || idx} className="my-6 text-center">
+                <div className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-sm max-w-[90%] border ${
+                  isDelivery 
+                    ? 'bg-[#EAF3DE] text-[#3B6D11] border-[#d3ecc1]' 
+                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                }`}>
+                  <span className="text-base shrink-0">{isDelivery ? '🎉' : '📦'}</span>
+                  <span className="text-left">{cleanText}</span>
+                </div>
+                <div className="text-[10px] text-gray-400 mt-1">
+                  {new Date(msg.created_at).toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            );
+          }
+
           const isMe = msg.sender_id === user.id;
           return (
             <div key={msg.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
