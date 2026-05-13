@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../components/LanguageContext';
 
 export default function AdminDashboard() {
@@ -10,10 +11,20 @@ export default function AdminDashboard() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('reports'); // 'reports' | 'listings'
+  const router = useRouter();
 
   useEffect(() => {
-    loadReports();
-  }, []);
+    async function checkAdmin() {
+      const { data: { user } } = await supabase.auth.getUser();
+      const adminEmails = ['alex@pixelsurgestudio.dev', 'admin@povoljno24.rs'];
+      if (!user || !adminEmails.includes(user?.email)) {
+        router.push('/');
+        return;
+      }
+      loadReports();
+    }
+    checkAdmin();
+  }, [router]);
 
   async function loadReports() {
     setLoading(true);

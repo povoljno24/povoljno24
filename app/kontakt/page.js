@@ -13,11 +13,19 @@ export default function ContactPage() {
     setLoading(true);
     setError('');
 
+    // Spam cooldown timer check (60 seconds for global studio form)
+    const lastGlobalSend = localStorage.getItem('global_contact_cooldown');
+    if (lastGlobalSend && Date.now() - parseInt(lastGlobalSend, 10) < 60000) {
+      setError(t.contactRateLimit || "Molimo sačekajte 60 sekundi pre slanja nove poruke.");
+      setLoading(false);
+      return;
+    }
+
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
 
     try {
-      const response = await fetch('https://formspree.io/f/mzdogwll', {
+      const response = await fetch('https://formsubmit.co/ajax/alex@pixelsurgestudio.dev', {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
@@ -27,6 +35,7 @@ export default function ContactPage() {
       });
 
       if (response.ok) {
+        localStorage.setItem('global_contact_cooldown', Date.now().toString());
         setSent(true);
       } else {
         setError(t.errorPrefix + 'Failed to send message.');

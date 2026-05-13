@@ -28,6 +28,14 @@ export default function ContactForm({ listingId, receiverId }) {
       return;
     }
     
+    // Prevent spam flooding with a basic 30-second client-side dispatch cooldown lock
+    const lastSendTime = localStorage.getItem(`contact_cooldown_${listingId}`);
+    if (lastSendTime && Date.now() - parseInt(lastSendTime, 10) < 30000) {
+      setMsgError(t.contactRateLimit || "Molimo sačekajte 30 sekundi pre slanja nove poruke.");
+      setSendingMsg(false);
+      return;
+    }
+
     const { error } = await supabase.from('messages').insert({
       listing_id: listingId,
       sender_id: user.id,
@@ -39,6 +47,7 @@ export default function ContactForm({ listingId, receiverId }) {
     if (error) {
       setMsgError(t.reportError + error.message);
     } else {
+      localStorage.setItem(`contact_cooldown_${listingId}`, Date.now().toString());
       window.location.href = `/poruke/${listingId}-${receiverId}`;
     }
     setSendingMsg(false);

@@ -26,7 +26,7 @@ export default function HelpPage() {
           <div className="bg-[#E6F1FB] p-8 rounded-2xl border border-[#d6ebfa] mt-12">
             <h3 className="text-lg font-bold text-[#0C447C] mb-2">{t.needMoreHelp}</h3>
             <p className="text-[#185FA5] mb-4">{t.contactSupportText}</p>
-            <a href="mailto:support@povoljno24.rs" className="text-[#185FA5] font-bold hover:underline">support@povoljno24.rs</a>
+            <a href="mailto:alex@pixelsurgestudio.dev" className="text-[#185FA5] font-bold hover:underline">alex@pixelsurgestudio.dev</a>
           </div>
         </div>
       </div>
