@@ -18,16 +18,16 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: {
-    template: '%s | Povoljno24.rs',
-    default: 'Povoljno24.rs - Kupi i prodaj sve brzo i sigurno',
+    template: '%s | Povoljno24',
+    default: 'Povoljno24 - Kupi i prodaj sve brzo i sigurno',
   },
   description: 'Najveća platforma za kupovinu i prodaju u Srbiji. Hiljade oglasa iz kategorija: elektronika, automobili, nekretnine, moda i još mnogo toga. Bezbedna trgovina i provereni prodavci.',
   keywords: ['oglasi', 'kupovina', 'prodaja', 'srbija', 'povoljno24', 'polovni automobili', 'nekretnine', 'mali oglasi', 'besplatni oglasi', 'beograd', 'novi sad', 'niš', 'kupujem prodajem', 'polovni telefoni'],
   openGraph: {
-    title: 'Povoljno24.rs - Kupi i prodaj sve',
+    title: 'Povoljno24 - Kupi i prodaj sve',
     description: 'Najveća platforma za kupovinu i prodaju u Srbiji.',
-    url: 'https://povoljno24.rs',
-    siteName: 'Povoljno24.rs',
+    url: 'https://povoljno24.com',
+    siteName: 'Povoljno24',
     locale: 'sr_RS',
     type: 'website',
   },

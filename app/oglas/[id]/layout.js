@@ -23,10 +23,10 @@ export async function generateMetadata({ params }) {
 
   return {
     title: listing.title,
-    description: listing.description ? listing.description.substring(0, 160) : `Kupite ${listing.title} na Povoljno24.rs. Cena: ${listing.price} RSD.`,
+    description: listing.description ? listing.description.substring(0, 160) : `Kupite ${listing.title} na Povoljno24. Cena: ${listing.price} RSD.`,
     openGraph: {
       title: listing.title,
-      description: listing.description ? listing.description.substring(0, 160) : `Kupite ${listing.title} na Povoljno24.rs.`,
+      description: listing.description ? listing.description.substring(0, 160) : `Kupite ${listing.title} na Povoljno24.`,
       images: listing.image_url ? [listing.image_url] : [],
     },
   };

@@ -310,7 +310,7 @@ const t = {
 
     // Kako funkcionise
     hifTitle: 'Kupi i prodaj pametnije, brže i sigurnije',
-    hifSub: 'Dobrodošli na Povoljno24.rs, platformu dizajniranu da spoji kupce i prodavce širom Srbije na najjednostavniji mogući način. Saznajte kako možete izvući maksimum iz našeg sajta.',
+    hifSub: 'Dobrodošli na Povoljno24, platformu dizajniranu da spoji kupce i prodavce širom Srbije na najjednostavniji mogući način. Saznajte kako možete izvući maksimum iz našeg sajta.',
     startSelling: 'Započni prodaju',
     exploreAds: 'Istraži oglase',
     forWhom: 'Za koga je Povoljno24?',
@@ -711,7 +711,7 @@ const t = {
 
     // Kako funkcionise
     hifTitle: 'Buy and sell smarter, faster and safer',
-    hifSub: 'Welcome to Povoljno24.rs, a platform designed to connect buyers and sellers across Serbia in the simplest way possible. Find out how to get the most out of our site.',
+    hifSub: 'Welcome to Povoljno24, a platform designed to connect buyers and sellers across Serbia in the simplest way possible. Find out how to get the most out of our site.',
     startSelling: 'Start selling',
     exploreAds: 'Explore listings',
     forWhom: 'Who is Povoljno24 for?',

@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function checkAdmin() {
       const { data: { user } } = await supabase.auth.getUser();
-      const adminEmails = ['alex@pixelsurgestudio.dev', 'admin@povoljno24.rs'];
+      const adminEmails = ['alex@pixelsurgestudio.dev', 'admin@povoljno24.com'];
       if (!user || !adminEmails.includes(user?.email)) {
         router.push('/');
         return;

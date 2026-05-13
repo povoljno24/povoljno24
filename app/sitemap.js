@@ -1,7 +1,7 @@
 import { supabaseServer } from '../lib/supabase-server';
 
 export default async function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://povoljno24.rs';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://povoljno24.com';
 
   // Get all listings
   const { data: listings } = await supabaseServer

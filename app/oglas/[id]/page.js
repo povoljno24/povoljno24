@@ -55,14 +55,14 @@ export async function generateMetadata({ params }) {
       description: listing.description
         ? listing.description.substring(0, 160)
         : `Kupite ${listing.title} povoljno na Povoljno24. Najbolja ponuda u gradu ${listing.city}.`,
-      url: `https://povoljno24.rs/oglas/${listing.id}`,
+      url: `https://povoljno24.com/oglas/${listing.id}`,
       siteName: 'Povoljno24',
       images: [{ url: listing.image_url || '/default-og.png', width: 800, height: 600, alt: listing.title }],
       locale: 'sr_RS',
       type: 'website',
     },
     alternates: {
-      canonical: `https://povoljno24.rs/oglas/${listing.id}`,
+      canonical: `https://povoljno24.com/oglas/${listing.id}`,
     },
   };
 }
