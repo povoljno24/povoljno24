@@ -76,7 +76,7 @@ export default function Navbar() {
   return (
     <nav className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white border-b border-gray-200 sticky top-0 z-50">
       <Link href="/" className="text-lg sm:text-xl font-semibold text-[#185FA5] hover:opacity-90 transition-opacity shrink-0">
-        Povoljno<span className="text-[#E24B4A]">24</span>.rs
+        Povoljno<span className="text-[#E24B4A]">24</span>
       </Link>
 
       <div className="flex items-center gap-3 sm:gap-5">
