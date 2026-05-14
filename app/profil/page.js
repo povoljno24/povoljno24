@@ -104,7 +104,7 @@ export default function Profil() {
     if (soldFormData.soldOnPlatform && soldFormData.price) {
       const { error: txError } = await supabase.from('transactions').insert({
         seller_id: user.id,
-        listing_id: listing.id,
+        listing_id: String(listing.id),
         listing_title: listing.title,
         sale_price: Number(soldFormData.price),
         was_shipped: soldFormData.wasShipped
