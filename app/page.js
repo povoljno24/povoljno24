@@ -346,14 +346,10 @@ export default function Home() {
                   >
                     {listing.image_url ? (
                       <>
-                        {/* Blurred background - Optimized */}
-                        <Image 
-                          src={listing.image_url} 
-                          alt=""
-                          fill
-                          sizes="10vw"
-                          quality={1}
-                          className="absolute inset-0 blur-md opacity-40 scale-110 pointer-events-none object-cover"
+                        {/* Blurred background */}
+                        <div 
+                          className="absolute inset-0 blur-md opacity-40 scale-110 pointer-events-none"
+                          style={{ backgroundImage: `url(${listing.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
                         />
                         <Image 
                           src={listing.image_url} 
