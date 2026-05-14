@@ -4,6 +4,7 @@ import Link from 'next/link';
 import StarRating from '../../../components/StarRating';
 import FavoriteButton from './FavoriteButton';
 import ReportButton from '../../../components/ReportButton';
+import UserBadges from '../../../components/UserBadges';
 
 export function ListingBreadcrumbs({ listing }) {
   const { t } = useLanguage();
@@ -80,14 +81,12 @@ export function SellerCard({ seller, listingUserId }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-gray-900 text-[15px] truncate">{seller.username || t.userWord}</div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-1">
             <StarRating rating={seller.avgRating} size="sm" />
             <span className="text-[10px] text-gray-400">({seller.reviewCount})</span>
           </div>
+          <UserBadges profile={seller} user={seller} averageRating={seller.avgRating} />
         </div>
-        <span className="text-[10px] font-semibold bg-[#EAF3DE] text-[#3B6D11] px-2 py-0.5 rounded-full border border-[#d3ecc1] shrink-0">
-          {t.verifiedBadge}
-        </span>
       </div>
       
       {seller.phone_verified && (

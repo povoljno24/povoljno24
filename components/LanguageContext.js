@@ -299,6 +299,7 @@ const t = {
 
     // Chat page
     rateSeller: 'Oceni prodavca',
+    rateBuyer: 'Oceni kupca',
     yourRating: 'Vaša ocena',
     comment: 'Komentar (opciono)',
     commentPlaceholder: 'Kakvo je bilo iskustvo sa ovim prodavcem?',
@@ -404,6 +405,19 @@ const t = {
     langTooltip: 'Promeni jezik / Change language',
     notificationsSub: 'Pratite promene cena i nove poruke.',
     markAllAsRead: 'Označi sve kao pročitano',
+
+    // Gamification
+    profileCompleteness: 'Kompletnost profila',
+    nextStep: 'Sledeći korak',
+    addAvatar: 'Dodaj profilnu sliku',
+    addFullName: 'Unesi Ime i Prezime',
+    addBio: 'Dodaj kratku biografiju',
+    verifyPhone: 'Verifikuj broj telefona',
+    profileCompleteSuccess: 'Profil 100% kompletan! Osvojili ste bedž Proveren.',
+    badgeFastResponder: 'Brz odgovor',
+    badgeHighlyRated: 'Sjajne ocene',
+    badgeVeteran: 'Povoljno Veteran',
+    badgeTopContributor: 'Top Saradnik',
   },
   en: {
     // Navbar
@@ -702,6 +716,7 @@ const t = {
 
     // Chat page
     rateSeller: 'Rate seller',
+    rateBuyer: 'Rate buyer',
     yourRating: 'Your rating',
     comment: 'Comment (optional)',
     commentPlaceholder: 'How was your experience with this seller?',
@@ -807,6 +822,19 @@ const t = {
     langTooltip: 'Change language / Promeni jezik',
     notificationsSub: 'Track price drops and new messages.',
     markAllAsRead: 'Mark all as read',
+
+    // Gamification
+    profileCompleteness: 'Profile Completeness',
+    nextStep: 'Next Step',
+    addAvatar: 'Add profile picture',
+    addFullName: 'Enter Full Name',
+    addBio: 'Add a short bio',
+    verifyPhone: 'Verify phone number',
+    profileCompleteSuccess: 'Profile 100% complete! You earned the Verified badge.',
+    badgeFastResponder: 'Fast Responder',
+    badgeHighlyRated: 'Highly Rated',
+    badgeVeteran: 'Povoljno Veteran',
+    badgeTopContributor: 'Top Contributor',
   }
 };
 

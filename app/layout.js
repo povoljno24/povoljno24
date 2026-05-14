@@ -35,16 +35,16 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html
-      lang="sr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+      <html
+        lang="sr"
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased overflow-x-hidden w-full`}
+      >
       <head>
         <link rel="preconnect" href="https://mbluydruyogrgaxztpi.supabase.co" />
         <link rel="dns-prefetch" href="https://mbluydruyogrgaxztpi.supabase.co" />
         <link rel="preconnect" href="https://mbluydruyogrgaxztpi.supabase.co" crossorigin />
       </head>
-      <body className="min-h-full flex flex-col bg-[#f5f5f5] text-[#1a1a1a]">
+      <body className="min-h-full flex flex-col bg-[#f5f5f5] text-[#1a1a1a] overflow-x-hidden w-full">
         <LanguageProvider>
           <ToastProvider>
             <Navbar />

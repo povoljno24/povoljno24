@@ -289,12 +289,12 @@ export default function ChatPage() {
           </Link>
         </div>
         
-        {listing?.user_id === otherUserId && !hasRated && user.id !== otherUserId && (
+        {!hasRated && user.id !== otherUserId && (
           <button 
             onClick={() => setShowRatingForm(true)}
             className="text-[11px] font-bold text-white bg-[#1D9E75] hover:bg-[#157a5a] px-3 py-1.5 rounded-lg transition-colors shrink-0"
           >
-            {t.rateSeller}
+            {listing?.user_id === user.id ? t.rateBuyer : t.rateSeller}
           </button>
         )}
       </div>
@@ -342,7 +342,7 @@ export default function ChatPage() {
       {showRatingForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-full max-w-[400px] shadow-2xl animate-in fade-in zoom-in duration-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">{t.rateSeller}</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">{listing?.user_id === user.id ? t.rateBuyer : t.rateSeller}</h3>
             <div className="mb-4">
               <label className="text-[13px] text-gray-500 block mb-2">{t.yourRating}</label>
               <StarRating rating={ratingScore} onRate={setRatingScore} size="lg" interactive={true} />
