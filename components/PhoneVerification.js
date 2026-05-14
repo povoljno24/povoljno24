@@ -24,7 +24,7 @@ export default function PhoneVerification({ onVerified }) {
       return;
     }
 
-    const { error: otpError } = await supabase.auth.signInWithOtp({
+    const { error: otpError } = await supabase.auth.updateUser({
       phone: phone,
     });
 
@@ -44,7 +44,7 @@ export default function PhoneVerification({ onVerified }) {
     const { data, error: verifyError } = await supabase.auth.verifyOtp({
       phone: phone,
       token: code,
-      type: 'sms',
+      type: 'phone_change',
     });
 
     if (verifyError) {
