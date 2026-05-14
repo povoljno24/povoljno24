@@ -7,11 +7,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import PhoneVerification from '../../components/PhoneVerification';
 import { useLanguage } from '../../components/LanguageContext';
+import { useToast } from '../../components/ToastContext';
 import ProfileProgress from '../../components/ProfileProgress';
 import UserBadges from '../../components/UserBadges';
 
 export default function Profil() {
   const { t } = useLanguage();
+  const { showToast } = useToast();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [listings, setListings] = useState([]);
@@ -21,6 +23,9 @@ export default function Profil() {
   const [updating, setUpdating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ username: '', full_name: '', bio: '' });
+  const [transactions, setTransactions] = useState([]);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, listingId: null });
+  const [soldFormData, setSoldFormData] = useState({ soldOnPlatform: true, price: '', wasShipped: false });
   const router = useRouter();
   useEffect(() => {
     async function loadProfile() {
@@ -34,11 +39,12 @@ export default function Profil() {
       setUser(user);
 
       try {
-        const [profileRes, listingsRes, messagesRes, favoritesRes] = await Promise.all([
+        const [profileRes, listingsRes, messagesRes, favoritesRes, transactionsRes] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', user.id).single(),
           supabase.from('listings').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
           supabase.from('messages').select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false }),
           supabase.from('favorites').select('*, listings(*)').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('transactions').select('*').eq('seller_id', user.id)
         ]);
 
         if (profileRes.data) {
@@ -53,6 +59,7 @@ export default function Profil() {
 
         setListings(listingsRes.data || []);
         setMessages(messagesRes.data || []);
+        setTransactions(transactionsRes.data || []);
 
         const favData = favoritesRes.data || [];
         const formattedFavs = favData
@@ -82,12 +89,45 @@ export default function Profil() {
     router.push('/');
   }
 
-  async function handleDeleteListing(id) {
-    if (!confirm(t.confirmDelete)) return;
-    setListings(listings.filter(l => l.id !== id));
-    const { error } = await supabase.from('listings').delete().eq('id', id);
+  function handleDeleteListingClick(id) {
+    setDeleteModal({ isOpen: true, listingId: id });
+    setSoldFormData({ soldOnPlatform: true, price: '', wasShipped: false });
+  }
+
+  async function handleConfirmDelete() {
+    const { listingId } = deleteModal;
+    const listing = listings.find(l => l.id === listingId);
+    if (!listing) return;
+    
+    setUpdating(true);
+
+    if (soldFormData.soldOnPlatform && soldFormData.price) {
+      const { error: txError } = await supabase.from('transactions').insert({
+        seller_id: user.id,
+        listing_id: listing.id,
+        listing_title: listing.title,
+        sale_price: Number(soldFormData.price),
+        was_shipped: soldFormData.wasShipped
+      });
+      if (txError) {
+        console.error("Failed to save transaction", txError);
+      } else {
+        setTransactions(prev => [...prev, {
+          id: Date.now().toString(),
+          sale_price: Number(soldFormData.price),
+          was_shipped: soldFormData.wasShipped
+        }]);
+      }
+    }
+
+    setListings(listings.filter(l => l.id !== listingId));
+    const { error } = await supabase.from('listings').delete().eq('id', listingId);
+    
+    setUpdating(false);
+    setDeleteModal({ isOpen: false, listingId: null });
+
     if (error) {
-      alert(t.deleteError + error.message);
+      showToast(t.deleteError + error.message, 'error');
       window.location.reload();
     }
   }
@@ -99,7 +139,7 @@ export default function Profil() {
 
     if (hoursSinceBump < 24) {
       const remainingHours = Math.ceil(24 - hoursSinceBump);
-      alert(`${t.bumpWait} ${remainingHours}h.`);
+      showToast(`${t.bumpWait} ${remainingHours}h.`, 'error');
       return;
     }
 
@@ -113,14 +153,14 @@ export default function Profil() {
       .eq('id', id);
 
     if (error) {
-      alert(t.bumpError + error.message);
+      showToast(t.bumpError + error.message, 'error');
     } else {
       const updatedListings = listings.map(l =>
         l.id === id ? { ...l, created_at: now, last_bumped_at: now } : l
       ).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       setListings(updatedListings);
-      alert(t.bumpSuccess);
+      showToast(t.bumpSuccess, 'success');
     }
   }
 
@@ -137,10 +177,10 @@ export default function Profil() {
       .eq('id', user.id);
 
     if (error) {
-      alert(t.updateProfileError + error.message);
+      showToast(t.updateProfileError + error.message, 'error');
     } else {
       setProfile(prev => ({ ...prev, ...formData }));
-      alert(t.updateProfileSuccess);
+      showToast(t.updateProfileSuccess, 'success');
     }
     setUpdating(false);
   }
@@ -172,9 +212,9 @@ export default function Profil() {
       if (updateError) throw updateError;
 
       setProfile(prev => ({ ...prev, avatar_url: avatarUrl }));
-      alert(t.avatarSuccess);
+      showToast(t.avatarSuccess, 'success');
     } catch (error) {
-      alert(t.avatarError + error.message);
+      showToast(t.avatarError + error.message, 'error');
     }
     setUpdating(false);
   }
@@ -183,11 +223,13 @@ export default function Profil() {
     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (error) alert(error.message);
-    else alert(t.passwordResetSent);
+    if (error) showToast(error.message, 'error');
+    else showToast(t.passwordResetSent, 'success');
   }
 
   const unreadCount = messages.filter(m => !m.is_read).length;
+  const totalEarnings = transactions.reduce((sum, tx) => sum + Number(tx.sale_price || 0), 0);
+  const packagesSent = transactions.filter(tx => tx.was_shipped).length;
 
   const tabs = [
     { key: 'listings', label: t.myListings, count: listings.length },
@@ -265,10 +307,14 @@ export default function Profil() {
               <div className="text-[12px] text-gray-600 mt-1">{t.activeListings}</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <div className="text-2xl font-semibold text-[#185FA5]">{totalEarnings.toLocaleString()} <span className="text-sm">RSD</span></div>
+              <div className="text-[12px] text-gray-600 mt-1">{t.earnings || 'Zarada'}</div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-semibold text-[#1D9E75]">
-                {profile?.verification_level || 1}
+                {packagesSent}
               </div>
-              <div className="text-[12px] text-gray-600 mt-1">{t.verificationLevel}</div>
+              <div className="text-[12px] text-gray-600 mt-1">{t.sentPackages || 'Poslatih paketa'}</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-semibold text-gray-900">
@@ -363,7 +409,7 @@ export default function Profil() {
                       <Link href={`/oglas/edit/${listing.id}`} className="text-[11px] text-[#185FA5] bg-[#E6F1FB] hover:bg-[#d0e5f7] px-3 py-1.5 rounded-md font-medium text-center transition-colors">
                         {t.editBtn}
                       </Link>
-                      <button onClick={() => handleDeleteListing(listing.id)} className="text-[11px] text-[#E24B4A] bg-[#fdf0f0] hover:bg-[#fbdada] px-3 py-1.5 rounded-md font-medium text-center transition-colors cursor-pointer border-none outline-none">
+                      <button onClick={() => handleDeleteListingClick(listing.id)} className="text-[11px] text-[#E24B4A] bg-[#fdf0f0] hover:bg-[#fbdada] px-3 py-1.5 rounded-md font-medium text-center transition-colors cursor-pointer border-none outline-none">
                         {t.deleteBtn}
                       </button>
                     </div>
@@ -523,6 +569,71 @@ export default function Profil() {
                     {t.logoutAll}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Modal */}
+        {deleteModal.isOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t.deleteAdTitle || 'Brisanje oglasa'}</h3>
+              
+              <div className="mb-6 space-y-4">
+                <p className="text-sm text-gray-600">{t.didYouSellOnPlatform || 'Da li ste prodali ovaj predmet preko Povoljno24?'}</p>
+                
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="sold" checked={soldFormData.soldOnPlatform} onChange={() => setSoldFormData(prev => ({ ...prev, soldOnPlatform: true }))} className="w-4 h-4 text-[#185FA5]" />
+                    <span className="text-sm text-gray-700">{t.yes || 'Da'}</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="sold" checked={!soldFormData.soldOnPlatform} onChange={() => setSoldFormData(prev => ({ ...prev, soldOnPlatform: false }))} className="w-4 h-4 text-[#185FA5]" />
+                    <span className="text-sm text-gray-700">{t.no || 'Ne'}</span>
+                  </label>
+                </div>
+
+                {soldFormData.soldOnPlatform && (
+                  <div className="bg-gray-50 p-4 rounded-xl space-y-4 border border-gray-100">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">{t.finalPrice || 'Konačna cena (RSD)'}</label>
+                      <input 
+                        type="number" 
+                        value={soldFormData.price}
+                        onChange={e => setSoldFormData(prev => ({ ...prev, price: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-[#185FA5] text-sm"
+                        placeholder="0"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={soldFormData.wasShipped}
+                        onChange={e => setSoldFormData(prev => ({ ...prev, wasShipped: e.target.checked }))}
+                        className="w-4 h-4 rounded text-[#185FA5]"
+                      />
+                      <span className="text-sm text-gray-700">{t.sentViaCourier || 'Poslato kurirskom službom'}</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => setDeleteModal({ isOpen: false, listingId: null })}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={updating}
+                >
+                  {t.cancelDelete || 'Odustani'}
+                </button>
+                <button 
+                  onClick={handleConfirmDelete}
+                  disabled={updating || (soldFormData.soldOnPlatform && !soldFormData.price)}
+                  className="px-4 py-2 text-sm font-bold text-white bg-[#E24B4A] hover:bg-[#c93c3b] rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {updating ? (t.deleting || 'Brisanje...') : (t.deleteBtn || 'Obriši')}
+                </button>
               </div>
             </div>
           </div>

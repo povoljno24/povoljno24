@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { SellerPageClient } from './SellerPageClient';
 
 async function getSellerData(id) {
-  const [{ data: profile, error: profileError }, { data: listings, error: listingsError }, { data: ratings }] = await Promise.all([
+  const [{ data: profile, error: profileError }, { data: listings, error: listingsError }, { data: ratings }, { data: transactions }] = await Promise.all([
     supabaseServer
       .from('profiles')
       .select('id, username, full_name, bio, avatar_url, created_at, phone, phone_verified, verification_level')
@@ -17,7 +17,11 @@ async function getSellerData(id) {
     supabaseServer
       .from('ratings')
       .select('score')
-      .eq('ratee_id', id)
+      .eq('ratee_id', id),
+    supabaseServer
+      .from('transactions')
+      .select('sale_price, was_shipped')
+      .eq('seller_id', id)
   ]);
 
   if (profileError) console.error('[getSellerData] profile error:', profileError.message);
@@ -27,11 +31,16 @@ async function getSellerData(id) {
     ? ratings.reduce((acc, r) => acc + r.score, 0) / ratings.length 
     : 0;
 
+  const totalEarnings = transactions?.reduce((sum, tx) => sum + Number(tx.sale_price || 0), 0) || 0;
+  const packagesSent = transactions?.filter(tx => tx.was_shipped).length || 0;
+
   return { 
     profile, 
     listings: listings || [], 
     avgRating, 
-    reviewCount: ratings?.length || 0 
+    reviewCount: ratings?.length || 0,
+    totalEarnings,
+    packagesSent
   };
 }
 
@@ -47,7 +56,7 @@ export async function generateMetadata({ params }) {
 
 export default async function SellerPage({ params }) {
   const { id } = await params;
-  const { profile, listings, avgRating, reviewCount } = await getSellerData(id);
+  const { profile, listings, avgRating, reviewCount, totalEarnings, packagesSent } = await getSellerData(id);
 
   if (!profile) notFound();
 
@@ -57,6 +66,8 @@ export default async function SellerPage({ params }) {
       listings={listings}
       avgRating={avgRating}
       reviewCount={reviewCount}
+      totalEarnings={totalEarnings}
+      packagesSent={packagesSent}
       id={id}
     />
   );

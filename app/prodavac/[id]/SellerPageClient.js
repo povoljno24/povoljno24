@@ -5,7 +5,7 @@ import Image from 'next/image';
 import StarRating from '../../../components/StarRating';
 import ReviewList from '../../../components/ReviewList';
 
-export function SellerPageClient({ profile, listings, avgRating, reviewCount, id }) {
+export function SellerPageClient({ profile, listings, avgRating, reviewCount, totalEarnings, packagesSent, id }) {
   const { t } = useLanguage();
 
   const joinYear = profile.created_at
@@ -58,6 +58,18 @@ export function SellerPageClient({ profile, listings, avgRating, reviewCount, id
                 <span>{t.memberSinceLabel}</span>
                 <span className="font-semibold text-gray-800">{joinYear}.</span>
               </div>
+              {totalEarnings > 0 && (
+                <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                  <span className="font-semibold text-[#185FA5]">{totalEarnings.toLocaleString()} RSD</span>
+                  <span>{t.earnings || 'Zarada'}</span>
+                </div>
+              )}
+              {packagesSent > 0 && (
+                <div className="flex items-center gap-1.5 text-[13px] text-gray-600">
+                  <span className="font-semibold text-[#1D9E75]">{packagesSent}</span>
+                  <span>{t.sentPackages || 'Poslatih paketa'}</span>
+                </div>
+              )}
             </div>
             
             <div className="mt-4 flex items-center gap-2">
