@@ -301,7 +301,7 @@ export default function Profil() {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <div className="text-2xl font-semibold text-[#185FA5]">{listings.length}</div>
               <div className="text-[12px] text-gray-600 mt-1">{t.activeListings}</div>
