@@ -39,6 +39,7 @@ export default function NotificationDropdown({ userId, onClose }) {
   async function markAsRead(id) {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
     setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+    window.dispatchEvent(new Event('counts_changed'));
   }
 
   return (

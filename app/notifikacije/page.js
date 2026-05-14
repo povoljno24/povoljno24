@@ -67,11 +67,13 @@ export default function NotifikacijePage() {
       .eq('is_read', false);
     
     setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+    window.dispatchEvent(new Event('counts_changed'));
   }
 
   async function markAsRead(id) {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
     setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+    window.dispatchEvent(new Event('counts_changed'));
   }
 
   if (loading) return (

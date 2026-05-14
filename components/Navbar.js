@@ -48,13 +48,15 @@ export default function Navbar() {
   useEffect(() => {
     if (!user) return;
 
-    // Real-time subscriptions - Filtered to current user
+    const handleCountsChanged = () => fetchCounts(user);
+    window.addEventListener('counts_changed', handleCountsChanged);
+
+    // Real-time subscriptions - without filter to bypass Postgres default replica identity update constraints
     const msgChannel = supabase.channel(`msg_counts_${user.id}`)
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'messages',
-        filter: `receiver_id=eq.${user.id}` 
+        table: 'messages'
       }, () => fetchCounts(user))
       .subscribe();
       
@@ -62,12 +64,12 @@ export default function Navbar() {
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`
+        table: 'notifications'
       }, () => fetchCounts(user))
       .subscribe();
 
     return () => {
+      window.removeEventListener('counts_changed', handleCountsChanged);
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(notifChannel);
     };

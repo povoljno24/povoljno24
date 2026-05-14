@@ -64,6 +64,7 @@ export default function Profil() {
         const unreadIds = (messagesRes.data || []).filter(m => !m.is_read && m.receiver_id === user.id).map(m => m.id);
         if (unreadIds.length > 0) {
           await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
+          window.dispatchEvent(new Event('counts_changed'));
         }
       } catch (err) {
         console.error('Profile load error:', err);

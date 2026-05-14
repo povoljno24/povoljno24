@@ -81,6 +81,8 @@ export default function ChatPage() {
         .eq('receiver_id', currentUser.id)
         .eq('sender_id', otherUserId)
         .eq('is_read', false);
+
+      window.dispatchEvent(new Event('counts_changed'));
     }
 
     init();
@@ -111,7 +113,9 @@ export default function ChatPage() {
           });
           // If from other, mark as read immediately
           if (isFromOther) {
-            supabase.from('messages').update({ is_read: true }).eq('id', newMsg.id);
+            supabase.from('messages').update({ is_read: true }).eq('id', newMsg.id).then(() => {
+              window.dispatchEvent(new Event('counts_changed'));
+            });
           }
         }
       })
@@ -239,11 +243,12 @@ export default function ChatPage() {
       setHasRated(true);
       setShowRatingForm(false);
       // Optional: send a message that user has been rated
+      const commentText = ratingComment.trim() ? `\nKomentar: "${ratingComment.trim()}"` : '';
       await supabase.from('messages').insert({
         listing_id: listingId,
         sender_id: user.id,
         receiver_id: otherUserId,
-        content: `Korisnik vas je ocenio sa ${ratingScore} zvezdica.`,
+        content: `Korisnik vas je ocenio sa ${ratingScore} zvezdica.${commentText}`,
         is_read: false
       });
     }
