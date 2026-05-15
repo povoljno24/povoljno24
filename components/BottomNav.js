@@ -15,18 +15,18 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="sm:hidden fixed bottom-6 left-6 right-6 bg-white/75 backdrop-blur-2xl border border-white/20 z-[100] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.15)] overflow-hidden">
-      <div className="flex justify-around items-center h-16 px-2">
+    <div className="sm:hidden fixed bottom-8 left-8 right-8 bg-black/60 backdrop-blur-3xl border border-white/10 z-[100] rounded-full shadow-[0_32px_64px_rgba(0,0,0,0.6)] overflow-hidden">
+      <div className="flex justify-around items-center h-20 px-4">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
           return (
             <Link 
               key={item.path} 
               href={item.path}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all ${isActive ? 'text-[#185FA5] scale-105' : 'text-gray-400'}`}
+              className={`flex flex-col items-center justify-center gap-1.5 flex-1 h-full transition-all duration-500 ${isActive ? 'text-white scale-110' : 'text-white/20'}`}
             >
-              <span className={`text-xl ${isActive ? 'drop-shadow-[0_0_8px_rgba(24,95,165,0.4)]' : 'opacity-70'} transition-transform`}>{item.icon}</span>
-              <span className={`text-[10px] font-extrabold uppercase tracking-tight ${isActive ? 'opacity-100' : 'opacity-60'}`}>{t[item.labelKey]}</span>
+              <span className={`text-xl ${isActive ? 'drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]' : ''}`}>{item.icon}</span>
+              <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${isActive ? 'opacity-100' : 'opacity-40'}`}>{t[item.labelKey]}</span>
             </Link>
           );
         })}

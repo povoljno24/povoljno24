@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import DynamicAurora from "../components/DynamicAurora";
@@ -8,13 +8,8 @@ import { LanguageProvider } from "../components/LanguageContext";
 import { ToastProvider } from "../components/ToastContext";
 import RealtimeNotifications from "../components/RealtimeNotifications";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
 });
 
@@ -24,30 +19,21 @@ export const metadata = {
     default: 'Povoljno24 - Kupi i prodaj sve brzo i sigurno',
   },
   description: 'Najveća platforma za kupovinu i prodaju u Srbiji. Hiljade oglasa iz kategorija: elektronika, automobili, nekretnine, moda i još mnogo toga. Bezbedna trgovina i provereni prodavci.',
-  keywords: ['oglasi', 'kupovina', 'prodaja', 'srbija', 'povoljno24', 'polovni automobili', 'nekretnine', 'mali oglasi', 'besplatni oglasi', 'beograd', 'novi sad', 'niš', 'kupujem prodajem', 'polovni telefoni'],
-  openGraph: {
-    title: 'Povoljno24 - Kupi i prodaj sve',
-    description: 'Najveća platforma za kupovinu i prodaju u Srbiji.',
-    url: 'https://povoljno24.com',
-    siteName: 'Povoljno24',
-    locale: 'sr_RS',
-    type: 'website',
-  },
 };
 
 export default function RootLayout({ children }) {
   return (
       <html
         lang="sr"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased overflow-x-hidden w-full`}
+        className={`${jakarta.variable} h-full antialiased overflow-x-hidden w-full`}
       >
-      <head>
-        <link rel="preconnect" href="https://mbluydruyogrgaxztpi.supabase.co" />
-        <link rel="dns-prefetch" href="https://mbluydruyogrgaxztpi.supabase.co" />
-        <link rel="preconnect" href="https://mbluydruyogrgaxztpi.supabase.co" crossOrigin="anonymous" />
-      </head>
-      <body className="min-h-full flex flex-col bg-transparent text-[#1a1a1a] overflow-x-hidden w-full relative">
+      <body className="min-h-full flex flex-col bg-[#050505] text-[#F5F5F7] font-sans overflow-x-hidden w-full relative selection:bg-[#185FA5] selection:text-white">
         <DynamicAurora />
+        
+        {/* Grain Overlay for tactile feel */}
+        <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-[-5] mix-blend-overlay" 
+             style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }} />
+
         <LanguageProvider>
           <ToastProvider>
             <RealtimeNotifications />

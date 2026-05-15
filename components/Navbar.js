@@ -76,23 +76,23 @@ export default function Navbar() {
   }, [user]);
 
   return (
-    <nav className="flex items-center justify-between px-6 py-3.5 bg-white/75 backdrop-blur-2xl border border-white/20 shadow-[0_12px_40px_rgba(0,0,0,0.12)] sticky top-4 z-50 mx-4 sm:mx-8 rounded-3xl transition-all duration-500 hover:bg-white/80 hover:shadow-[0_15px_50px_rgba(0,0,0,0.15)] group">
-      <Link href="/" className="text-lg sm:text-xl font-semibold text-[#185FA5] hover:opacity-90 transition-opacity shrink-0">
-        Povoljno<span className="text-[#E24B4A]">24</span>
+    <nav className="flex items-center justify-between px-8 py-4 bg-white/[0.03] backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] sticky top-6 z-50 mx-auto max-w-[1200px] w-[calc(100%-3rem)] rounded-full transition-all duration-700 hover:bg-white/[0.05] hover:border-white/20 group">
+      <Link href="/" className="text-xl sm:text-2xl font-extrabold tracking-tighter text-white hover:opacity-90 transition-opacity shrink-0 flex items-center gap-1">
+        Povoljno<span className="text-[#185FA5]">24</span>
       </Link>
 
-      <div className="flex items-center gap-3 sm:gap-5">
-        <Link href="/" className="text-sm text-gray-600 hover:text-[#185FA5] transition-colors hidden sm:block">
+      <div className="flex items-center gap-4 sm:gap-8">
+        <Link href="/" className="text-[13px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all hidden md:block">
           {t.listings}
         </Link>
-        <Link href="/kako-funkcionise" className="text-sm text-gray-600 hover:text-[#185FA5] transition-colors hidden sm:block">
+        <Link href="/kako-funkcionise" className="text-[13px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all hidden md:block">
           {t.howItWorks}
         </Link>
 
         {/* Language Toggle */}
         <button 
           onClick={() => setLang(lang === 'sr' ? 'en' : 'sr')}
-          className="text-[11px] sm:text-[12px] font-bold text-gray-500 hover:text-[#185FA5] border border-gray-200 rounded-lg py-1 w-[38px] sm:w-[44px] flex items-center justify-center transition-colors bg-gray-50"
+          className="text-[10px] font-black text-white/40 hover:text-white border border-white/10 rounded-full py-1.5 px-3 transition-all bg-white/[0.02] hover:bg-white/10"
           title={t.langTooltip}
         >
           {lang === 'sr' ? 'EN' : 'SRB'}
@@ -134,20 +134,19 @@ export default function Navbar() {
               )}
             </Link>
 
-            {/* Profile link */}
-            <Link href="/profil" className="text-sm text-gray-600 hover:text-[#185FA5] font-medium transition-colors hidden sm:block">
+            <Link href="/profil" className="text-[13px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all hidden sm:block">
               {t.profile}
             </Link>
           </>
         ) : (
-          <Link href="/login" className="text-sm text-gray-600 hover:text-[#185FA5] font-medium transition-colors">
+          <Link href="/login" className="text-[13px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all">
             {t.login}
           </Link>
         )}
 
         <Link
           href="/postoglas"
-          className="bg-[#185FA5] hover:bg-[#0C447C] text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors shadow-sm hidden sm:block"
+          className="bg-white text-black hover:bg-[#185FA5] hover:text-white rounded-full px-6 py-2.5 text-[12px] font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95 hidden sm:block"
         >
           {t.postAd}
         </Link>

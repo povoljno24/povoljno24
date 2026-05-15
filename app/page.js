@@ -153,32 +153,29 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="pt-16 pb-12 px-6 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[#185FA5]/5 pointer-events-none" />
-        <h1 className="text-3xl font-semibold text-[#0C447C] mb-2">{t.hero}</h1>
-        <p className="text-[15px] text-[#185FA5] mb-6">{t.heroSub}</p>
+      {/* Hero: Editorial Style */}
+      <section className="pt-32 pb-24 px-6 text-center relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#185FA5]/10 rounded-full blur-[120px] pointer-events-none" />
+        <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-[1.1] max-w-[900px] mx-auto">
+          {t.hero}
+        </h1>
+        <p className="text-[16px] md:text-[18px] text-white/50 mb-12 max-w-[600px] mx-auto font-medium leading-relaxed">
+          {t.heroSub}
+        </p>
         
-        <div className="max-w-[700px] mx-auto relative">
-          {/* Main Search Bar */}
-          <div className="flex bg-white rounded-xl border border-gray-300 overflow-hidden shadow-sm relative z-20">
+        <div className="max-w-[800px] mx-auto relative group">
+          {/* Main Search Bar: Floating Island */}
+          <div className="flex bg-white/[0.03] backdrop-blur-3xl rounded-full border border-white/10 overflow-hidden shadow-[0_32px_64px_rgba(0,0,0,0.4)] relative z-20 transition-all duration-500 group-focus-within:border-white/20 group-focus-within:bg-white/[0.05]">
             <select 
               value={filterCat} 
               onChange={e => setFilterCat(e.target.value)} 
-              className="border-none outline-none py-3 px-4 text-[13px] text-gray-600 bg-gray-50 border-r border-gray-200 cursor-pointer hidden sm:block max-w-[160px]"
+              className="border-none outline-none py-4 px-6 text-[13px] font-bold uppercase tracking-widest text-white/60 bg-transparent border-r border-white/10 cursor-pointer hidden sm:block max-w-[180px] hover:text-white transition-colors"
             >
-              <option value="">{t.allCats}</option>
+              <option value="" className="bg-[#050505]">{t.allCats}</option>
               {categories.map(c => (
-                <option key={c.value} value={c.value}>{c.name}</option>
+                <option key={c.value} value={c.value} className="bg-[#050505]">{c.name}</option>
               ))}
             </select>
-            <button 
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="border-none outline-none py-3 px-3 sm:px-4 text-[13px] text-gray-600 bg-gray-50 border-r border-gray-200 hover:bg-gray-100 cursor-pointer flex items-center gap-1.5 shrink-0 transition-colors"
-            >
-              <span className="text-[15px] text-[#185FA5] font-bold">{showAdvanced ? '−' : '＋'}</span> 
-              <span className="hidden md:inline">{t.advancedFilters}</span>
-            </button>
             <input 
               type="text" 
               value={search} 
@@ -187,11 +184,11 @@ export default function Home() {
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()} 
               placeholder={t.searchPlaceholder} 
-              className="flex-1 border-none outline-none py-3 px-4 text-sm w-full" 
+              className="flex-1 border-none outline-none py-4 px-6 text-[15px] text-white placeholder:text-white/20 w-full bg-transparent" 
             />
             <button 
               onClick={handleSearch} 
-              className="bg-[#185FA5] hover:bg-[#0C447C] text-white transition-colors border-none py-3 px-5 sm:px-8 text-[13px] sm:text-[14px] font-semibold cursor-pointer shrink-0"
+              className="bg-white text-black hover:bg-[#185FA5] hover:text-white transition-all border-none py-4 px-8 text-[13px] font-black uppercase tracking-widest cursor-pointer shrink-0"
             >
               {t.search}
             </button>
@@ -260,20 +257,19 @@ export default function Home() {
           )}
         </div>
         
-        <div className="flex justify-center gap-7 mt-6 flex-wrap">
+        <div className="flex justify-center gap-12 mt-12 flex-wrap">
           {[t.trust1, t.trust2, t.trust3, t.trust4].map(item => (
-            <div key={item} className="flex items-center gap-1.5 text-[12px] font-medium text-[#185FA5]">
-              <div className="w-2 h-2 rounded-full bg-[#1D9E75]"></div>
+            <div key={item} className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] text-white/40">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#185FA5] shadow-[0_0_10px_#185FA5]"></div>
               {item}
             </div>
           ))}
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-10 px-6 bg-white/30 backdrop-blur-md border-y border-white/10">
-        <h2 className="text-base font-semibold mb-4 text-gray-800 max-w-[1200px] mx-auto">{t.categories}</h2>
-        <div className="flex flex-wrap gap-2 max-w-[1200px] mx-auto">
+      {/* Categories: Minimalist Pill Bar */}
+      <section className="py-20 px-6 bg-transparent">
+        <div className="flex flex-wrap justify-center gap-3 max-w-[1200px] mx-auto">
           {categories.map(cat => {
             const isSelected = filterCat === cat.value;
             return (
@@ -284,10 +280,10 @@ export default function Home() {
                   setFilterCat(nextCat); 
                   loadListings(search, nextCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, filterPhoto, filterVerified, 0, false); 
                 }} 
-                className={`rounded-full py-2.5 px-4 text-[13px] font-medium cursor-pointer transition-all border outline-none ${
+                className={`rounded-full py-3 px-6 text-[11px] font-black uppercase tracking-widest cursor-pointer transition-all border outline-none ${
                   isSelected 
-                    ? 'bg-[#185FA5] text-white border-[#185FA5] shadow-sm scale-[1.02]' 
-                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-gray-300 active:scale-95'
+                    ? 'bg-white text-black border-white shadow-[0_0_30px_rgba(255,255,255,0.2)]' 
+                    : 'bg-white/[0.03] text-white/40 border-white/5 hover:border-white/20 hover:text-white hover:bg-white/[0.06] active:scale-95'
                 }`}
               >
                 {cat.name}
@@ -297,14 +293,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Listings */}
-      <section className="pt-2 pb-12 px-6 bg-transparent max-w-[1200px] mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-base font-semibold text-gray-800">{t.newListings}</h2>
+      {/* Listings: Vantablack Glass Grid */}
+      <section className="pb-32 px-6 max-w-[1400px] mx-auto">
+        <div className="flex justify-between items-end mb-12 px-2">
+          <div>
+            <div className="text-[11px] font-black text-[#185FA5] uppercase tracking-[0.3em] mb-2">{t.listings}</div>
+            <h2 className="text-3xl font-black text-white">{t.newListings}</h2>
+          </div>
           {(filterCat || search || minPrice || maxPrice || filterCity || filterCondition || filterPhoto || filterVerified || sortBy !== 'newest') && (
             <button 
               onClick={clearFilters} 
-              className="text-[13px] font-medium text-[#E24B4A] hover:underline bg-transparent border-none cursor-pointer flex items-center gap-1"
+              className="text-[12px] font-bold text-white/40 hover:text-white uppercase tracking-widest bg-transparent border-none cursor-pointer flex items-center gap-2 transition-colors"
             >
               <span>×</span> {t.removeFilters}
             </button>
@@ -341,9 +340,10 @@ export default function Home() {
           ) : (
             listings.map((listing, index) => (
               <Link key={listing.id} href={`/oglas/${listing.id}`} className="block group h-full">
-                {/* Double-Bezel Architecture */}
-                <div className="p-1.5 bg-white/10 backdrop-blur-lg rounded-[2rem] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-all duration-500 hover:scale-[1.02] hover:bg-white/20 group h-full">
-                  <div className="bg-white rounded-[calc(2rem-0.375rem)] overflow-hidden flex flex-col h-full">
+                {/* Vantablack Double-Bezel Architecture */}
+                <div className="p-[1px] bg-white/10 rounded-[2.5rem] transition-all duration-700 hover:scale-[1.02] group h-full">
+                  <div className="p-2 bg-[#050505] rounded-[calc(2.5rem-1px)] overflow-hidden flex flex-col h-full shadow-[0_30px_60px_rgba(0,0,0,0.5)] border border-white/5">
+                    <div className="bg-[#0A0A0A] rounded-[2rem] overflow-hidden flex flex-col h-full transition-colors group-hover:bg-[#0D0D0D]">
                   <div 
                     className="h-[160px] bg-gray-900 relative flex items-center justify-center overflow-hidden shrink-0 border-b border-gray-100 select-none"
                     onContextMenu={(e) => e.preventDefault()}
@@ -373,10 +373,16 @@ export default function Home() {
                       <span className="opacity-40 text-3xl">📦</span>
                     )}
                   </div>
-                  <div className="p-3.5 flex flex-col flex-1">
-                    <div className="text-[14px] font-medium text-gray-800 mb-1 line-clamp-2 leading-snug group-hover:text-[#185FA5] transition-colors">{listing.title}</div>
-                    <div className="flex items-center justify-between mt-auto pt-2">
-                      <div className="text-[16px] font-bold text-[#185FA5]">{listing.price?.toLocaleString()} RSD</div>
+                    <div className="p-6 flex flex-col flex-1">
+                      <div className="text-[11px] font-black text-[#185FA5] uppercase tracking-[0.2em] mb-3">{listing.category}</div>
+                      <div className="text-[18px] font-bold text-white mb-2 line-clamp-2 leading-snug transition-colors group-hover:text-[#185FA5]">{listing.title}</div>
+                      <div className="flex items-center justify-between mt-auto pt-4">
+                        <div className="text-[20px] font-black text-white">{listing.price?.toLocaleString()} <span className="text-[12px] text-white/30 font-bold ml-1">RSD</span></div>
+                      </div>
+                      <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/5">
+                        <span className="text-[11px] font-bold text-white/30 uppercase tracking-widest flex items-center gap-2">
+                          <span className="w-1 h-1 rounded-full bg-white/20"></span> {listing.city}
+                        </span>
                       {listing.condition && (
                         <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${listing.condition === 'Novo' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
                           {listing.condition === 'Novo' ? t.condNew : t.condUsed}
