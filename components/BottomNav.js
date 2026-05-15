@@ -15,7 +15,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="sm:hidden fixed bottom-8 left-8 right-8 bg-black/60 backdrop-blur-3xl border border-white/10 z-[100] rounded-full shadow-[0_32px_64px_rgba(0,0,0,0.6)] overflow-hidden">
+    <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#0A0A0A]/80 backdrop-blur-3xl border-t border-white/10 z-[100] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
       <div className="flex justify-around items-center h-20 px-4">
         {navItems.map((item) => {
           const isActive = pathname === item.path;

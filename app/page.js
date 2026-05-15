@@ -263,8 +263,8 @@ export default function Home() {
         
         <div className="flex justify-center gap-12 mt-16 flex-wrap">
           {[t.trust1, t.trust2, t.trust3, t.trust4].map(item => (
-            <div key={item} className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#185FA5] shadow-[0_0_10px_#185FA5]"></div>
+            <div key={item} className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white/60">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#185FA5] shadow-[0_0_15px_#185FA5]"></div>
               {item}
             </div>
           ))}
