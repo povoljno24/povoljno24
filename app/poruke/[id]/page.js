@@ -177,6 +177,13 @@ export default function ChatPage() {
 
     setSending(true);
     const content = "📦 [SISTEM] Prodavac je označio predmet kao poslat.";
+    
+    // Update listing status
+    await supabase.from('listings').update({ 
+      status: 'shipped',
+      buyer_id: otherUserId 
+    }).eq('id', listingId);
+
     const { data, error } = await supabase.from('messages').insert({
       listing_id: listingId,
       sender_id: user.id,
@@ -192,6 +199,8 @@ export default function ChatPage() {
         if (prev.find(m => m.id === data.id)) return prev;
         return [...prev, data];
       });
+      // Update local listing state to reflect status change
+      setListing(prev => ({ ...prev, status: 'shipped', buyer_id: otherUserId }));
     }
     setSending(false);
   }
@@ -206,6 +215,10 @@ export default function ChatPage() {
 
     setSending(true);
     const content = "✅ [SISTEM] Kupac je potvrdio prijem predmeta. Transakcija je uspešno završena!";
+    
+    // Update listing status to collected
+    await supabase.from('listings').update({ status: 'collected' }).eq('id', listingId);
+
     const { data, error } = await supabase.from('messages').insert({
       listing_id: listingId,
       sender_id: user.id,
@@ -220,6 +233,16 @@ export default function ChatPage() {
       setMessages(prev => {
         if (prev.find(m => m.id === data.id)) return prev;
         return [...prev, data];
+      });
+      // Update local listing state
+      setListing(prev => ({ ...prev, status: 'collected' }));
+      
+      // Create notification for seller to fill KPIs
+      await supabase.from('notifications').insert({
+        user_id: otherUserId,
+        type: 'kpi_prompt',
+        content: `Predmet "${listing.title}" je preuzet! Molimo popunite podatke o prodaji.`,
+        listing_id: listingId
       });
     }
     setSending(false);

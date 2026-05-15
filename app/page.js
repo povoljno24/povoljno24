@@ -72,7 +72,8 @@ export default function Home() {
     
     let query = supabase
       .from('listings')
-      .select('id, title, price, city, category, image_url, created_at, user_id', { count: 'exact' });
+      .select('id, title, price, city, category, image_url, created_at, user_id, status', { count: 'exact' })
+      .eq('status', 'active');
       
     // Apply filters
     if (searchTerm) query = query.ilike('title', `%${searchTerm}%`);

@@ -1,7 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from './LanguageContext';
+import { auth } from '../lib/firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
 export default function PhoneVerification({ onVerified }) {
   const { t } = useLanguage();
@@ -12,6 +14,14 @@ export default function PhoneVerification({ onVerified }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible',
+      });
+    }
+  }, []);
+
   async function handleSendCode(e) {
     e.preventDefault();
     setLoading(true);
@@ -19,19 +29,25 @@ export default function PhoneVerification({ onVerified }) {
 
     // Format check: ensure it starts with +
     if (!phone.startsWith('+')) {
-      setError(t.phoneVerifyFormatError);
+      setError(t.phoneVerifyFormatError || 'Phone must start with +');
       setLoading(false);
       return;
     }
 
-    const { error: otpError } = await supabase.auth.updateUser({
-      phone: phone,
-    });
-
-    if (otpError) {
-      setError(t.reportError + otpError.message);
-    } else {
+    try {
+      const appVerifier = window.recaptchaVerifier;
+      const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+      window.confirmationResult = confirmationResult;
       setStep(2);
+    } catch (err) {
+      console.error(err);
+      setError(t.reportError + err.message);
+      // Reset recaptcha if error
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.render().then(function(widgetId) {
+          window.recaptchaVerifier.reset(widgetId);
+        });
+      }
     }
     setLoading(false);
   }
@@ -41,16 +57,13 @@ export default function PhoneVerification({ onVerified }) {
     setLoading(true);
     setError('');
 
-    const { data, error: verifyError } = await supabase.auth.verifyOtp({
-      phone: phone,
-      token: code,
-      type: 'phone_change',
-    });
+    try {
+      const result = await window.confirmationResult.confirm(code);
+      const user = result.user; // Firebase user
 
-    if (verifyError) {
-      setError(t.phoneVerifyCodeError);
-    } else {
-      // Update profile
+      // Update Supabase profile
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      if (supabaseUser) {
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ 
@@ -58,14 +71,18 @@ export default function PhoneVerification({ onVerified }) {
             phone_verified: true,
             verification_level: 2
           })
-          .eq('id', data.user.id);
+          .eq('id', supabaseUser.id);
 
-      if (profileError) {
-        setError(t.updateProfileError + profileError.message);
-      } else {
-        setSuccess(true);
-        if (onVerified) onVerified(phone);
+        if (profileError) {
+          setError(t.updateProfileError + profileError.message);
+        } else {
+          setSuccess(true);
+          if (onVerified) onVerified(phone);
+        }
       }
+    } catch (err) {
+      console.error(err);
+      setError(t.phoneVerifyCodeError || 'Invalid code');
     }
     setLoading(false);
   }
@@ -139,6 +156,8 @@ export default function PhoneVerification({ onVerified }) {
           </div>
         </form>
       )}
+
+      <div id="recaptcha-container"></div>
 
       {error && <p className="mt-4 text-xs text-[#E24B4A] text-center bg-red-50 py-2 rounded-lg">{error}</p>}
     </div>

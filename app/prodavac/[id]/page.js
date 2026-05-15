@@ -11,8 +11,9 @@ async function getSellerData(id) {
       .single(),
     supabaseServer
       .from('listings')
-      .select('id, title, price, city, category, image_url, created_at, user_id')
+      .select('id, title, price, city, category, image_url, created_at, user_id, status')
       .eq('user_id', id)
+      .eq('status', 'active')
       .order('created_at', { ascending: false }),
     supabaseServer
       .from('ratings')

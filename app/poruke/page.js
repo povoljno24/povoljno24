@@ -76,6 +76,22 @@ export default function PorukePage() {
       setLoading(false);
     }
     loadConversations();
+
+    // Subscribe to new messages for real-time inbox updates
+    const channel = supabase
+      .channel('inbox-updates')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'messages'
+      }, () => {
+        loadConversations();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [router]);
 
   if (loading) return (

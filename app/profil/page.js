@@ -57,9 +57,22 @@ export default function Profil() {
           });
         }
 
-        setListings(listingsRes.data || []);
+        const allListings = listingsRes.data || [];
+        const filteredListings = allListings.filter(l => l.status !== 'collected');
+        const collectedListings = allListings.filter(l => l.status === 'collected');
+
+        setListings(filteredListings);
         setMessages(messagesRes.data || []);
         setTransactions(transactionsRes.data || []);
+
+        if (collectedListings.length > 0) {
+          // Auto-trigger KPI modal for the first collected listing found
+          setTimeout(() => {
+            setDeleteModal({ isOpen: true, listingId: collectedListings[0].id });
+            setSoldFormData({ soldOnPlatform: true, price: '', wasShipped: collectedListings[0].status === 'shipped' || true });
+            showToast(t.kpiPrompt || 'Imate prodatih predmeta koji čekaju potvrdu!', 'info');
+          }, 1000);
+        }
 
         const favData = favoritesRes.data || [];
         const formattedFavs = favData
@@ -86,7 +99,7 @@ export default function Profil() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push('/');
+    window.location.href = '/';
   }
 
   function handleDeleteListingClick(id) {

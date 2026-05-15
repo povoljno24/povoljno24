@@ -2,6 +2,7 @@ import { supabaseServer } from '../../../lib/supabase-server';
 import ImageGallery from './ImageGallery';
 import ContactForm from './ContactForm';
 import { ListingBreadcrumbs, ListingDetails, SellerCard, ContactHeader } from './ListingClientParts';
+import { createClient } from '../../../lib/supabase-server-auth';
 
 async function getListing(id) {
   const { data, error } = await supabaseServer
@@ -71,10 +72,32 @@ export default async function OglasPage({ params }) {
   const { id } = await params;
   const listing = await getListing(id);
 
+  const supabase = await createClient();
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+
   if (!listing) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <p className="text-gray-500">Oglas nije pronađen.</p>
+      </div>
+    );
+  }
+
+  // Lifecycle visibility restrictions
+  if (listing.status === 'shipped') {
+    if (!currentUser || (currentUser.id !== listing.user_id && currentUser.id !== listing.buyer_id)) {
+      return (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500 font-medium">Ovaj oglas je prodat i više nije javan.</p>
+        </div>
+      );
+    }
+  }
+
+  if (listing.status === 'collected') {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-gray-500 font-medium">Ovaj oglas je uspešno prodat i obrisan.</p>
       </div>
     );
   }
@@ -137,14 +160,16 @@ export default async function OglasPage({ params }) {
               <SellerCard seller={seller} listingUserId={listing.user_id} />
             )}
 
-            {/* Contact Form — PROMINENT */}
-            <div className="bg-white rounded-2xl border-2 border-[#185FA5] shadow-md overflow-hidden">
-              {/* Client component for translatable header */}
-              <ContactHeader />
-              <div className="p-5">
-                <ContactForm listingId={listing.id} receiverId={listing.user_id} />
+            {/* Contact Form — PROMINENT (Hide if viewing own ad) */}
+            {(!currentUser || currentUser.id !== listing.user_id) && (
+              <div className="bg-white rounded-2xl border-2 border-[#185FA5] shadow-md overflow-hidden">
+                {/* Client component for translatable header */}
+                <ContactHeader />
+                <div className="p-5">
+                  <ContactForm listingId={listing.id} receiverId={listing.user_id} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
