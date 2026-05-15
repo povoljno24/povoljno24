@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useLanguage } from './components/LanguageContext';
+import { useLanguage } from '../components/LanguageContext';
 
 export default function NotFound() {
   const { t } = useLanguage();
