@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import Image from 'next/image';
 import Link from 'next/link';
-import PhoneVerification from '../../components/PhoneVerification';
+import EmailVerification from '../../components/EmailVerification';
 import { useLanguage } from '../../components/LanguageContext';
 import { useToast } from '../../components/ToastContext';
 import ProfileProgress from '../../components/ProfileProgress';
@@ -550,15 +550,15 @@ export default function Profil() {
                 {profile?.phone_verified ? (
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <div>
-                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t.phoneLabel}</div>
-                      <div className="text-[15px] font-bold text-gray-900">{profile.phone}</div>
+                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Email verifikovan</div>
+                      <div className="text-[15px] font-bold text-gray-900">{profile.phone || profile.email}</div>
                     </div>
                     <div className="bg-[#EAF3DE] text-[#3B6D11] text-[10px] font-bold px-3 py-1.5 rounded-full border border-[#d3ecc1]">
                       {t.verified2}
                     </div>
                   </div>
                 ) : (
-                  <PhoneVerification onVerified={(phone) => setProfile(prev => ({ ...prev, phone, phone_verified: true }))} />
+                  <EmailVerification onVerified={(email) => setProfile(prev => ({ ...prev, phone: email, phone_verified: true }))} />
                 )}
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
