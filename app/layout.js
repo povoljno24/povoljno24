@@ -6,6 +6,7 @@ import BottomNav from "../components/BottomNav";
 import { LanguageProvider } from "../components/LanguageContext";
 import { ToastProvider } from "../components/ToastContext";
 import RealtimeNotifications from "../components/RealtimeNotifications";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +58,7 @@ export default function RootLayout({ children }) {
             <BottomNav />
           </ToastProvider>
         </LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );
