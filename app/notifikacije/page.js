@@ -40,7 +40,6 @@ export default function NotifikacijePage() {
       setUser(currentUser);
       fetchNotifications(currentUser.id);
 
-      // Subscribe to real-time changes
       channel = supabase.channel('notif_page_changes')
         .on('postgres_changes', { 
           event: '*', 
@@ -77,23 +76,25 @@ export default function NotifikacijePage() {
   }
 
   if (loading) return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-[#185FA5] border-t-transparent rounded-full animate-spin"></div>
+    <div className="flex-1 flex items-center justify-center bg-transparent">
+      <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
   );
 
+  const cardClasses = "bg-[#0A0A0A]/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 p-8 shadow-[0_32px_64px_rgba(0,0,0,0.6)] relative overflow-hidden group transition-all duration-500 hover:border-white/20";
+
   return (
-    <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
-      <div className="max-w-[700px] mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="flex-1 bg-transparent py-16 px-6">
+      <div className="max-w-[800px] mx-auto">
+        <div className="flex items-end justify-between mb-12">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t.notifications}</h1>
-            <p className="text-sm text-gray-500 mt-1">{t.notificationsSub}</p>
+            <h1 className="text-3xl font-black text-white uppercase tracking-tight mb-2">{t.notifications}</h1>
+            <p className="text-[12px] font-black text-white/20 uppercase tracking-[0.3em]">{t.notificationsSub}</p>
           </div>
           {notifications.some(n => !n.is_read) && (
             <button 
               onClick={markAllAsRead}
-              className="text-[12px] font-bold text-[#185FA5] hover:underline bg-transparent border-none cursor-pointer"
+              className="text-[10px] font-black text-[#185FA5] hover:text-white uppercase tracking-widest bg-white/[0.03] border border-white/5 px-6 py-2 rounded-full transition-all"
             >
               {t.markAllAsRead}
             </button>
@@ -101,50 +102,49 @@ export default function NotifikacijePage() {
         </div>
 
         {notifications.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-gray-100 p-16 text-center shadow-sm">
-            <div className="text-5xl mb-4 opacity-20">🔔</div>
-            <p className="text-gray-500 font-medium">{t.noNotifications}</p>
+          <div className="bg-[#0A0A0A]/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-24 text-center">
+            <div className="text-6xl mb-8 opacity-10">🔔</div>
+            <p className="text-[13px] font-black text-white/20 uppercase tracking-widest">{t.noNotifications}</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-6">
             {notifications.map((n) => (
               <Link 
                 key={n.id}
                 href={n.type === 'message' ? `/poruke` : `/oglas/${n.listing_id}`}
                 onClick={() => markAsRead(n.id)}
-                className={`flex gap-4 p-5 rounded-2xl border transition-all hover:shadow-md group relative
-                  ${!n.is_read ? 'bg-white border-[#185FA5] shadow-sm' : 'bg-white border-gray-100 opacity-70 hover:opacity-100'}`}
+                className={`${cardClasses} flex gap-6 items-center ${!n.is_read ? 'border-[#185FA5]/40 bg-[#185FA5]/5 shadow-[0_0_40px_rgba(24,95,165,0.1)]' : ''}`}
               >
-                <div className="w-14 h-14 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden relative border border-gray-100 shadow-sm group-hover:border-[#185FA5] transition-colors">
+                <div className="w-16 h-16 rounded-2xl bg-[#050505] overflow-hidden shrink-0 relative flex items-center justify-center border border-white/5 transition-all group-hover:border-white/20">
                   {n.listings?.image_url ? (
                     <Image src={n.listings.image_url} alt="" fill className="object-cover" />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-2xl">
+                    <div className="text-3xl opacity-10 grayscale">
                       {n.type === 'message' ? '💬' : '📉'}
                     </div>
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <p className={`text-[14px] leading-snug line-clamp-2 ${!n.is_read ? 'text-gray-900 font-bold' : 'text-gray-600 font-medium'}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <p className={`text-[15px] leading-snug line-clamp-2 tracking-tight ${!n.is_read ? 'text-white font-black uppercase' : 'text-white/40 font-bold'}`}>
                       {n.content}
                     </p>
-                    <span className="text-[10px] text-gray-400 shrink-0 ml-4">
+                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest shrink-0 ml-6">
                       {new Date(n.created_at).toLocaleDateString(lang === 'sr' ? 'sr-RS' : 'en-US', {
-                        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                        day: '2-digit', month: '2-digit'
                       })}
                     </span>
                   </div>
                   {n.listings?.title && (
-                    <p className="text-[12px] text-[#185FA5] font-semibold truncate">
-                      {n.listings.title}
+                    <p className="text-[11px] font-black text-[#185FA5] uppercase tracking-[0.2em] truncate">
+                      🏷️ {n.listings.title}
                     </p>
                   )}
                 </div>
 
                 {!n.is_read && (
-                  <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#185FA5]" />
+                  <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#185FA5] shadow-[0_0_10px_#185FA5] animate-pulse" />
                 )}
               </Link>
             ))}

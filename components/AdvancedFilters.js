@@ -13,125 +13,128 @@ export default function AdvancedFilters({
   handleSearch, clearFilters, 
   cities 
 }) {
+  const inputClasses = "w-full px-5 py-4 rounded-2xl border border-white/5 bg-white/[0.03] text-white placeholder:text-white/10 outline-none focus:border-[#185FA5] focus:bg-white/10 transition-all text-[14px]";
+  const labelClasses = "text-[10px] font-black text-white/40 uppercase tracking-[0.3em] block mb-3 ml-1";
+
   return (
-    <div className="fixed inset-0 sm:relative sm:inset-auto z-[100] sm:z-10 bg-white sm:bg-white sm:rounded-xl sm:border border-gray-200 p-6 sm:p-4 mt-0 sm:mt-2 shadow-2xl sm:shadow-sm text-left flex flex-col sm:grid sm:grid-cols-3 gap-6 sm:gap-4 animate-in slide-in-from-bottom sm:slide-in-from-top-2 duration-300 sm:duration-200">
-      <div className="flex items-center justify-between sm:hidden mb-2">
-        <h3 className="text-xl font-bold text-gray-900">{t.advancedFilters}</h3>
+    <div className="fixed inset-0 sm:relative sm:inset-auto z-[100] sm:z-10 bg-[#0A0A0A] sm:bg-[#0A0A0A]/80 sm:backdrop-blur-3xl sm:rounded-[2.5rem] sm:border border-white/10 p-8 sm:p-10 mt-0 sm:mt-8 shadow-2xl text-left flex flex-col sm:grid sm:grid-cols-3 gap-8 sm:gap-10 animate-in fade-in slide-in-from-bottom sm:slide-in-from-top-4 duration-500 overflow-y-auto">
+      <div className="flex items-center justify-between sm:hidden mb-4">
+        <h3 className="text-2xl font-black text-white uppercase tracking-tight">{t.advancedFilters}</h3>
         <button 
           onClick={() => setShowAdvanced(false)}
-          className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl text-gray-500"
+          className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-2xl text-white/40 hover:text-white transition-all border border-white/5"
         >
           ×
         </button>
       </div>
       
       <div>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.minPrice} (RSD)</label>
+        <label className={labelClasses}>{t.minPrice} (RSD)</label>
         <input 
           type="number" 
           value={minPrice} 
           onChange={e => setMinPrice(e.target.value)} 
           placeholder="0" 
-          className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50"
+          className={inputClasses}
         />
       </div>
       <div>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.maxPrice} (RSD)</label>
+        <label className={labelClasses}>{t.maxPrice} (RSD)</label>
         <input 
           type="number" 
           value={maxPrice} 
           onChange={e => setMaxPrice(e.target.value)} 
-          placeholder="100000" 
-          className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50"
+          placeholder="100.000" 
+          className={inputClasses}
         />
       </div>
       <div>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.sortBy}</label>
+        <label className={labelClasses}>{t.sortBy}</label>
         <select 
           value={sortBy} 
           onChange={e => setSortBy(e.target.value)} 
-          className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50 cursor-pointer appearance-none"
+          className={inputClasses + " cursor-pointer appearance-none"}
         >
-          <option value="newest">{t.sortNewest}</option>
-          <option value="price_asc">{t.sortPriceAsc}</option>
-          <option value="price_desc">{t.sortPriceDesc}</option>
+          <option value="newest" className="bg-[#050505]">{t.sortNewest}</option>
+          <option value="price_asc" className="bg-[#050505]">{t.sortPriceAsc}</option>
+          <option value="price_desc" className="bg-[#050505]">{t.sortPriceDesc}</option>
         </select>
       </div>
       <div>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.city}</label>
+        <label className={labelClasses}>{t.city}</label>
         <select 
           value={filterCity} 
           onChange={e => setFilterCity(e.target.value)} 
-          className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] bg-gray-50/50 cursor-pointer appearance-none"
+          className={inputClasses + " cursor-pointer appearance-none"}
         >
-          <option value="">{t.allCities}</option>
+          <option value="" className="bg-[#050505]">{t.allCities}</option>
           {cities.map(city => (
-            <option key={city} value={city}>{city}</option>
+            <option key={city} value={city} className="bg-[#050505]">{city}</option>
           ))}
         </select>
       </div>
       <div>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">{t.condition}</label>
-        <div className="flex bg-gray-50 p-1.5 rounded-xl border border-gray-200 h-[46px]">
+        <label className={labelClasses}>{t.condition}</label>
+        <div className="flex bg-white/[0.03] p-1.5 rounded-[1.5rem] border border-white/5 h-[58px]">
           <button 
             type="button"
             onClick={() => setFilterCondition(filterCondition === 'Novo' ? '' : 'Novo')}
-            className={`flex-1 rounded-lg text-sm font-bold transition-all ${filterCondition === 'Novo' ? 'bg-[#185FA5] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+            className={`flex-1 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest transition-all ${filterCondition === 'Novo' ? 'bg-white text-black shadow-2xl scale-[1.02]' : 'text-white/20 hover:text-white/60'}`}
           >
             {t.condNew}
           </button>
           <button 
             type="button"
             onClick={() => setFilterCondition(filterCondition === 'Polovno' ? '' : 'Polovno')}
-            className={`flex-1 rounded-lg text-sm font-bold transition-all ${filterCondition === 'Polovno' ? 'bg-[#185FA5] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+            className={`flex-1 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest transition-all ${filterCondition === 'Polovno' ? 'bg-white text-black shadow-2xl scale-[1.02]' : 'text-white/20 hover:text-white/60'}`}
           >
             {t.condUsed}
           </button>
         </div>
       </div>
 
-      {/* Row 2 Column 3 empty spacer to complete the middle grid line cleanly */}
       <div className="hidden sm:block"></div>
 
-      {/* Row 3 Column 1 */}
       <div>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Slike</label>
+        <label className={labelClasses}>Slike</label>
         <button 
           type="button"
           onClick={() => setFilterPhoto(!filterPhoto)}
-          className={`w-full h-[46px] px-4 rounded-xl text-left text-[13px] font-bold transition-all flex items-center justify-between border ${filterPhoto ? 'bg-[#185FA5] text-white border-[#185FA5] shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+          className={`w-full h-[58px] px-6 rounded-[1.5rem] text-left text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-between border ${filterPhoto ? 'bg-[#185FA5] text-white border-[#185FA5] shadow-[0_0_20px_rgba(24,95,165,0.2)]' : 'bg-white/[0.03] text-white/20 border-white/5 hover:border-white/20'}`}
         >
-          <span className="flex items-center gap-2 truncate">📸 {t.onlyWithPhoto || 'Samo sa slikom'}</span>
-          <span className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 transition-colors ${filterPhoto ? 'bg-white text-[#185FA5] text-[11px] font-extrabold border-white' : 'border-gray-300 bg-white text-transparent'}`}>✓</span>
+          <span className="flex items-center gap-3 truncate">📸 {t.onlyWithPhoto || 'Samo sa slikom'}</span>
+          <div className={`w-5 h-5 rounded-lg flex items-center justify-center border transition-all ${filterPhoto ? 'bg-white border-white' : 'border-white/10 bg-black/20'}`}>
+            {filterPhoto && <svg className="w-3.5 h-3.5 text-[#185FA5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
+          </div>
         </button>
       </div>
 
-      {/* Row 3 Column 2 */}
       <div>
-        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Sigurnost</label>
+        <label className={labelClasses}>Sigurnost</label>
         <button 
           type="button"
           onClick={() => setFilterVerified(!filterVerified)}
-          className={`w-full h-[46px] px-4 rounded-xl text-left text-[13px] font-bold transition-all flex items-center justify-between border ${filterVerified ? 'bg-[#185FA5] text-white border-[#185FA5] shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+          className={`w-full h-[58px] px-6 rounded-[1.5rem] text-left text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-between border ${filterVerified ? 'bg-[#1D9E75] text-white border-[#1D9E75] shadow-[0_0_20px_rgba(29,158,117,0.2)]' : 'bg-white/[0.03] text-white/20 border-white/5 hover:border-white/20'}`}
         >
-          <span className="flex items-center gap-2 truncate">🛡️ {t.onlyVerified || 'Samo provereni'}</span>
-          <span className={`w-4 h-4 rounded flex items-center justify-center border shrink-0 transition-colors ${filterVerified ? 'bg-white text-[#185FA5] text-[11px] font-extrabold border-white' : 'border-gray-300 bg-white text-transparent'}`}>✓</span>
+          <span className="flex items-center gap-3 truncate">🛡️ {t.onlyVerified || 'Samo provereni'}</span>
+          <div className={`w-5 h-5 rounded-lg flex items-center justify-center border transition-all ${filterVerified ? 'bg-white border-white' : 'border-white/10 bg-black/20'}`}>
+            {filterVerified && <svg className="w-3.5 h-3.5 text-[#1D9E75]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
+          </div>
         </button>
       </div>
 
-      {/* Row 3 Column 3 - Apply filters button aligned flush right at the bottom */}
-      <div className="mt-auto sm:mt-0 sm:col-span-1 flex flex-col sm:flex-row gap-3 sm:justify-end items-end">
+      <div className="mt-auto sm:mt-0 sm:col-span-1 flex flex-col sm:flex-row gap-4 sm:justify-end items-end pt-6 sm:pt-0">
         <button 
           type="button"
           onClick={() => { clearFilters(); setShowAdvanced(false); }}
-          className="sm:hidden w-full py-4 rounded-xl text-sm font-bold text-gray-500 bg-gray-100"
+          className="w-full sm:w-auto py-5 px-10 rounded-2xl text-[11px] font-black uppercase tracking-widest text-white/20 hover:text-white bg-white/5 transition-all"
         >
           {t.resetAll}
         </button>
         <button 
           type="button"
           onClick={() => { handleSearch(); setShowAdvanced(false); }}
-          className="w-full sm:w-auto bg-[#185FA5] hover:bg-[#0C447C] text-white py-4 sm:py-0 sm:h-[46px] px-10 rounded-xl text-sm sm:text-[13px] font-bold transition-all shadow-xl active:scale-95 flex items-center justify-center"
+          className="w-full sm:w-auto bg-white hover:bg-[#185FA5] hover:text-white text-black py-5 px-12 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95"
         >
           {t.applyFilters}
         </button>

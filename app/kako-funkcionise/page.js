@@ -5,22 +5,25 @@ import { useLanguage } from '../../components/LanguageContext';
 
 export default function KakoFunkcionise() {
   const { t } = useLanguage();
+  const cardClasses = "bg-[#0A0A0A]/60 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-12 shadow-[0_32px_64px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all duration-500 hover:border-white/20 hover:bg-[#0A0A0A]/80 group h-full flex flex-col justify-center";
+
   return (
-    <div className="flex-1 bg-white">
+    <div className="flex-1 bg-transparent">
       {/* Hero Section */}
-      <section className="bg-[#E6F1FB] py-20 px-6 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl font-bold text-[#0C447C] mb-6 leading-tight">
+      <section className="pt-32 pb-24 px-6 text-center relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#185FA5]/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="max-w-4xl mx-auto relative z-10">
+          <h1 className="text-5xl md:text-7xl font-black text-white mb-8 leading-[1.1] tracking-tight uppercase">
             {t.hifTitle}
           </h1>
-          <p className="text-lg text-[#185FA5] mb-10 max-w-2xl mx-auto">
+          <p className="text-[16px] md:text-[18px] text-white/40 mb-12 max-w-2xl mx-auto font-black uppercase tracking-[0.3em] leading-relaxed">
             {t.hifSub}
           </p>
-          <div className="flex justify-center gap-4">
-            <Link href="/postoglas" className="bg-[#185FA5] hover:bg-[#0C447C] text-white px-8 py-3.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg">
+          <div className="flex justify-center gap-6 flex-wrap">
+            <Link href="/postoglas" className="bg-white text-black hover:bg-[#185FA5] hover:text-white px-12 py-5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl active:scale-95">
               {t.startSelling}
             </Link>
-            <Link href="/" className="bg-white hover:bg-gray-50 text-[#185FA5] border border-[#185FA5] px-8 py-3.5 rounded-xl font-semibold transition-all shadow-sm">
+            <Link href="/" className="bg-white/[0.03] text-white border border-white/10 px-12 py-5 rounded-full text-[11px] font-black uppercase tracking-[0.3em] hover:bg-white/[0.08] transition-all active:scale-95">
               {t.exploreAds}
             </Link>
           </div>
@@ -28,38 +31,40 @@ export default function KakoFunkcionise() {
       </section>
 
       {/* For Whom Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t.forWhom}</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+      <section className="py-32 px-6">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="text-center mb-24">
+            <h2 className="text-4xl font-black text-white mb-6 uppercase tracking-tight">{t.forWhom}</h2>
+            <p className="text-white/40 max-w-2xl mx-auto text-[13px] font-black uppercase tracking-widest">
               {t.forWhomSub}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="bg-gray-50 p-10 rounded-3xl border border-gray-100 h-full flex flex-col justify-center transition-transform hover:-translate-y-1">
-              <div className="text-5xl mb-6">🛒</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t.forBuyers}</h3>
-              <p className="text-gray-600 mb-6 leading-relaxed">
+          <div className="grid md:grid-cols-2 gap-12">
+            <div className={cardClasses}>
+               <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#1D9E75]/10 rounded-full blur-[80px] pointer-events-none" />
+              <div className="text-6xl mb-10 grayscale opacity-20">🛒</div>
+              <h3 className="text-3xl font-black text-white mb-6 uppercase tracking-tight">{t.forBuyers}</h3>
+              <p className="text-white/60 mb-8 leading-relaxed font-medium">
                 {t.forBuyersSub}
               </p>
-              <ul className="space-y-3 text-gray-700">
+              <ul className="space-y-4 text-[11px] font-black text-white/40 uppercase tracking-widest">
                 {t.forBuyersList.map((item, i) => (
-                  <li key={i} className="flex items-center gap-3"><span className="text-[#1D9E75] text-xl">✓</span> {item}</li>
+                  <li key={i} className="flex items-center gap-4 transition-all hover:text-white"><span className="text-[#1D9E75] text-xl drop-shadow-[0_0_10px_#1D9E75]">✓</span> {item}</li>
                 ))}
               </ul>
             </div>
 
-            <div className="bg-[#f0f7fd] p-10 rounded-3xl border border-[#d6ebfa] h-full flex flex-col justify-center transition-transform hover:-translate-y-1">
-              <div className="text-5xl mb-6">🚀</div>
-              <h3 className="text-2xl font-bold text-[#0C447C] mb-4">{t.forSellers}</h3>
-              <p className="text-[#185FA5] mb-6 leading-relaxed">
+            <div className={cardClasses}>
+               <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#185FA5]/10 rounded-full blur-[80px] pointer-events-none" />
+              <div className="text-6xl mb-10 grayscale opacity-20">🚀</div>
+              <h3 className="text-3xl font-black text-[#185FA5] mb-6 uppercase tracking-tight">{t.forSellers}</h3>
+              <p className="text-white/60 mb-8 leading-relaxed font-medium">
                 {t.forSellersSub}
               </p>
-              <ul className="space-y-3 text-[#185FA5]">
+              <ul className="space-y-4 text-[11px] font-black text-white/40 uppercase tracking-widest">
                 {t.forSellersList.map((item, i) => (
-                  <li key={i} className="flex items-center gap-3"><span className="text-[#0C447C] text-xl">✓</span> {item}</li>
+                  <li key={i} className="flex items-center gap-4 transition-all hover:text-white"><span className="text-[#185FA5] text-xl drop-shadow-[0_0_10px_#185FA5]">✓</span> {item}</li>
                 ))}
               </ul>
             </div>
@@ -68,85 +73,66 @@ export default function KakoFunkcionise() {
       </section>
 
       {/* How it works steps */}
-      <section className="bg-gray-50 py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-16">{t.stepsTitle}</h2>
+      <section className="py-32 px-6 bg-[#050505]">
+        <div className="max-w-[1200px] mx-auto">
+          <h2 className="text-4xl font-black text-center text-white mb-24 uppercase tracking-tight">{t.stepsTitle}</h2>
           
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Step 1 */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center relative z-10">
-              <div className="w-16 h-16 bg-[#E6F1FB] text-[#185FA5] rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">{t.step1Title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.step1Sub}</p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center relative z-10">
-              <div className="w-16 h-16 bg-[#E6F1FB] text-[#185FA5] rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">{t.step2Title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.step2Sub}</p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center relative z-10">
-              <div className="w-16 h-16 bg-[#E6F1FB] text-[#185FA5] rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">{t.step3Title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.step3Sub}</p>
-            </div>
+          <div className="grid md:grid-cols-3 gap-10">
+            {[
+              { id: 1, title: t.step1Title, sub: t.step1Sub },
+              { id: 2, title: t.step2Title, sub: t.step2Sub },
+              { id: 3, title: t.step3Title, sub: t.step3Sub }
+            ].map((step) => (
+              <div key={step.id} className="bg-[#0A0A0A]/40 backdrop-blur-3xl p-12 rounded-[2.5rem] border border-white/5 text-center transition-all hover:border-white/20 hover:bg-[#0A0A0A]/60 group">
+                <div className="w-20 h-20 bg-white/[0.03] text-[#185FA5] border border-white/5 rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-10 shadow-2xl transition-all group-hover:scale-110 group-hover:border-[#185FA5]/40 group-hover:bg-[#185FA5]/5">
+                  {step.id}
+                </div>
+                <h3 className="text-xl font-black text-white mb-6 uppercase tracking-tight">{step.title}</h3>
+                <p className="text-[13px] text-white/40 font-black uppercase tracking-widest leading-relaxed">{step.sub}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Benefits */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12">{t.whyTitle}</h2>
+      <section className="py-32 px-6">
+        <div className="max-w-[1000px] mx-auto text-center">
+          <h2 className="text-4xl font-black text-white mb-20 uppercase tracking-tight">{t.benefitsTitle || 'Naše Prednosti'}</h2>
           
-          <div className="grid sm:grid-cols-2 gap-8 text-left">
-            <div className="flex gap-4">
-              <div className="text-[#1D9E75] text-3xl shrink-0">🛡️</div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-2">{t.whySecurity}</h4>
-                <p className="text-gray-600">{t.whySecuritySub}</p>
+          <div className="grid sm:grid-cols-2 gap-16 text-left">
+            {[
+              { icon: '🛡️', title: t.whySecurity, sub: t.whySecuritySub },
+              { icon: '⚡', title: t.whySpeed, sub: t.whySpeedSub },
+              { icon: '💬', title: t.whyMessages, sub: t.whyMessagesSub },
+              { icon: '📱', title: t.whyMobile, sub: t.whyMobileSub }
+            ].map((benefit, i) => (
+              <div key={i} className="flex gap-8 group">
+                <div className="text-5xl shrink-0 grayscale opacity-20 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110">
+                  {benefit.icon}
+                </div>
+                <div>
+                  <h4 className="text-xl font-black text-white mb-4 uppercase tracking-tight group-hover:text-[#185FA5] transition-colors">{benefit.title}</h4>
+                  <p className="text-[14px] text-white/40 font-medium leading-relaxed">{benefit.sub}</p>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="text-[#1D9E75] text-3xl shrink-0">⚡</div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-2">{t.whySpeed}</h4>
-                <p className="text-gray-600">{t.whySpeedSub}</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="text-[#1D9E75] text-3xl shrink-0">💬</div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-2">{t.whyMessages}</h4>
-                <p className="text-gray-600">{t.whyMessagesSub}</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="text-[#1D9E75] text-3xl shrink-0">📱</div>
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 mb-2">{t.whyMobile}</h4>
-                <p className="text-gray-600">{t.whyMobileSub}</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="bg-[#185FA5] py-16 px-6 text-center text-white">
-        <h2 className="text-3xl font-bold mb-6">{t.ctaTitle}</h2>
-        <p className="text-[#d6ebfa] text-lg mb-8 max-w-2xl mx-auto">
-          {t.ctaSub}
-        </p>
-        <Link href="/register" className="inline-block bg-white text-[#185FA5] px-10 py-4 rounded-xl font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg">
-          {t.ctaBtn}
-        </Link>
+      <section className="py-32 px-6 text-center relative overflow-hidden bg-[#0A0A0A]">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#185FA5]/5 rounded-full blur-[140px] pointer-events-none" />
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <h2 className="text-5xl md:text-6xl font-black text-white mb-8 uppercase tracking-tight leading-tight">{t.ctaTitle}</h2>
+          <p className="text-[14px] md:text-[16px] text-white/30 mb-16 max-w-2xl mx-auto font-black uppercase tracking-[0.4em] leading-relaxed">
+            {t.ctaSub}
+          </p>
+          <Link href="/register" className="inline-block bg-white text-black px-16 py-6 rounded-full font-black text-[11px] uppercase tracking-[0.4em] hover:bg-[#185FA5] hover:text-white transition-all shadow-2xl active:scale-95">
+            {t.ctaBtn}
+          </Link>
+        </div>
       </section>
     </div>
   );

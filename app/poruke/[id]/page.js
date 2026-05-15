@@ -101,17 +101,14 @@ export default function ChatPage() {
         filter: `listing_id=eq.${listingId}`
       }, (payload) => {
         const newMsg = payload.new;
-        // Verify if message belongs to this conversation
         const isFromOther = newMsg.sender_id === otherUserId && newMsg.receiver_id === user.id;
         const isFromMe = newMsg.sender_id === user.id && newMsg.receiver_id === otherUserId;
         
         if (isFromOther || isFromMe) {
           setMessages(prev => {
-            // Avoid duplicates
             if (prev.find(m => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
-          // If from other, mark as read immediately
           if (isFromOther) {
             supabase.from('messages').update({ is_read: true }).eq('id', newMsg.id).then(() => {
               window.dispatchEvent(new Event('counts_changed'));
@@ -136,7 +133,6 @@ export default function ChatPage() {
     let content = newMessage.trim();
     setNewMessage('');
 
-    // Adversarial input sanitization: Prevent users from manually typing system message prefixes to spoof state milestones
     if (content.startsWith('📦 [SISTEM]') || content.startsWith('✅ [SISTEM]')) {
       content = "[Korisnik] " + content;
     }
@@ -150,13 +146,12 @@ export default function ChatPage() {
     }).select().single();
 
     if (error) {
-      alert(t.sendError + error.message);
+      console.error(t.sendError + error.message);
     } else if (data) {
       setMessages(prev => {
         if (prev.find(m => m.id === data.id)) return prev;
         return [...prev, data];
       });
-      // Create notification for receiver
       await supabase.from('notifications').insert({
         user_id: otherUserId,
         type: 'message',
@@ -169,16 +164,11 @@ export default function ChatPage() {
 
   async function handleActionSent() {
     if (!user || sending) return;
-    // Strict ownership runtime gate: Verify that the executing account owns the targeted listing asset
-    if (listing?.user_id !== user.id) {
-      alert("Bezbednosna provera: Samo vlasnik oglasa može označiti slanje pošiljke.");
-      return;
-    }
+    if (listing?.user_id !== user.id) return;
 
     setSending(true);
     const content = "📦 [SISTEM] Prodavac je označio predmet kao poslat.";
     
-    // Update listing status
     await supabase.from('listings').update({ 
       status: 'shipped',
       buyer_id: otherUserId 
@@ -193,13 +183,12 @@ export default function ChatPage() {
     }).select().single();
 
     if (error) {
-      alert(t.sendError + error.message);
+      console.error(t.sendError + error.message);
     } else if (data) {
       setMessages(prev => {
         if (prev.find(m => m.id === data.id)) return prev;
         return [...prev, data];
       });
-      // Update local listing state to reflect status change
       setListing(prev => ({ ...prev, status: 'shipped', buyer_id: otherUserId }));
     }
     setSending(false);
@@ -207,16 +196,11 @@ export default function ChatPage() {
 
   async function handleActionReceived() {
     if (!user || sending) return;
-    // Strict ownership runtime gate: Verify that the executing account is the interlocutor/buyer
-    if (listing?.user_id === user.id) {
-      alert("Bezbednosna provera: Samo kupac može potvrditi prijem pošiljke.");
-      return;
-    }
+    if (listing?.user_id === user.id) return;
 
     setSending(true);
     const content = "✅ [SISTEM] Kupac je potvrdio prijem predmeta. Transakcija je uspešno završena!";
     
-    // Update listing status to collected
     await supabase.from('listings').update({ status: 'collected' }).eq('id', listingId);
 
     const { data, error } = await supabase.from('messages').insert({
@@ -228,16 +212,14 @@ export default function ChatPage() {
     }).select().single();
 
     if (error) {
-      alert(t.sendError + error.message);
+      console.error(t.sendError + error.message);
     } else if (data) {
       setMessages(prev => {
         if (prev.find(m => m.id === data.id)) return prev;
         return [...prev, data];
       });
-      // Update local listing state
       setListing(prev => ({ ...prev, status: 'collected' }));
       
-      // Create notification for seller to fill KPIs
       await supabase.from('notifications').insert({
         user_id: otherUserId,
         type: 'kpi_prompt',
@@ -261,11 +243,10 @@ export default function ChatPage() {
     });
 
     if (error) {
-      alert(t.ratingError + error.message);
+      console.error(t.ratingError + error.message);
     } else {
       setHasRated(true);
       setShowRatingForm(false);
-      // Optional: send a message that user has been rated
       const commentText = ratingComment.trim() ? `\nKomentar: "${ratingComment.trim()}"` : '';
       await supabase.from('messages').insert({
         listing_id: listingId,
@@ -279,8 +260,8 @@ export default function ChatPage() {
   }
 
   if (loading) return (
-    <div className="flex-1 flex items-center justify-center bg-[#f5f5f5]">
-      <div className="w-8 h-8 border-2 border-[#185FA5] border-t-transparent rounded-full animate-spin"></div>
+    <div className="flex-1 flex items-center justify-center bg-transparent">
+      <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
   );
 
@@ -289,134 +270,102 @@ export default function ChatPage() {
   const isSeller = listing?.user_id === user?.id;
   const isBuyer = listing && listing?.user_id !== user?.id;
 
+  const cardClasses = "bg-[#0A0A0A]/80 backdrop-blur-3xl border border-white/10 shadow-[0_32px_64px_rgba(0,0,0,0.6)]";
+  const inputClasses = "flex-1 bg-white/[0.03] border border-white/5 rounded-2xl px-6 py-4 text-[15px] text-white placeholder:text-white/20 outline-none focus:border-[#185FA5] focus:bg-white/10 transition-all";
+
   return (
-    <div className="flex-1 flex flex-col bg-[#f5f5f5] h-[calc(100vh-64px)]">
+    <div className="flex-1 flex flex-col bg-transparent h-[calc(100vh-64px)] relative">
+      
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
-        <Link href="/poruke" className="p-2 -ml-2 text-gray-400 hover:text-[#185FA5] transition-colors">
+      <div className="bg-[#0A0A0A]/40 backdrop-blur-3xl border-b border-white/10 px-8 py-5 flex items-center gap-6 sticky top-0 z-[50] shadow-2xl">
+        <Link href="/poruke" className="p-3 -ml-3 text-white/20 hover:text-white transition-all bg-white/[0.03] rounded-full border border-white/5">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
           </svg>
         </Link>
         <div className="flex-1 min-w-0">
-          <Link href={`/prodavac/${otherUserId}`} className="inline-flex items-center gap-2 font-bold text-gray-900 truncate hover:text-[#185FA5] transition-colors group">
-            <span>{otherUser?.username || t.userWord}</span>
+          <div className="flex items-center gap-3 mb-1">
+            <Link href={`/prodavac/${otherUserId}`} className="font-black text-white text-lg tracking-tight truncate hover:text-[#185FA5] transition-colors">
+              {otherUser?.username || t.userWord}
+            </Link>
             {otherUser?.verification_level > 0 && (
-              <span className="text-[10px] font-semibold bg-[#EAF3DE] text-[#3B6D11] px-1.5 py-0.5 rounded border border-[#d3ecc1] shrink-0 group-hover:bg-[#d9ebd0] transition-colors" title="Verifikovan nivo">
-                🛡️ Nivo {otherUser.verification_level}
+              <span className="text-[9px] font-black bg-[#1D9E75]/10 text-[#1D9E75] px-2 py-0.5 rounded-full border border-[#1D9E75]/20 uppercase tracking-widest">
+                🛡️ Verified
               </span>
             )}
-          </Link>
-          <Link href={`/oglas/${listingId}`} className="text-[12px] text-[#185FA5] font-medium truncate block hover:underline">
-            {t.listingLabel}{listing?.title}
+          </div>
+          <Link href={`/oglas/${listingId}`} className="text-[11px] font-black text-[#185FA5] uppercase tracking-widest truncate block hover:text-white transition-colors">
+            {listing?.title}
           </Link>
         </div>
         
         {!hasRated && user.id !== otherUserId && (
           <button 
             onClick={() => setShowRatingForm(true)}
-            className="text-[11px] font-bold text-white bg-[#1D9E75] hover:bg-[#157a5a] px-3 py-1.5 rounded-lg transition-colors shrink-0"
+            className="text-[10px] font-black text-black bg-white hover:bg-[#1D9E75] hover:text-white px-5 py-2.5 rounded-full transition-all uppercase tracking-widest shadow-xl"
           >
             {listing?.user_id === user.id ? t.rateBuyer : t.rateSeller}
           </button>
         )}
       </div>
 
-      {/* Transaction Lifecycle Status Controller Banner */}
-      <div className="bg-amber-50/80 border-b border-amber-100 px-6 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left shadow-inner shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-base">{hasReceived ? '🎉' : hasSent ? '🚚' : '🤝'}</span>
-          <div className="text-[12px] text-amber-900 leading-tight">
-            <span className="font-bold">Status dogovora: </span>
+      {/* Status Controller Banner */}
+      <div className="bg-[#185FA5]/10 backdrop-blur-2xl border-b border-[#185FA5]/20 px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-xl shadow-inner border border-white/5">
+            {hasReceived ? '🎉' : hasSent ? '🚚' : '🤝'}
+          </div>
+          <div className="text-[11px] font-black uppercase tracking-[0.2em] leading-relaxed">
+            <span className="text-white/20">Status: </span>
             {hasReceived ? (
-              <span className="text-[#1D9E75] font-extrabold">Paket je uspešno preuzet. Završeno!</span>
+              <span className="text-[#1D9E75] shadow-[0_0_15px_rgba(29,158,117,0.1)]">Završeno</span>
             ) : hasSent ? (
-              <span className="text-amber-800 font-semibold">Predmet je poslat. Čeka se potvrda kupca o preuzimanju.</span>
+              <span className="text-[#185FA5]">Poslato</span>
             ) : (
-              <span className="text-gray-600">U toku pregovori. Prodavac može označiti slanje po dogovoru.</span>
+              <span className="text-white/40">U toku</span>
             )}
           </div>
         </div>
 
-        {/* Action Triggers */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-4">
           {isSeller && !hasSent && (
             <button
               onClick={handleActionSent}
               disabled={sending}
-              className="bg-[#185FA5] hover:bg-[#0C447C] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              className="bg-[#185FA5] text-white text-[10px] font-black uppercase tracking-[0.3em] px-6 py-3 rounded-full transition-all shadow-[0_15px_30px_rgba(24,95,165,0.2)] hover:scale-105 active:scale-95 disabled:opacity-20"
             >
-              📦 Označi kao poslato
+              📦 Označi slanje
             </button>
           )}
           {isBuyer && hasSent && !hasReceived && (
             <button
               onClick={handleActionReceived}
               disabled={sending}
-              className="bg-[#1D9E75] hover:bg-[#157a5a] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm active:scale-95 disabled:opacity-50 animate-pulse"
+              className="bg-[#1D9E75] text-white text-[10px] font-black uppercase tracking-[0.3em] px-6 py-3 rounded-full transition-all shadow-[0_15px_30px_rgba(29,158,117,0.2)] hover:scale-105 active:scale-95 disabled:opacity-20 animate-pulse"
             >
-              ✅ Potvrdi prijem paketa
+              ✅ Potvrdi prijem
             </button>
           )}
         </div>
       </div>
 
-      {/* Rating Form Modal */}
-      {showRatingForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-[400px] shadow-2xl animate-in fade-in zoom-in duration-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">{listing?.user_id === user.id ? t.rateBuyer : t.rateSeller}</h3>
-            <div className="mb-4">
-              <label className="text-[13px] text-gray-500 block mb-2">{t.yourRating}</label>
-              <StarRating rating={ratingScore} onRate={setRatingScore} size="lg" interactive={true} />
-            </div>
-            <div className="mb-6">
-              <label className="text-[13px] text-gray-500 block mb-2">{t.comment}</label>
-              <textarea 
-                value={ratingComment}
-                onChange={e => setRatingComment(e.target.value)}
-                placeholder={t.commentPlaceholder}
-                rows={3}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#1D9E75] focus:ring-1 focus:ring-[#1D9E75] transition-all resize-none"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setShowRatingForm(false)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                {t.cancel}
-              </button>
-              <button 
-                onClick={handleSubmitRating}
-                disabled={submittingRating}
-                className="flex-1 py-2.5 rounded-xl bg-[#1D9E75] text-white text-sm font-semibold hover:bg-[#157a5a] transition-colors disabled:opacity-50"
-              >
-                {submittingRating ? t.sending2 : t.sendRating}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-8 space-y-8 no-scrollbar">
         {messages.map((msg, idx) => {
-          // Intercept system event notifications
           if (msg.content.startsWith('📦 [SISTEM]') || msg.content.startsWith('✅ [SISTEM]')) {
             const isDelivery = msg.content.startsWith('✅ [SISTEM]');
             const cleanText = msg.content.replace('📦 [SISTEM] ', '').replace('✅ [SISTEM] ', '');
             return (
-              <div key={msg.id || idx} className="my-6 text-center">
-                <div className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-sm max-w-[90%] border ${
-                  isDelivery 
-                    ? 'bg-[#EAF3DE] text-[#3B6D11] border-[#d3ecc1]' 
-                    : 'bg-amber-50 text-amber-800 border-amber-200'
+              <div key={msg.id || idx} className="my-10 flex flex-col items-center animate-in fade-in zoom-in duration-500">
+                <div className={`px-8 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] border backdrop-blur-3xl shadow-2xl flex items-center gap-4 max-w-[80%]
+                  ${isDelivery 
+                    ? 'bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/20 shadow-[0_0_40px_rgba(29,158,117,0.1)]' 
+                    : 'bg-[#185FA5]/10 text-[#185FA5] border-[#185FA5]/20 shadow-[0_0_40px_rgba(24,95,165,0.1)]'
                 }`}>
-                  <span className="text-base shrink-0">{isDelivery ? '🎉' : '📦'}</span>
-                  <span className="text-left">{cleanText}</span>
+                  <span className="text-xl shrink-0">{isDelivery ? '🎉' : '📦'}</span>
+                  <span className="leading-relaxed">{cleanText}</span>
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1">
+                <div className="text-[9px] font-black text-white/10 mt-3 uppercase tracking-widest">
                   {new Date(msg.created_at).toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -426,12 +375,12 @@ export default function ChatPage() {
           const isMe = msg.sender_id === user.id;
           return (
             <div key={msg.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 text-[14px] shadow-sm
+              <div className={`max-w-[80%] sm:max-w-[65%] rounded-[2rem] px-8 py-5 shadow-2xl relative group transition-all duration-300 hover:scale-[1.01]
                 ${isMe 
-                  ? 'bg-[#185FA5] text-white rounded-tr-none' 
-                  : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'}`}>
-                {msg.content}
-                <div className={`text-[10px] mt-1 opacity-60 text-right ${isMe ? 'text-white' : 'text-gray-400'}`}>
+                  ? 'bg-[#185FA5] text-white rounded-tr-none shadow-[0_20px_40px_rgba(24,95,165,0.2)]' 
+                  : 'bg-white/[0.03] text-white border border-white/10 rounded-tl-none backdrop-blur-3xl'}`}>
+                <p className="text-[16px] leading-relaxed font-medium tracking-tight">{msg.content}</p>
+                <div className={`text-[9px] font-black mt-3 uppercase tracking-widest ${isMe ? 'text-white/40' : 'text-white/20'} text-right`}>
                   {new Date(msg.created_at).toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -442,29 +391,74 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 p-4 pb-8 sm:pb-4">
-        <form onSubmit={handleSendMessage} className="max-w-[700px] mx-auto flex gap-2">
+      <div className="bg-[#0A0A0A]/40 backdrop-blur-3xl border-t border-white/10 p-8">
+        <form onSubmit={handleSendMessage} className="max-w-[900px] mx-auto flex gap-4">
           <input
             type="text"
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
             placeholder={t.messagePlaceholder}
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] transition-all"
+            className={inputClasses}
           />
           <button
             type="submit"
             disabled={!newMessage.trim() || sending}
-            className={`p-2.5 rounded-xl transition-all shadow-sm flex items-center justify-center
+            className={`w-16 h-16 rounded-2xl transition-all shadow-2xl flex items-center justify-center shrink-0 border
               ${!newMessage.trim() || sending 
-                ? 'bg-gray-100 text-gray-400' 
-                : 'bg-[#185FA5] text-white hover:bg-[#0C447C] active:scale-95'}`}
+                ? 'bg-white/5 border-white/5 text-white/10' 
+                : 'bg-white border-white text-black hover:bg-[#185FA5] hover:text-white hover:border-[#185FA5] active:scale-90'}`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform rotate-90" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 transform rotate-90" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
             </svg>
           </button>
         </form>
       </div>
+
+      {/* Rating Form Modal */}
+      {showRatingForm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/90 backdrop-blur-xl animate-in fade-in duration-500">
+          <div className="bg-[#0A0A0A] border border-white/10 rounded-[3rem] p-12 w-full max-w-[500px] shadow-[0_64px_128px_rgba(0,0,0,0.8)] relative overflow-hidden">
+             <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#1D9E75]/10 rounded-full blur-[80px] pointer-events-none" />
+            
+            <h3 className="text-3xl font-black text-white mb-10 tracking-tight uppercase">{listing?.user_id === user.id ? t.rateBuyer : t.rateSeller}</h3>
+            
+            <div className="mb-10">
+              <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] block mb-4 ml-1">{t.yourRating}</label>
+              <div className="flex justify-center bg-white/[0.03] py-8 rounded-[2rem] border border-white/5">
+                <StarRating rating={ratingScore} onRate={setRatingScore} size="lg" interactive={true} />
+              </div>
+            </div>
+            
+            <div className="mb-12">
+              <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] block mb-4 ml-1">{t.comment}</label>
+              <textarea 
+                value={ratingComment}
+                onChange={e => setRatingComment(e.target.value)}
+                placeholder={t.commentPlaceholder}
+                rows={3}
+                className="w-full bg-white/[0.03] border border-white/5 rounded-[2rem] px-8 py-6 text-white text-base outline-none focus:border-[#1D9E75] transition-all resize-none"
+              />
+            </div>
+            
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setShowRatingForm(false)}
+                className="flex-1 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest text-white/20 hover:text-white bg-white/5 transition-all"
+              >
+                {t.cancel}
+              </button>
+              <button 
+                onClick={handleSubmitRating}
+                disabled={submittingRating}
+                className="flex-1 py-5 rounded-2xl bg-[#1D9E75] text-white text-[11px] font-black uppercase tracking-widest hover:bg-[#157a5a] transition-all shadow-[0_20px_40px_rgba(29,158,117,0.2)] disabled:opacity-20"
+              >
+                {submittingRating ? t.sending2 : t.sendRating}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

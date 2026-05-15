@@ -38,34 +38,47 @@ export default function Login() {
     setLoading(false);
   }
 
-  return (
-    <div className="flex-1 flex items-center justify-center p-6 bg-[#f5f5f5]">
-      <div className="bg-white p-8 rounded-2xl border border-gray-200 w-full max-w-[400px] shadow-sm">
-        <h1 className="text-xl font-semibold mb-6 text-gray-900 text-center">{t.loginTitle}</h1>
+  const inputClasses = (hasError) => `
+    w-full px-5 py-4 rounded-2xl border text-[14px] outline-none transition-all duration-300
+    bg-white/[0.03] text-white placeholder:text-white/10
+    ${hasError 
+      ? 'border-red-500/50 focus:border-red-500 focus:bg-red-500/5' 
+      : 'border-white/5 focus:border-[#185FA5] focus:bg-white/10 focus:ring-1 focus:ring-[#185FA5]/50'}
+  `;
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="mb-4">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.emailLabel}</label>
+  const labelClasses = "text-[10px] font-black text-white/40 uppercase tracking-[0.3em] block mb-3 ml-1";
+
+  return (
+    <div className="flex-1 flex items-center justify-center p-6 bg-transparent py-32">
+      <div className="bg-[#0A0A0A]/60 backdrop-blur-3xl p-12 sm:p-16 rounded-[3rem] border border-white/10 w-full max-w-[480px] shadow-[0_64px_128px_rgba(0,0,0,0.8)] relative overflow-hidden group">
+        {/* Subtle internal glow */}
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#185FA5]/10 rounded-full blur-[80px] pointer-events-none" />
+        
+        <h1 className="text-3xl font-black mb-12 text-white text-center tracking-tight uppercase">{t.loginTitle}</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="relative z-10">
+          <div className="mb-6">
+            <label className={labelClasses}>{t.emailLabel}</label>
             <input
               type="email"
               {...register('email')}
               placeholder={t.emailPlaceholder}
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+              className={inputClasses(errors.email)}
             />
-            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+            {errors.email && <p className="mt-2 text-[11px] font-bold text-red-500 uppercase tracking-widest ml-1">{errors.email.message}</p>}
           </div>
 
-          <div className="mb-6">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.passwordLabel}</label>
+          <div className="mb-10">
+            <label className={labelClasses}>{t.passwordLabel}</label>
             <input
               type="password"
               {...register('password')}
               placeholder="••••••"
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+              className={inputClasses(errors.password)}
             />
-            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
-            <div className="flex justify-end mt-2">
-              <Link href="/forgot-password" size="sm" className="text-[12px] text-[#185FA5] hover:underline font-medium">
+            {errors.password && <p className="mt-2 text-[11px] font-bold text-red-500 uppercase tracking-widest ml-1">{errors.password.message}</p>}
+            <div className="flex justify-end mt-4">
+              <Link href="/forgot-password" size="sm" className="text-[11px] font-black text-[#185FA5] hover:text-white uppercase tracking-widest transition-colors">
                 {t.forgotPassword}
               </Link>
             </div>
@@ -74,20 +87,21 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+            className={`w-full py-5 rounded-2xl text-[13px] font-black uppercase tracking-[0.3em] transition-all duration-500 shadow-[0_20px_40px_rgba(0,0,0,0.3)]
+              ${loading ? 'bg-white/10 text-white/20 cursor-not-allowed' : 'bg-white text-black hover:bg-[#185FA5] hover:text-white cursor-pointer active:scale-[0.98]'}`}
           >
             {loading ? t.loggingIn : t.loginTitle}
           </button>
         </form>
 
         {message && (
-          <p className="mt-4 text-[13px] text-[#E24B4A] text-center bg-red-50 py-2 rounded-md">
+          <p className="mt-8 p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest text-center text-[#E24B4A] bg-red-500/10 border border-red-500/20">
             {message}
           </p>
         )}
 
-        <p className="mt-6 text-[13px] text-gray-600 text-center">
-          {t.noAccount} <Link href="/register" className="text-[#185FA5] hover:underline font-medium">{t.register}</Link>
+        <p className="mt-10 text-[12px] font-bold text-white/40 text-center uppercase tracking-widest">
+          {t.noAccount} <Link href="/register" className="text-white hover:text-[#185FA5] transition-colors">{t.register}</Link>
         </p>
       </div>
     </div>

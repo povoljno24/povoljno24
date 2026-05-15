@@ -28,10 +28,10 @@ export default function ContactForm({ listingId, receiverId }) {
       return;
     }
     
-    // Prevent spam flooding with a basic 30-second client-side dispatch cooldown lock
+    // Cooldown check
     const lastSendTime = localStorage.getItem(`contact_cooldown_${listingId}`);
     if (lastSendTime && Date.now() - parseInt(lastSendTime, 10) < 30000) {
-      setMsgError(t.contactRateLimit || "Molimo sačekajte 30 sekundi pre slanja nove poruke.");
+      setMsgError(t.contactRateLimit || "Molimo sačekajte 30 sekundi.");
       setSendingMsg(false);
       return;
     }
@@ -53,31 +53,34 @@ export default function ContactForm({ listingId, receiverId }) {
     setSendingMsg(false);
   }
 
+  const inputClasses = "w-full px-6 py-5 rounded-[1.5rem] border border-white/5 bg-white/[0.03] text-white placeholder:text-white/20 outline-none focus:border-[#185FA5] focus:bg-white/10 transition-all text-[15px] resize-none";
+
   if (msgSent) {
     return (
-      <div className="bg-[#EAF3DE] border border-[#d3ecc1] rounded-lg p-4 text-center">
-        <p className="text-[#3B6D11] text-sm font-medium">{t.contactSent}</p>
+      <div className="bg-[#1D9E75]/10 border border-[#1D9E75]/20 rounded-2xl p-6 text-center animate-in zoom-in duration-300">
+        <p className="text-[#1D9E75] text-[13px] font-black uppercase tracking-widest">{t.contactSent}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <textarea
         value={message}
         onChange={e => setMessage(e.target.value)}
         placeholder={t.contactPlaceholder}
         rows={4}
-        className="w-full px-4 py-3 rounded-xl border border-gray-300 text-sm outline-none focus:border-[#185FA5] focus:ring-1 focus:ring-[#185FA5] transition-all resize-y"
+        className={inputClasses}
       />
       <button
         onClick={handleSendMessage}
         disabled={sendingMsg}
-        className={`w-full py-3.5 text-white rounded-xl text-[15px] font-semibold transition-colors ${sendingMsg ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+        className={`w-full py-5 rounded-2xl text-[12px] font-black uppercase tracking-[0.3em] transition-all duration-500 shadow-[0_20px_40px_rgba(0,0,0,0.3)]
+          ${sendingMsg ? 'bg-white/10 text-white/20 cursor-not-allowed' : 'bg-white text-black hover:bg-[#185FA5] hover:text-white cursor-pointer active:scale-[0.98]'}`}
       >
         {sendingMsg ? t.contactSending : t.contactSend}
       </button>
-      {msgError && <p className="text-[#E24B4A] text-[13px] text-center">{msgError}</p>}
+      {msgError && <p className="text-[#E24B4A] text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-2 duration-300">{msgError}</p>}
     </div>
   );
 }

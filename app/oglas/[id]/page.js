@@ -21,7 +21,7 @@ async function getSellerProfile(userId) {
   const [{ data: profile }, { data: ratings }] = await Promise.all([
     supabaseServer
       .from('profiles')
-      .select('username, verification_level, created_at, phone, phone_verified')
+      .select('username, verification_level, created_at, phone, phone_verified, avatar_url')
       .eq('id', userId)
       .single(),
     supabaseServer
@@ -77,8 +77,8 @@ export default async function OglasPage({ params }) {
 
   if (!listing) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-gray-500">Oglas nije pronađen.</p>
+      <div className="flex-1 flex items-center justify-center bg-transparent">
+        <p className="text-white/40 font-black uppercase tracking-widest">Oglas nije pronađen.</p>
       </div>
     );
   }
@@ -87,8 +87,8 @@ export default async function OglasPage({ params }) {
   if (listing.status === 'shipped') {
     if (!currentUser || (currentUser.id !== listing.user_id && currentUser.id !== listing.buyer_id)) {
       return (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500 font-medium">Ovaj oglas je prodat i više nije javan.</p>
+        <div className="flex-1 flex items-center justify-center bg-transparent">
+          <p className="text-white/40 font-black uppercase tracking-widest">Ovaj oglas je prodat i više nije javan.</p>
         </div>
       );
     }
@@ -96,8 +96,8 @@ export default async function OglasPage({ params }) {
 
   if (listing.status === 'collected') {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-gray-500 font-medium">Ovaj oglas je uspešno prodat i obrisan.</p>
+      <div className="flex-1 flex items-center justify-center bg-transparent">
+        <p className="text-white/40 font-black uppercase tracking-widest">Ovaj oglas je uspešno prodat i obrisan.</p>
       </div>
     );
   }
@@ -105,8 +105,8 @@ export default async function OglasPage({ params }) {
   const seller = await getSellerProfile(listing.user_id);
 
   return (
-    <div className="flex-1 bg-[#f5f5f5]">
-      <div className="max-w-[900px] mx-auto my-8 px-6">
+    <div className="flex-1 bg-transparent py-12">
+      <div className="max-w-[1100px] mx-auto px-6">
         {/* Structured Data (Schema.org) */}
         <script
           type="application/ld+json"
@@ -137,35 +137,32 @@ export default async function OglasPage({ params }) {
           }}
         />
 
-        {/* Breadcrumbs — client component for i18n */}
+        {/* Breadcrumbs */}
         <ListingBreadcrumbs listing={listing} />
 
-        {/* Two-column layout on larger screens */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start mt-8">
 
           {/* LEFT: Listing Details */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          <div className="space-y-8">
+            <div className="bg-[#0A0A0A]/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-[0_64px_128px_rgba(0,0,0,0.6)]">
               <ImageGallery images={listing.images || [listing.image_url]} title={listing.title} />
-              {/* Client component for translatable content */}
               <ListingDetails listing={listing} />
             </div>
           </div>
 
-          {/* RIGHT: Seller + Contact (sticky on large screens) */}
-          <div className="space-y-4 lg:sticky lg:top-24">
+          {/* RIGHT: Seller + Contact (sticky) */}
+          <div className="space-y-8 lg:sticky lg:top-24">
 
-            {/* Seller Card — client component for i18n */}
+            {/* Seller Card */}
             {seller && (
               <SellerCard seller={seller} listingUserId={listing.user_id} />
             )}
 
-            {/* Contact Form — PROMINENT (Hide if viewing own ad) */}
+            {/* Contact Form */}
             {(!currentUser || currentUser.id !== listing.user_id) && (
-              <div className="bg-white rounded-2xl border-2 border-[#185FA5] shadow-md overflow-hidden">
-                {/* Client component for translatable header */}
+              <div className="bg-[#0A0A0A]/80 backdrop-blur-3xl rounded-[2.5rem] border border-[#185FA5]/30 shadow-[0_32px_64px_rgba(24,95,165,0.1)] overflow-hidden">
                 <ContactHeader />
-                <div className="p-5">
+                <div className="p-8">
                   <ContactForm listingId={listing.id} receiverId={listing.user_id} />
                 </div>
               </div>

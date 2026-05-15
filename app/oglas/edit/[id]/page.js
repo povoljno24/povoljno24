@@ -62,7 +62,6 @@ export default function EditOglas({ params }) {
         return;
       }
 
-      // Pre-populate the form
       reset({
         title: data.title,
         description: data.description || '',
@@ -77,7 +76,7 @@ export default function EditOglas({ params }) {
       setFetching(false);
     }
     loadListing();
-  }, [id, router, reset]);
+  }, [id, router, reset, t.noResults]);
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -105,7 +104,6 @@ export default function EditOglas({ params }) {
 
     const uploadedUrls = [...existingImages];
 
-    // Upload new images
     if (newImageFiles.length > 0) {
       try {
         for (let i = 0; i < newImageFiles.length; i++) {
@@ -115,7 +113,6 @@ export default function EditOglas({ params }) {
           const watermarkedBlob = await applyWatermark(compressedFile);
           const finalFile = new File([watermarkedBlob], file.name, { type: file.type });
           
-          // eslint-disable-next-line react-hooks/purity
           const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-edit-${i}.${finalFile.name.split('.').pop()}`;
           const { error: uploadError } = await supabase.storage.from('listing-images').upload(fileName, finalFile);
           if (uploadError) throw uploadError;
@@ -147,9 +144,7 @@ export default function EditOglas({ params }) {
     if (error) {
       setMessage(t.errorPrefix + error.message);
     } else {
-      // Check for price drop
       if (data.price < oldPrice) {
-        // Fetch all users who favorited this listing
         const { data: fans } = await supabase
           .from('favorites')
           .select('user_id')
@@ -173,154 +168,154 @@ export default function EditOglas({ params }) {
   }
 
   if (fetching) return (
-    <div className="flex-1 flex items-center justify-center">
-      <p className="text-gray-500">{t.loading}</p>
+    <div className="flex-1 flex items-center justify-center bg-transparent">
+      <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
     </div>
   );
 
-  return (
-    <div className="flex-1 bg-[#f5f5f5] py-10 px-6">
-      <div className="max-w-[600px] mx-auto bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-        <Link href="/profil" className="inline-block mb-6 text-sm text-gray-600 hover:text-[#185FA5] transition-colors">
-          {t.backToProfile}
-        </Link>
-        <h1 className="text-xl font-semibold mb-6 text-gray-900">{t.editAdTitle}</h1>
+  const inputClasses = (hasError) => `
+    w-full px-5 py-4 rounded-2xl border text-[14px] outline-none transition-all duration-300
+    bg-white/[0.03] text-white placeholder:text-white/10
+    ${hasError 
+      ? 'border-red-500/50 focus:border-red-500 focus:bg-red-500/5' 
+      : 'border-white/5 focus:border-[#185FA5] focus:bg-white/10 focus:ring-1 focus:ring-[#185FA5]/50'}
+  `;
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="mb-4">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.adTitle}</label>
+  const labelClasses = "text-[10px] font-black text-white/40 uppercase tracking-[0.3em] block mb-3 ml-1";
+
+  return (
+    <div className="flex-1 bg-transparent py-20 px-6">
+      <div className="max-w-[700px] mx-auto bg-[#0A0A0A]/60 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-10 sm:p-16 shadow-[0_64px_128px_rgba(0,0,0,0.8)] relative overflow-hidden group">
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#185FA5]/10 rounded-full blur-[80px] pointer-events-none" />
+        
+        <Link href="/profil" className="inline-block mb-10 text-[10px] font-black text-white/20 hover:text-white uppercase tracking-widest transition-all">
+          ← {t.backToProfile}
+        </Link>
+        <h1 className="text-3xl font-black mb-12 text-white tracking-tight uppercase">{t.editAdTitle}</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="relative z-10">
+          <div className="mb-8">
+            <label className={labelClasses}>{t.adTitle}</label>
             <input 
               type="text" 
               {...register('title')}
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+              className={inputClasses(errors.title)} 
             />
-            {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>}
+            {errors.title && <p className="mt-2 text-[11px] font-bold text-red-500 uppercase tracking-widest ml-1">{errors.title.message}</p>}
           </div>
 
-          <div className="mb-4">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.description}</label>
+          <div className="mb-8">
+            <label className={labelClasses}>{t.description}</label>
             <textarea 
               {...register('description')}
-              rows={4} 
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all resize-y ${errors.description ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+              rows={5} 
+              className={inputClasses(errors.description) + " resize-none"} 
             />
-            {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>}
+            {errors.description && <p className="mt-2 text-[11px] font-bold text-red-500 uppercase tracking-widest ml-1">{errors.description.message}</p>}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
             <div>
-              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.price}</label>
-              <input 
-                type="number" 
-                {...register('price')}
-                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.price ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
-              />
-              {errors.price && <p className="mt-1 text-xs text-red-500">{errors.price.message}</p>}
+              <label className={labelClasses}>{t.price}</label>
+              <div className="relative">
+                <input 
+                  type="number" 
+                  {...register('price')}
+                  className={inputClasses(errors.price)} 
+                />
+                <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-white/20 uppercase">RSD</span>
+              </div>
+              {errors.price && <p className="mt-2 text-[11px] font-bold text-red-500 uppercase tracking-widest ml-1">{errors.price.message}</p>}
             </div>
             <div>
-              <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.cityLabel}</label>
+              <label className={labelClasses}>{t.cityLabel}</label>
               <input 
                 type="text" 
                 {...register('city')}
-                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all ${errors.city ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`} 
+                className={inputClasses(errors.city)} 
               />
-              {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city.message}</p>}
+              {errors.city && <p className="mt-2 text-[11px] font-bold text-red-500 uppercase tracking-widest ml-1">{errors.city.message}</p>}
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.category}</label>
+          <div className="mb-8">
+            <label className={labelClasses}>{t.category}</label>
             <select 
               {...register('category')}
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm outline-none focus:ring-1 transition-all bg-white ${errors.category ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-[#185FA5] focus:ring-[#185FA5]'}`}
+              className={inputClasses(errors.category)}
             >
-              <option value="">{t.chooseCat}</option>
-              <option value="elektronika">{t.electronics}</option>
-              <option value="automobili">{t.cars}</option>
-              <option value="nekretnine">{t.realestate}</option>
-              <option value="moda">{t.fashion}</option>
-              <option value="namestaj">{t.furniture}</option>
-              <option value="gaming">{t.gaming}</option>
-              <option value="alati">{t.tools}</option>
-              <option value="knjige">{t.books}</option>
-              <option value="usluge">{t.services}</option>
-              <option value="posao">{t.jobs}</option>
-              <option value="sport">{t.sports}</option>
-              <option value="kucni_ljubimci">{t.pets}</option>
-              <option value="deca">{t.kids}</option>
-              <option value="muzika">{t.music}</option>
-              <option value="poljoprivreda">{t.agriculture}</option>
-              <option value="umetnost">{t.art}</option>
-              <option value="ostalo">{t.other}</option>
+              <option value="" className="bg-[#0A0A0A]">{t.chooseCat}</option>
+              <option value="elektronika" className="bg-[#0A0A0A]">{t.electronics}</option>
+              <option value="automobili" className="bg-[#0A0A0A]">{t.cars}</option>
+              <option value="nekretnine" className="bg-[#0A0A0A]">{t.realestate}</option>
+              <option value="moda" className="bg-[#0A0A0A]">{t.fashion}</option>
+              <option value="namestaj" className="bg-[#0A0A0A]">{t.furniture}</option>
+              <option value="gaming" className="bg-[#0A0A0A]">{t.gaming}</option>
+              <option value="alati" className="bg-[#0A0A0A]">{t.tools}</option>
+              <option value="knjige" className="bg-[#0A0A0A]">{t.books}</option>
+              <option value="usluge" className="bg-[#0A0A0A]">{t.services}</option>
+              <option value="posao" className="bg-[#0A0A0A]">{t.jobs}</option>
+              <option value="sport" className="bg-[#0A0A0A]">{t.sports}</option>
+              <option value="kucni_ljubimci" className="bg-[#0A0A0A]">{t.pets}</option>
+              <option value="deca" className="bg-[#0A0A0A]">{t.kids}</option>
+              <option value="muzika" className="bg-[#0A0A0A]">{t.music}</option>
+              <option value="poljoprivreda" className="bg-[#0A0A0A]">{t.agriculture}</option>
+              <option value="umetnost" className="bg-[#0A0A0A]">{t.art}</option>
+              <option value="ostalo" className="bg-[#0A0A0A]">{t.other}</option>
             </select>
-            {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category.message}</p>}
+            {errors.category && <p className="mt-2 text-[11px] font-bold text-red-500 uppercase tracking-widest ml-1">{errors.category.message}</p>}
           </div>
 
-          <div className="mb-6">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.itemCondition}</label>
+          <div className="mb-10">
+            <label className={labelClasses}>{t.itemCondition}</label>
             <div className="grid grid-cols-2 gap-4">
               <label className="cursor-pointer">
                 <input type="radio" value="Novo" {...register('condition')} className="peer hidden" />
-                <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
+                <div className="w-full text-center py-4 rounded-2xl border border-white/5 text-[12px] font-black uppercase tracking-widest transition-all peer-checked:bg-white peer-checked:text-black hover:bg-white/5 text-white/40">
                   {t.condNew}
                 </div>
               </label>
               <label className="cursor-pointer">
                 <input type="radio" value="Polovno" {...register('condition')} className="peer hidden" />
-                <div className="w-full text-center py-2.5 rounded-lg border border-gray-300 text-sm font-medium transition-all peer-checked:bg-[#E6F1FB] peer-checked:border-[#185FA5] peer-checked:text-[#185FA5] hover:bg-gray-50">
+                <div className="w-full text-center py-4 rounded-2xl border border-white/5 text-[12px] font-black uppercase tracking-widest transition-all peer-checked:bg-white peer-checked:text-black hover:bg-white/5 text-white/40">
                   {t.condUsed}
                 </div>
               </label>
             </div>
-            {errors.condition && <p className="mt-1 text-xs text-red-500">{errors.condition.message}</p>}
+            {errors.condition && <p className="mt-2 text-[11px] font-bold text-red-500 uppercase tracking-widest ml-1">{errors.condition.message}</p>}
           </div>
-          <div className="mb-6">
-            <label className="text-[13px] text-gray-600 block mb-1.5 font-medium">{t.photos}</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
-              {/* Existing Images */}
+
+          <div className="mb-12">
+            <label className={labelClasses}>{t.photos}</label>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 mb-6">
               {existingImages.map((src, idx) => (
-                <div 
-                  key={`exist-${idx}`} 
-                  className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group select-none"
-                  onContextMenu={(e) => e.preventDefault()}
-                >
-                  <Image src={src} alt="Existing" fill className="object-cover pointer-events-none" draggable={false} />
-                  <div className="absolute inset-0 z-10 bg-transparent" />
+                <div key={`exist-${idx}`} className="relative aspect-square rounded-2xl overflow-hidden bg-white/[0.03] border border-white/5 group shadow-xl">
+                  <Image src={src} alt="Existing" fill className="object-cover" />
                   <button 
                     type="button"
                     onClick={() => removeExisting(idx)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
+                    className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-all shadow-xl z-20 hover:scale-110"
                   >
                     ✕
                   </button>
                 </div>
               ))}
-              {/* New Previews */}
               {newPreviews.map((src, idx) => (
-                <div 
-                  key={`new-${idx}`} 
-                  className="relative aspect-square rounded-lg overflow-hidden bg-gray-50 border border-dashed border-[#185FA5] group select-none"
-                  onContextMenu={(e) => e.preventDefault()}
-                >
-                  <Image src={src} alt="New Preview" fill className="object-cover opacity-70 pointer-events-none" draggable={false} />
-                  <div className="absolute inset-0 z-10 bg-transparent" />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                    <span className="bg-white/80 px-1.5 py-0.5 rounded text-[8px] font-bold text-[#185FA5] uppercase">{t.condNew}</span>
-                  </div>
+                <div key={`new-${idx}`} className="relative aspect-square rounded-2xl overflow-hidden bg-[#185FA5]/10 border border-[#185FA5]/20 group shadow-xl">
+                  <Image src={src} alt="New" fill className="object-cover" />
+                  <div className="absolute inset-0 bg-[#185FA5]/20" />
                   <button 
                     type="button"
                     onClick={() => removeNew(idx)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
+                    className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-all shadow-xl z-20 hover:scale-110"
                   >
                     ✕
                   </button>
                 </div>
               ))}
-              {/* Add Button */}
-              {existingImages.length + newImageFiles.length < 10 && (
-                <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#185FA5] hover:bg-[#E6F1FB] transition-all text-gray-400 hover:text-[#185FA5]">
-                  <span className="text-2xl font-light">+</span>
-                  <span className="text-[10px] font-semibold uppercase">{t.addPhoto}</span>
+              {existingImages.length + newPreviews.length < 10 && (
+                <label className="aspect-square rounded-2xl border border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:border-[#185FA5] hover:bg-[#185FA5]/5 transition-all text-white/20 hover:text-white group">
+                  <span className="text-3xl font-light group-hover:scale-110 transition-transform">+</span>
                   <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
                 </label>
               )}
@@ -330,16 +325,18 @@ export default function EditOglas({ params }) {
           <button 
             type="submit"
             disabled={loading}
-            className={`w-full py-3 text-white rounded-lg text-sm font-semibold transition-colors ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#185FA5] hover:bg-[#0C447C] cursor-pointer'}`}
+            className={`w-full py-5 rounded-2xl text-[13px] font-black uppercase tracking-[0.3em] transition-all duration-500 shadow-2xl active:scale-95
+              ${loading ? 'bg-white/10 text-white/20 cursor-not-allowed' : 'bg-white text-black hover:bg-[#185FA5] hover:text-white cursor-pointer'}`}
           >
             {loading ? t.saving : t.saveChanges}
           </button>
         </form>
 
         {message && (
-          <p className={`mt-4 text-[13px] text-center py-2 rounded-md ${message.includes('uspešno') ? 'text-[#3B6D11] bg-[#EAF3DE]' : 'text-[#E24B4A] bg-red-50'}`}>
+          <div className={`mt-8 p-4 rounded-2xl text-[12px] font-black uppercase tracking-widest text-center animate-in fade-in slide-in-from-bottom-2 duration-300
+            ${message.includes('uspešno') || message.includes('successfully') ? 'text-[#3B6D11] bg-[#EAF3DE]/10 border border-[#3B6D11]/20' : 'text-[#E24B4A] bg-red-500/10 border border-red-500/20'}`}>
             {message}
-          </p>
+          </div>
         )}
       </div>
     </div>

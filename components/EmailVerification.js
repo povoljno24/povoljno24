@@ -75,57 +75,62 @@ export default function EmailVerification({ onVerified }) {
     }
   }
 
+  const inputClasses = "w-full px-5 py-4 rounded-2xl border border-white/5 bg-white/[0.03] text-white placeholder:text-white/10 outline-none focus:border-[#185FA5] focus:bg-white/10 transition-all text-sm";
+  const labelClasses = "text-[10px] font-black text-white/40 uppercase tracking-[0.3em] block mb-3 ml-1";
+
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-      <h3 className="text-lg font-bold text-gray-900 mb-2">Verifikacija naloga</h3>
-      <p className="text-sm text-gray-500 mb-6">
+    <div className="bg-transparent">
+      <h3 className="text-xl font-black text-white uppercase tracking-tight mb-4">Verifikacija naloga</h3>
+      <p className="text-[13px] text-white/40 font-medium mb-8 leading-relaxed">
         {step === 'input' 
           ? 'Unesite vaš email kako biste verifikovali nalog i otključali sve opcije.' 
           : 'Unesite kod koji smo vam poslali na email.'}
       </p>
 
       {step === 'input' ? (
-        <div className="space-y-4">
+        <div className="space-y-8">
           <div>
-            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">EMAIL ADRESA</label>
+            <label className={labelClasses}>EMAIL ADRESA</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vash@email.com"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-[#185FA5] transition-all text-sm"
+              className={inputClasses}
             />
           </div>
           <button
             onClick={handleSendOTP}
             disabled={loading}
-            className="w-full bg-[#185FA5] hover:bg-[#0C447C] text-white py-3 rounded-xl font-bold transition-all disabled:bg-gray-300"
+            className={`w-full py-5 rounded-2xl text-[12px] font-black uppercase tracking-[0.3em] transition-all duration-500 shadow-[0_20px_40px_rgba(0,0,0,0.3)]
+              ${loading ? 'bg-white/10 text-white/20 cursor-not-allowed' : 'bg-white text-black hover:bg-[#185FA5] hover:text-white cursor-pointer active:scale-[0.98]'}`}
           >
             {loading ? 'Slanje...' : 'Pošalji kod'}
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-8">
           <div>
-            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">UNESITE KOD</label>
+            <label className={labelClasses}>UNESITE KOD</label>
             <input
               type="text"
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value)}
               placeholder="123456"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-[#185FA5] transition-all text-sm text-center tracking-widest font-bold"
+              className={inputClasses + " text-center tracking-[1em] font-black text-lg"}
             />
           </div>
           <button
             onClick={handleVerifyOTP}
             disabled={loading}
-            className="w-full bg-[#1D9E75] hover:bg-[#167D5D] text-white py-3 rounded-xl font-bold transition-all disabled:bg-gray-300"
+            className={`w-full py-5 rounded-2xl text-[12px] font-black uppercase tracking-[0.3em] transition-all duration-500 shadow-[0_20px_40px_rgba(0,0,0,0.3)]
+              ${loading ? 'Verifikacija...' : 'bg-[#1D9E75] text-white hover:bg-[#167D5D] cursor-pointer active:scale-[0.98]'}`}
           >
-            {loading ? 'Verifikacija...' : 'Potvrdi kod'}
+            Potvrdi kod
           </button>
           <button
             onClick={() => setStep('input')}
-            className="w-full text-sm text-gray-500 hover:underline"
+            className="w-full text-[11px] font-black text-white/20 hover:text-white uppercase tracking-widest transition-colors"
           >
             Nazad na unos emaila
           </button>

@@ -37,7 +37,7 @@ export default function AdminDashboard() {
       `)
       .order('created_at', { ascending: false });
 
-    if (error) alert(error.message);
+    if (error) console.error(error);
     else setReports(data || []);
     setLoading(false);
   }
@@ -48,10 +48,8 @@ export default function AdminDashboard() {
     const { error } = await supabase.from('listings').delete().eq('id', id);
     if (error) alert(error.message);
     else {
-      // Also resolve the report
       await supabase.from('reports').update({ status: 'resolved' }).eq('id', reportId);
       loadReports();
-      alert(t.adminListingDeleted);
     }
   }
 
@@ -60,105 +58,108 @@ export default function AdminDashboard() {
     if (error) alert(error.message);
     else {
       loadReports();
-      alert(t.adminReportDismissed);
     }
   }
 
   return (
-    <div className="p-8 max-w-[1200px] mx-auto">
-      <div className="flex gap-4 mb-8">
+    <div className="p-8 max-w-[1200px] mx-auto py-20 bg-transparent">
+      <div className="flex gap-6 mb-12">
         <button 
           onClick={() => setActiveTab('reports')}
-          className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'reports' ? 'bg-[#185FA5] text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200'}`}
+          className={`px-10 py-4 rounded-full text-[11px] font-black uppercase tracking-[0.3em] transition-all ${activeTab === 'reports' ? 'bg-white text-black shadow-2xl scale-105' : 'bg-white/[0.03] text-white/40 border border-white/5 hover:border-white/20'}`}
         >
           {t.adminReports} ({reports.filter(r => r.status === 'pending').length})
         </button>
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-gray-400 font-medium italic">{t.adminLoading}</div>
+        <div className="text-center py-48 text-white/10 font-black uppercase tracking-[0.5em] animate-pulse">{t.adminLoading}</div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">{t.adminListing}</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">{t.adminReason}</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">{t.adminReporter}</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest">{t.adminStatus}</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-widest text-right">{t.adminActions}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {reports.map(report => (
-                <tr key={report.id} className={`hover:bg-gray-50/50 transition-colors ${report.status === 'resolved' ? 'opacity-50' : ''}`}>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden relative shrink-0">
-                        {report.listings?.image_url && (
-                          <Image src={report.listings.image_url} alt="" fill className="object-cover" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-bold text-gray-900 truncate max-w-[200px]">
-                          {report.listings?.title || t.adminDeleted}
-                        </div>
-                        <div className="text-[11px] text-[#185FA5] font-semibold">{report.listings?.price?.toLocaleString()} RSD</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-[12px] font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-100 uppercase tracking-tighter">
-                      {report.reason}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-600 font-medium">@{report.profiles?.username || t.userWord}</div>
-                    <div className="text-[10px] text-gray-400">{new Date(report.created_at).toLocaleDateString()}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${report.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
-                      {report.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      {report.status === 'pending' && (
-                        <>
-                          <button 
-                            onClick={() => handleDismissReport(report.id)}
-                            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                            title={t.adminDismiss}
-                          >
-                            ✓
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteListing(report.listing_id, report.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                            title={t.adminDeleteListing}
-                          >
-                            🗑️
-                          </button>
-                        </>
-                      )}
-                      <Link 
-                        href={`/oglas/${report.listing_id}`} 
-                        className="p-2 text-gray-400 hover:text-[#185FA5] hover:bg-blue-50 rounded-lg transition-all"
-                        title={t.adminViewListing}
-                      >
-                        👁️
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {reports.length === 0 && (
+        <div className="bg-[#0A0A0A]/60 backdrop-blur-3xl rounded-[3rem] border border-white/10 overflow-hidden shadow-[0_64px_128px_rgba(0,0,0,0.8)] relative">
+           <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#185FA5]/10 rounded-full blur-[80px] pointer-events-none" />
+          
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-white/[0.02] border-b border-white/5">
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center text-gray-400 italic">{t.adminNoReports}</td>
+                  <th className="px-8 py-6 text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">{t.adminListing}</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">{t.adminReason}</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">{t.adminReporter}</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">{t.adminStatus}</th>
+                  <th className="px-8 py-6 text-[10px] font-black text-white/20 uppercase tracking-[0.4em] text-right">{t.adminActions}</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {reports.map(report => (
+                  <tr key={report.id} className={`hover:bg-white/[0.03] transition-colors ${report.status === 'resolved' ? 'opacity-30' : ''} group`}>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-[#050505] overflow-hidden relative shrink-0 border border-white/5">
+                          {report.listings?.image_url && (
+                            <Image src={report.listings.image_url} alt="" fill className="object-cover" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[14px] font-black text-white uppercase tracking-tight truncate max-w-[180px]">
+                            {report.listings?.title || t.adminDeleted}
+                          </div>
+                          <div className="text-[10px] text-[#185FA5] font-black uppercase tracking-widest">{report.listings?.price?.toLocaleString()} RSD</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className="text-[10px] font-black text-[#E24B4A] bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20 uppercase tracking-widest shadow-[0_0_15px_rgba(226,75,74,0.1)]">
+                        {report.reason}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="text-[13px] text-white/60 font-black tracking-tight uppercase group-hover:text-white transition-colors">@{report.profiles?.username || t.userWord}</div>
+                      <div className="text-[10px] text-white/20 font-bold uppercase tracking-widest mt-1">{new Date(report.created_at).toLocaleDateString()}</div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <span className={`text-[9px] font-black px-4 py-1.5 rounded-full border uppercase tracking-[0.2em] ${report.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-white/5 text-white/20 border-white/5'}`}>
+                        {report.status}
+                      </span>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                        {report.status === 'pending' && (
+                          <>
+                            <button 
+                              onClick={() => handleDismissReport(report.id)}
+                              className="w-10 h-10 flex items-center justify-center text-white/20 hover:text-green-500 hover:bg-green-500/10 rounded-full transition-all border border-white/5 hover:border-green-500/20"
+                              title={t.adminDismiss}
+                            >
+                              ✓
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteListing(report.listing_id, report.id)}
+                              className="w-10 h-10 flex items-center justify-center text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all border border-white/5 hover:border-red-500/20"
+                              title={t.adminDeleteListing}
+                            >
+                              🗑️
+                            </button>
+                          </>
+                        )}
+                        <Link 
+                          href={`/oglas/${report.listing_id}`} 
+                          className="w-10 h-10 flex items-center justify-center text-white/20 hover:text-[#185FA5] hover:bg-[#185FA5]/10 rounded-full transition-all border border-white/5 hover:border-[#185FA5]/20"
+                          title={t.adminViewListing}
+                        >
+                          👁️
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {reports.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-32 text-center text-white/10 font-black uppercase tracking-[0.4em] italic">{t.adminNoReports}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
