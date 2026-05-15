@@ -138,7 +138,7 @@ const t = {
     saving: 'Čuvanje...',
     saveChanges: 'Sačuvaj izmene',
     securityTitle: 'Sigurnost i Verifikacija',
-    phone: 'Broj telefona',
+    phone: 'Email adresa',
     verified2: 'VERIFIKOVAN',
     password: 'Lozinka',
     lastChanged: 'Poslednji put promenjena: Nedavno',
@@ -188,7 +188,7 @@ const t = {
     verifiedSeller: '✓ Proveren prodavac',
     noDescription: 'Nema opisa.',
     descriptionLabel: 'Opis',
-    phoneLabel: 'Telefon',
+    phoneLabel: 'Email',
     breadcrumbHome: 'Početna',
 
     // poruke/page.js
@@ -388,7 +388,7 @@ const t = {
     // New keys
     errorPrefix: 'Greška: ',
     changeAvatar: 'PROMENI',
-    phoneLabel: 'Broj telefona',
+    phoneLabel: 'Email adresa',
     fullNamePlaceholder: 'Marko Marković',
     usernamePlaceholder: 'npr. marko123',
     bumpBtn: '🚀 Obnovi',
@@ -555,7 +555,7 @@ const t = {
     saving: 'Saving...',
     saveChanges: 'Save changes',
     securityTitle: 'Security & Verification',
-    phone: 'Phone number',
+    phone: 'Email address',
     verified2: 'VERIFIED',
     password: 'Password',
     lastChanged: 'Last changed: Recently',
@@ -605,7 +605,7 @@ const t = {
     verifiedSeller: '✓ Verified seller',
     noDescription: 'No description.',
     descriptionLabel: 'Description',
-    phoneLabel: 'Phone',
+    phoneLabel: 'Email',
     breadcrumbHome: 'Home',
 
     // poruke/page.js
@@ -805,7 +805,7 @@ const t = {
     // New keys
     errorPrefix: 'Error: ',
     changeAvatar: 'CHANGE',
-    phoneLabel: 'Phone number',
+    phoneLabel: 'Email',
     fullNamePlaceholder: 'John Doe',
     usernamePlaceholder: 'e.g. john123',
     bumpBtn: '🚀 Bump',
