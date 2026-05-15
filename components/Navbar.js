@@ -104,13 +104,13 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifs(!showNotifs)}
-                className="p-1.5 text-gray-500 hover:text-[#185FA5] transition-colors bg-transparent border-none cursor-pointer flex items-center justify-center"
+                className="p-2 text-white/40 hover:text-white transition-all bg-white/[0.03] border border-white/10 rounded-full cursor-pointer flex items-center justify-center hover:bg-white/10"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
                 {notifCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-[#185FA5] text-white text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full shadow-sm animate-pulse">
+                  <span className="absolute top-0 right-0 bg-[#185FA5] text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-[0_0_10px_#185FA5] animate-pulse">
                     {notifCount}
                   </span>
                 )}
@@ -122,13 +122,13 @@ export default function Navbar() {
             <Link
               href="/poruke"
               title={t.messages}
-              className="relative p-1.5 text-gray-500 hover:text-[#185FA5] transition-colors flex items-center justify-center"
+              className="relative p-2 text-white/40 hover:text-white transition-all bg-white/[0.03] border border-white/10 rounded-full flex items-center justify-center hover:bg-white/10"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
               </svg>
               {unreadMsgCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 bg-[#E24B4A] text-white text-[9px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full shadow-sm">
+                <span className="absolute top-0 right-0 bg-[#E24B4A] text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-[0_0_10px_#E24B4A]">
                   {unreadMsgCount}
                 </span>
               )}

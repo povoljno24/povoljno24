@@ -196,10 +196,10 @@ export default function Home() {
 
           {/* Search Suggestions Dropdown */}
           {showSuggestions && (search.length > 0 || suggestions.length > 0) && (
-            <div className="absolute top-[52px] left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl z-50 text-left overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="absolute top-[64px] left-0 right-0 bg-[#0A0A0A]/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-[0_40px_80px_rgba(0,0,0,0.7)] z-50 text-left overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
               {suggestions.length > 0 && (
-                <div className="p-2 border-b border-gray-50">
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1">{t.suggestionsCategories}</div>
+                <div className="p-3 border-b border-white/5">
+                  <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] px-4 py-2">{t.suggestionsCategories}</div>
                   {suggestions.map(s => (
                     <button 
                       key={s.value}
@@ -208,22 +208,22 @@ export default function Home() {
                         setSearch('');
                         loadListings('', s.value, minPrice, maxPrice, filterCity, filterCondition, sortBy, filterPhoto, filterVerified, 0, false);
                       }}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors group"
+                      className="w-full text-left px-4 py-3 text-[13px] hover:bg-white/[0.05] rounded-xl flex items-center gap-3 transition-all group"
                     >
-                      <span className="opacity-60 group-hover:opacity-100">📁</span>
-                      <span className="text-gray-700">{s.name}</span>
+                      <span className="opacity-40 group-hover:opacity-100 transition-opacity">📁</span>
+                      <span className="text-white/60 group-hover:text-white transition-colors">{s.name}</span>
                     </button>
                   ))}
                 </div>
               )}
-              <div className="p-2">
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1">{t.suggestionsSearch}</div>
+              <div className="p-3">
+                <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] px-4 py-2">{t.suggestionsSearch}</div>
                 <button 
                   onClick={handleSearch}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded-lg flex items-center gap-2 transition-colors group"
+                  className="w-full text-left px-4 py-3 text-[13px] hover:bg-white/[0.05] rounded-xl flex items-center gap-3 transition-all group"
                 >
-                  <span className="opacity-60 group-hover:opacity-100">🔍</span>
-                  <span className="text-gray-700 font-medium">{t.suggestionsSearchFor} &quot;{search}&quot;</span>
+                  <span className="opacity-40 group-hover:opacity-100 transition-opacity">🔍</span>
+                  <span className="text-white/60 group-hover:text-white transition-colors font-bold">{t.suggestionsSearchFor} &quot;{search}&quot;</span>
                 </button>
               </div>
             </div>
@@ -313,26 +313,18 @@ export default function Home() {
         <div className="grid grid-cols-[repeat(auto-fit,minmax(155px,1fr))] sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
           {loading ? (
             Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col h-[260px] animate-pulse">
-                <div className="h-[140px] bg-gray-200 shrink-0"></div>
-                <div className="p-3.5 flex flex-col flex-1 gap-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-5 bg-gray-200 rounded w-1/2 mt-auto"></div>
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  </div>
-                </div>
+              <div key={i} className="p-[1px] bg-white/5 rounded-[2.5rem] animate-pulse">
+                <div className="bg-[#0A0A0A] rounded-[calc(2.5rem-1px)] h-[320px] w-full" />
               </div>
             ))
           ) : listings.length === 0 ? (
-            <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-gray-100 shadow-sm">
-              <div className="text-4xl mb-3 opacity-50">🔍</div>
-              <p className="text-[15px] font-medium text-gray-800 mb-1">{t.noResults}</p>
-              <p className="text-sm text-gray-500">{t.noResultsSub}</p>
+            <div className="col-span-full py-40 text-center bg-white/[0.02] rounded-[3rem] border border-white/5 shadow-inner">
+              <div className="text-6xl mb-8 opacity-10">🔍</div>
+              <p className="text-white font-black uppercase tracking-[0.3em] text-[14px] mb-4">{t.noResults}</p>
+              <p className="text-white/40 font-medium mb-10 max-w-[300px] mx-auto text-sm">{t.noResultsSub}</p>
               <button 
                 onClick={clearFilters}
-                className="mt-4 px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[13px] font-medium transition-colors"
+                className="px-10 py-4 bg-white text-black hover:bg-[#185FA5] hover:text-white rounded-full text-[12px] font-black uppercase tracking-widest transition-all shadow-[0_20px_40px_rgba(255,255,255,0.05)] active:scale-95"
               >
                 {t.showAll}
               </button>
@@ -394,11 +386,11 @@ export default function Home() {
         </div>
         
         {hasMore && !loading && listings.length > 0 && (
-          <div className="flex justify-center mt-10">
+          <div className="flex justify-center mt-20">
             <button 
               onClick={() => loadListings(search, filterCat, minPrice, maxPrice, filterCity, filterCondition, sortBy, filterPhoto, filterVerified, page + 1, true)}
               disabled={moreLoading}
-              className={`bg-white border border-gray-300 text-gray-700 hover:bg-[#E6F1FB] hover:text-[#185FA5] hover:border-[#185FA5] px-8 py-3 rounded-xl font-semibold shadow-sm transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 ${moreLoading ? 'opacity-70' : ''}`}
+              className="bg-white text-black hover:bg-[#185FA5] hover:text-white px-12 py-4 rounded-full font-black uppercase tracking-widest text-[12px] shadow-[0_20px_40px_rgba(255,255,255,0.1)] transition-all duration-500 active:scale-95 flex items-center gap-3 disabled:opacity-50"
             >
               {moreLoading ? (
                 <>
