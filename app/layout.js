@@ -7,6 +7,7 @@ import BottomNav from "../components/BottomNav";
 import { LanguageProvider } from "../components/LanguageContext";
 import { ToastProvider } from "../components/ToastContext";
 import RealtimeNotifications from "../components/RealtimeNotifications";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,6 +60,7 @@ export default function RootLayout({ children }) {
             <BottomNav />
           </ToastProvider>
         </LanguageProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
