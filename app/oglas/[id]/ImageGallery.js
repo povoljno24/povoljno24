@@ -10,7 +10,7 @@ export default function ImageGallery({ images = [], title }) {
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: e.clientX - position.x, y: e.clientY - position.y });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [touchStart, setTouchStart] = useState(0);
   const containerRef = useRef(null);
   

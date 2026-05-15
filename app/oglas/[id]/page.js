@@ -73,7 +73,8 @@ export default async function OglasPage({ params }) {
   const listing = await getListing(id);
 
   const supabase = await createClient();
-  const { data: { user: currentUser } } = await supabase.auth.getUser();
+  const { data: userData } = await supabase.auth.getUser();
+  const currentUser = userData?.user || null;
 
   if (!listing) {
     return (
