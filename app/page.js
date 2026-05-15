@@ -3,12 +3,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import { useLanguage } from '../components/LanguageContext';
 
-const AdvancedFilters = dynamic(() => import('../components/AdvancedFilters'), {
-  ssr: false,
-});
+import AdvancedFilters from '../components/AdvancedFilters';
 
 
 

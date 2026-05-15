@@ -303,27 +303,29 @@ export default function Profil() {
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={updating} />
                 </label>
               </div>
-              <div>
-                <h1 className="text-3xl font-black text-white mb-2 tracking-tight">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight break-words">
                   {profile?.full_name || profile?.username || t.userFallback}
                 </h1>
                 <UserBadges profile={profile} user={user} listingsCount={listings.length} />
-                <p className="text-[14px] text-white/40 font-bold mt-4 uppercase tracking-widest">{user?.email}</p>
+                <p className="text-[12px] sm:text-[14px] text-white/40 font-bold mt-4 uppercase tracking-widest break-all">
+                  {user?.email}
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="bg-white/[0.03] rounded-3xl p-6 border border-white/5 transition-all hover:bg-white/[0.05]">
-                <div className="text-3xl font-black text-white">{listings.length}</div>
-                <div className="text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">{t.activeListings}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white/[0.03] rounded-3xl p-5 sm:p-6 border border-white/5 transition-all hover:bg-white/[0.05]">
+                <div className="text-2xl sm:text-3xl font-black text-white">{listings.length}</div>
+                <div className="text-[9px] sm:text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">{t.activeListings}</div>
               </div>
-              <div className="bg-white/[0.03] rounded-3xl p-6 border border-white/5 transition-all hover:bg-white/[0.05]">
-                <div className="text-3xl font-black text-[#185FA5]">{totalEarnings.toLocaleString()}</div>
-                <div className="text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">Zarada (RSD)</div>
+              <div className="bg-white/[0.03] rounded-3xl p-5 sm:p-6 border border-white/5 transition-all hover:bg-white/[0.05]">
+                <div className="text-2xl sm:text-3xl font-black text-[#185FA5]">{totalEarnings.toLocaleString()}</div>
+                <div className="text-[9px] sm:text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">Zarada (RSD)</div>
               </div>
-              <div className="bg-white/[0.03] rounded-3xl p-6 border border-white/5 transition-all hover:bg-white/[0.05]">
-                <div className="text-3xl font-black text-[#1D9E75]">{packagesSent}</div>
-                <div className="text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">Paketa</div>
+              <div className="bg-white/[0.03] rounded-3xl p-5 sm:p-6 border border-white/5 transition-all hover:bg-white/[0.05]">
+                <div className="text-2xl sm:text-3xl font-black text-[#1D9E75]">{packagesSent}</div>
+                <div className="text-[9px] sm:text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">Paketa</div>
               </div>
             </div>
           </div>
@@ -356,7 +358,7 @@ export default function Profil() {
         </div>
 
         {/* Tab System */}
-        <div className="flex gap-2 bg-white/[0.03] border border-white/10 rounded-full p-2 mb-12 shadow-2xl backdrop-blur-2xl">
+        <div className="flex gap-2 bg-white/[0.03] border border-white/10 rounded-full p-2 mb-12 shadow-2xl backdrop-blur-2xl overflow-x-auto no-scrollbar whitespace-nowrap">
           {tabs.map(tab => (
             <button
               key={tab.key}

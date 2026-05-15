@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
           <ToastProvider>
             <RealtimeNotifications />
             <Navbar />
-            <main className="flex-1 flex flex-col pb-20 sm:pb-0">
+            <main className="flex-1 flex flex-col pb-32 sm:pb-0 relative z-10">
               {children}
             </main>
             <Footer />
