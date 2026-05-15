@@ -383,26 +383,12 @@ export default function Home() {
                         <span className="text-[11px] font-bold text-white/30 uppercase tracking-widest flex items-center gap-2">
                           <span className="w-1 h-1 rounded-full bg-white/20"></span> {listing.city}
                         </span>
-                      {listing.condition && (
-                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${listing.condition === 'Novo' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-gray-50 text-gray-500 border border-gray-100'}`}>
-                          {listing.condition === 'Novo' ? t.condNew : t.condUsed}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
-                      <span className="text-[11px] text-gray-500 truncate pr-2 flex items-center gap-1">
-                        📍 {listing.city}
-                      </span>
-                      {listing.is_verified && (
-                        <span className="text-[10px] font-semibold bg-[#EAF3DE] text-[#3B6D11] rounded px-1.5 py-0.5 whitespace-nowrap shrink-0 border border-[#d3ecc1]">
-                          {t.verified}
-                        </span>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+
             ))
           )}
         </div>
