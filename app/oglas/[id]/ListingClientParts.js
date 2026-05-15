@@ -92,8 +92,8 @@ export function SellerCard({ seller, listingUserId }) {
       {seller.phone_verified && (
         <div className="mb-4 p-3 bg-[#EAF3DE] rounded-xl border border-[#d3ecc1] flex items-center justify-between">
           <div>
-            <div className="text-[10px] font-bold text-[#3B6D11] uppercase tracking-wider mb-0.5">{t.phoneLabel}</div>
-            <div className="text-[14px] font-bold text-gray-900">{seller.phone}</div>
+            <div className="text-[10px] font-bold text-[#3B6D11] uppercase tracking-wider mb-0.5">{t.verified2}</div>
+            <div className="text-[13px] font-medium text-gray-700">{t.verifiedSeller}</div>
           </div>
           <div className="bg-[#3B6D11] text-white p-1 rounded-full">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
