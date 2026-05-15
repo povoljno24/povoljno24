@@ -200,7 +200,7 @@ const t = {
     sellerReviews: 'Utisci kupaca',
     noSellerAds: 'Ovaj prodavac nema aktivnih oglasa.',
     reviewCount: 'ocena',
-    verifiedPhone: '📱 Telefon verifikovan',
+    verifiedPhone: '📧 Email verifikovan',
     verificationLevelLabel: 'Nivo verifikacije',
     activeAdsLabel: 'aktivnih oglasa',
     memberSinceLabel: 'Član od',
@@ -412,7 +412,7 @@ const t = {
     addAvatar: 'Dodaj profilnu sliku',
     addFullName: 'Unesi Ime i Prezime',
     addBio: 'Dodaj kratku biografiju',
-    verifyPhone: 'Verifikuj broj telefona',
+    verifyPhone: 'Verifikuj email adresu',
     profileCompleteSuccess: 'Profil 100% kompletan! Osvojili ste bedž Proveren.',
     badgeFastResponder: 'Brz odgovor',
     badgeHighlyRated: 'Sjajne ocene',
@@ -640,8 +640,8 @@ const t = {
     seeAllNotifications: 'See all notifications',
 
     // Phone Verification
-    phoneVerifyTitle: 'Phone number verification',
-    phoneVerifySub: 'Enter your mobile phone number in international format.',
+    phoneVerifyTitle: 'Email verification',
+    phoneVerifySub: 'Enter your email address to verify your account.',
     phoneVerifyFormatError: 'Number must start with + (e.g. +3816...)',
     phoneVerifySendCode: 'Send SMS code',
     phoneVerifySendingCode: 'Sending code...',
