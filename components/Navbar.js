@@ -76,7 +76,7 @@ export default function Navbar() {
   }, [user]);
 
   return (
-    <nav className="flex items-center justify-between px-4 sm:px-6 py-3 bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="flex items-center justify-between px-6 py-3.5 bg-white/75 backdrop-blur-2xl border border-white/20 shadow-[0_12px_40px_rgba(0,0,0,0.12)] sticky top-4 z-50 mx-4 sm:mx-8 rounded-3xl transition-all duration-500 hover:bg-white/80 hover:shadow-[0_15px_50px_rgba(0,0,0,0.15)] group">
       <Link href="/" className="text-lg sm:text-xl font-semibold text-[#185FA5] hover:opacity-90 transition-opacity shrink-0">
         Povoljno<span className="text-[#E24B4A]">24</span>
       </Link>

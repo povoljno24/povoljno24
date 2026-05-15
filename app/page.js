@@ -154,7 +154,8 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-[#E6F1FB] pt-12 pb-10 px-6 text-center">
+      <section className="pt-16 pb-12 px-6 text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#185FA5]/5 pointer-events-none" />
         <h1 className="text-3xl font-semibold text-[#0C447C] mb-2">{t.hero}</h1>
         <p className="text-[15px] text-[#185FA5] mb-6">{t.heroSub}</p>
         
@@ -270,7 +271,7 @@ export default function Home() {
       </section>
 
       {/* Categories */}
-      <section className="py-8 px-6 bg-white border-b border-gray-100">
+      <section className="py-10 px-6 bg-white/30 backdrop-blur-md border-y border-white/10">
         <h2 className="text-base font-semibold mb-4 text-gray-800 max-w-[1200px] mx-auto">{t.categories}</h2>
         <div className="flex flex-wrap gap-2 max-w-[1200px] mx-auto">
           {categories.map(cat => {
@@ -340,7 +341,9 @@ export default function Home() {
           ) : (
             listings.map((listing, index) => (
               <Link key={listing.id} href={`/oglas/${listing.id}`} className="block group h-full">
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg hover:border-[#185FA5] transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1">
+                {/* Double-Bezel Architecture */}
+                <div className="p-1.5 bg-white/10 backdrop-blur-lg rounded-[2rem] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-all duration-500 hover:scale-[1.02] hover:bg-white/20 group h-full">
+                  <div className="bg-white rounded-[calc(2rem-0.375rem)] overflow-hidden flex flex-col h-full">
                   <div 
                     className="h-[160px] bg-gray-900 relative flex items-center justify-center overflow-hidden shrink-0 border-b border-gray-100 select-none"
                     onContextMenu={(e) => e.preventDefault()}

@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import DynamicAurora from "../components/DynamicAurora";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { LanguageProvider } from "../components/LanguageContext";
@@ -45,7 +46,8 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://mbluydruyogrgaxztpi.supabase.co" />
         <link rel="preconnect" href="https://mbluydruyogrgaxztpi.supabase.co" crossOrigin="anonymous" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#f5f5f5] text-[#1a1a1a] overflow-x-hidden w-full">
+      <body className="min-h-full flex flex-col bg-transparent text-[#1a1a1a] overflow-x-hidden w-full relative">
+        <DynamicAurora />
         <LanguageProvider>
           <ToastProvider>
             <RealtimeNotifications />
