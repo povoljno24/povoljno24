@@ -41,6 +41,16 @@ export async function middleware(request) {
     return NextResponse.redirect(url)
   }
 
+  // Strict Admin check in Middleware
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const adminEmails = ['alex@pixelsurgestudio.dev', 'admin@povoljno24.com']
+    if (!user || !adminEmails.includes(user.email)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
+
   return supabaseResponse
 }
 

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../components/LanguageContext';
+import { isUserAdmin } from '../../lib/security';
 
 export default function AdminDashboard() {
   const { t } = useLanguage();
@@ -16,8 +17,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function checkAdmin() {
       const { data: { user } } = await supabase.auth.getUser();
-      const adminEmails = ['alex@pixelsurgestudio.dev', 'admin@povoljno24.com'];
-      if (!user || !adminEmails.includes(user?.email)) {
+      if (!isUserAdmin(user)) {
         router.push('/');
         return;
       }

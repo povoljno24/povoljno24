@@ -1,13 +1,16 @@
 import { supabaseServer } from '../../../lib/supabase-server';
 import ImageGallery from './ImageGallery';
-import ContactForm from './ContactForm';
 import { ListingBreadcrumbs, ListingDetails, SellerCard, ContactHeader } from './ListingClientParts';
 import { createClient } from '../../../lib/supabase-server-auth';
+import { safeJsonStringify } from '../../../lib/security';
+import dynamic from 'next/dynamic';
+
+const ContactForm = dynamic(() => import('./ContactForm'), { ssr: false });
 
 async function getListing(id) {
   const { data, error } = await supabaseServer
     .from('listings')
-    .select('*')
+    .select('id, title, description, price, category, city, condition, image_url, images, user_id, status, buyer_id, created_at')
     .eq('id', id)
     .single();
   if (error || !data) {
@@ -108,11 +111,11 @@ export default async function OglasPage({ params }) {
   return (
     <div className="flex-1 bg-transparent py-12">
       <div className="max-w-[1100px] mx-auto px-6">
-        {/* Structured Data (Schema.org) */}
+        {/* Structured Data (Schema.org) - Safely Escaped */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonStringify({
               "@context": "https://schema.org/",
               "@type": "Product",
               "name": listing.title,

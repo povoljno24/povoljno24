@@ -5,7 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '../components/LanguageContext';
 
-import AdvancedFilters from '../components/AdvancedFilters';
+import dynamic from 'next/dynamic';
+
+const AdvancedFilters = dynamic(() => import('../components/AdvancedFilters'), { ssr: false });
 
 
 
@@ -147,7 +149,7 @@ export default function Home() {
     <div className="bg-transparent min-h-screen">
       {/* Hero: Editorial Style */}
       <section className="pt-32 pb-24 px-6 text-center relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#185FA5]/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#185FA5]/10 rounded-full blur-[120px] pointer-events-none hero-blur" />
         <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tight leading-[1.1] max-w-[900px] mx-auto uppercase">
           {t.hero}
         </h1>

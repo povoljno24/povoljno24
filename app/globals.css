@@ -36,3 +36,32 @@ body {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
+
+/* Mobile Performance Optimizations */
+@media (max-width: 640px) {
+  * {
+    /* Reduce blur radius on mobile for better performance */
+    --backdrop-blur: blur(20px);
+  }
+  
+  .backdrop-blur-3xl {
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+  }
+  
+  .backdrop-blur-2xl {
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+  }
+
+  /* Simplify transitions on mobile */
+  .transition-all {
+    transition-duration: 200ms !important;
+  }
+
+  .hero-blur {
+    filter: blur(60px) !important;
+    width: 300px !important;
+    height: 300px !important;
+  }
+}

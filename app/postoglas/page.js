@@ -36,12 +36,29 @@ export default function PostOglas() {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + imageFiles.length > 10) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+    const validFiles = files.filter(file => {
+      const extension = file.name.split('.').pop().toLowerCase();
+      const isValidType = allowedTypes.includes(file.type);
+      const isValidExtension = allowedExtensions.includes(extension);
+      
+      if (!isValidType || !isValidExtension) {
+        showToast(`${t.invalidFile || 'Neispravan fajl'}: ${file.name}`, 'error');
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    if (validFiles.length + imageFiles.length > 10) {
       showToast(t.maxImages, 'error');
       return;
     }
-    setImageFiles(prev => [...prev, ...files]);
-    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setImageFiles(prev => [...prev, ...validFiles]);
+    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
     setPreviews(prev => [...prev, ...newPreviews]);
   };
 

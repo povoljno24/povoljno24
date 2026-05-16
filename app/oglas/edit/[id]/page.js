@@ -80,12 +80,29 @@ export default function EditOglas({ params }) {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length + existingImages.length + newImageFiles.length > 10) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+    const validFiles = files.filter(file => {
+      const extension = file.name.split('.').pop().toLowerCase();
+      const isValidType = allowedTypes.includes(file.type);
+      const isValidExtension = allowedExtensions.includes(extension);
+      
+      if (!isValidType || !isValidExtension) {
+        alert(`${t.invalidFile || 'Neispravan fajl'}: ${file.name}`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    if (validFiles.length + existingImages.length + newImageFiles.length > 10) {
       alert(t.maxImages);
       return;
     }
-    setNewImageFiles(prev => [...prev, ...files]);
-    const previews = files.map(file => URL.createObjectURL(file));
+    setNewImageFiles(prev => [...prev, ...validFiles]);
+    const previews = validFiles.map(file => URL.createObjectURL(file));
     setNewPreviews(prev => [...prev, ...previews]);
   };
 
