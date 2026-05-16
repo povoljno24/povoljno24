@@ -33,7 +33,7 @@ export default function Login() {
     if (error) {
       setMessage(error.message);
     } else {
-      window.location.href = '/';
+      router.push('/');
     }
     setLoading(false);
   }

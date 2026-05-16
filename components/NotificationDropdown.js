@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -10,7 +10,7 @@ export default function NotificationDropdown({ userId, onClose }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  async function fetchNotifications() {
+  const fetchNotifications = useCallback(async () => {
     const { data, error } = await supabase
       .from('notifications')
       .select('*, listings(title, image_url)')
@@ -28,13 +28,12 @@ export default function NotificationDropdown({ userId, onClose }) {
       setNotifications(data || []);
     }
     setLoading(false);
-  }
+  }, [userId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [fetchNotifications]);
 
   async function markAsRead(id) {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);

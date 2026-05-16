@@ -33,7 +33,7 @@ export default function AdminLayout({ children }) {
       setLoading(false);
     }
     checkAdmin();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (

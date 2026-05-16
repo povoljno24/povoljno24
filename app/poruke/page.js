@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../components/LanguageContext';
 
@@ -147,7 +148,9 @@ export default function PorukePage() {
                   {/* Listing Image Thumbnail */}
                   <div className="w-20 h-20 rounded-2xl bg-[#050505] overflow-hidden shrink-0 relative flex items-center justify-center border border-white/5 shadow-xl transition-all group-hover:border-white/20">
                     {conv.listing_image ? (
-                      <img src={conv.listing_image} alt={conv.listing_title} className="w-full h-full object-cover" />
+                      <div className="relative w-full h-full">
+                        <Image src={conv.listing_image} alt={conv.listing_title} fill className="object-cover" />
+                      </div>
                     ) : (
                       <span className="text-3xl opacity-10">📦</span>
                     )}

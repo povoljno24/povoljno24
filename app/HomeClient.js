@@ -36,7 +36,6 @@ export default function HomeClient({ initialListings = [], t, lang }) {
   const [hasMore, setHasMore] = useState(initialListings.length === 20);
   const [loading, setLoading] = useState(false);
   
-  const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [moreLoading, setMoreLoading] = useState(false);
   
@@ -104,16 +103,10 @@ export default function HomeClient({ initialListings = [], t, lang }) {
     setMoreLoading(false);
   }
 
-  useEffect(() => {
-    if (search.length > 0) {
-      const filtered = categories.filter(c => 
-        c.name.toLowerCase().includes(search.toLowerCase())
-      );
-      setSuggestions(filtered);
-    } else {
-      setSuggestions([]);
-    }
-  }, [search]);
+  // Compute suggestions directly during render (derived state — no useEffect needed)
+  const suggestions = search.length > 0
+    ? categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
+    : [];
 
   const handleSearch = () => {
     setShowSuggestions(false);

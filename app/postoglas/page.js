@@ -97,7 +97,7 @@ export default function PostOglas() {
           const finalFile = new File([watermarkedBlob], compressedFile.name, { type: compressedFile.type });
 
           const fileExt = finalFile.name.split('.').pop() || 'jpg';
-          const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${i}.${fileExt}`;
+          const fileName = `${user.id}-${crypto.randomUUID()}-${i}.${fileExt}`;
           
           const { error: uploadError } = await supabase.storage
             .from('listing-images')

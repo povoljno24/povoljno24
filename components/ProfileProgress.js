@@ -9,28 +9,31 @@ export default function ProfileProgress({ profile, user }) {
   const { showToast } = useToast();
   const [completedMilestone, setCompletedMilestone] = useState(false);
 
-  if (!profile || !user) return null;
-
-  const checks = [
+  // Compute progress before the hook (used inside useEffect)
+  const checks = profile && user ? [
     { key: 'avatar', label: t.addAvatar || "Profilna Slika", completed: !!profile.avatar_url, weight: 25 },
     { key: 'name', label: t.addFullName || "Ime i prezime", completed: !!profile.full_name, weight: 25 },
     { key: 'bio', label: t.addBio || "Biografija", completed: !!profile.bio, weight: 25 },
     { key: 'phone', label: t.verifyPhone || "Verifikacija", completed: !!profile.phone_verified, weight: 25 },
-  ];
+  ] : [];
 
   const progress = checks.reduce((acc, curr) => curr.completed ? acc + curr.weight : acc, 0);
   const is100 = progress === 100;
 
+  // useEffect MUST be before any conditional return (Rules of Hooks)
   useEffect(() => {
+    if (!profile || !user) return;
     if (is100 && !completedMilestone && profile.verification_level < 2) {
       showToast(t.profileCompleteSuccess || "Profil je 100% popunjen!", 'success');
-      setCompletedMilestone(true);
-      
+      // setState is inside the async callback, not synchronously in the effect body
       supabase.from('profiles').update({ verification_level: 2 }).eq('id', user.id).then(() => {
-          // Profile level updated
+        setCompletedMilestone(true);
       });
     }
-  }, [progress, completedMilestone, profile, user, t, showToast, is100]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [is100]);
+
+  if (!profile || !user) return null;
 
   const cardClasses = "bg-[#0A0A0A]/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 p-8 shadow-[0_32px_64px_rgba(0,0,0,0.6)] relative overflow-hidden group transition-all duration-500 hover:border-white/20";
 

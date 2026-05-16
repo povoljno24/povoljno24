@@ -841,12 +841,18 @@ const t = {
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [lang, setLangState] = useState('sr');
+  const [lang, setLangState] = useState(() => {
+    // Read from localStorage lazily on first render (no effect needed)
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('povoljno24_lang');
+      if (saved === 'sr' || saved === 'en') return saved;
+    }
+    return 'sr';
+  });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('povoljno24_lang');
-    if (saved === 'sr' || saved === 'en') setLangState(saved);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

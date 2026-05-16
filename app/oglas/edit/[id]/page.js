@@ -130,7 +130,7 @@ export default function EditOglas({ params }) {
           const watermarkedBlob = await applyWatermark(compressedFile);
           const finalFile = new File([watermarkedBlob], file.name, { type: file.type });
           
-          const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-edit-${i}.${finalFile.name.split('.').pop()}`;
+          const fileName = `${user.id}-${crypto.randomUUID()}-edit-${i}.${finalFile.name.split('.').pop()}`;
           const { error: uploadError } = await supabase.storage.from('listing-images').upload(fileName, finalFile);
           if (uploadError) throw uploadError;
           
