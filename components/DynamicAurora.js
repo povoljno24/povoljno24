@@ -96,12 +96,24 @@ const AuroraSurface = () => {
 export default function DynamicAurora() {
   return (
     <div className="fixed inset-0 -z-10 w-full h-full overflow-hidden bg-[#02050A]">
-      <Canvas camera={{ position: [0, 0, 1] }} gl={{ antialias: false }}>
+      <Canvas 
+        camera={{ position: [0, 0, 1] }} 
+        gl={{ antialias: false, powerPreference: 'high-performance' }}
+        dpr={[1, 1.5]} // Limit pixel ratio for mobile performance
+      >
         <AuroraSurface />
       </Canvas>
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay" 
-           style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }} />
-      <div className="absolute inset-0 pointer-events-none backdrop-blur-[120px] opacity-20" />
+      {/* Local Grain Overlay using CSS filter for zero network cost */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay bg-[#000]" 
+           style={{ filter: 'url(#noiseFilter)' }} />
+      <div className="absolute inset-0 pointer-events-none backdrop-blur-[100px] opacity-15" />
+      
+      {/* SVG Filter for noise - zero external requests */}
+      <svg className="hidden">
+        <filter id="noiseFilter">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+        </filter>
+      </svg>
     </div>
   );
 }

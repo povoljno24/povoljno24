@@ -1,11 +1,9 @@
 import { supabaseServer } from '../../../lib/supabase-server';
 import ImageGallery from './ImageGallery';
-import { ListingBreadcrumbs, ListingDetails, SellerCard, ContactHeader } from './ListingClientParts';
+import { ListingBreadcrumbs, ListingDetails, SellerCard, ContactHeader, ContactFormWrapper } from './ListingClientParts';
 import { createClient } from '../../../lib/supabase-server-auth';
 import { safeJsonStringify } from '../../../lib/security';
-import dynamic from 'next/dynamic';
-
-const ContactForm = dynamic(() => import('./ContactForm'), { ssr: false });
+import { getDictionary } from '../../dictionaries';
 
 async function getListing(id) {
   const { data, error } = await supabaseServer
@@ -107,6 +105,8 @@ export default async function OglasPage({ params }) {
   }
 
   const seller = await getSellerProfile(listing.user_id);
+  const lang = (await params)?.lang || 'sr';
+  const t = await getDictionary(lang);
 
   return (
     <div className="flex-1 bg-transparent py-12">
@@ -142,15 +142,15 @@ export default async function OglasPage({ params }) {
         />
 
         {/* Breadcrumbs */}
-        <ListingBreadcrumbs listing={listing} />
+        <ListingBreadcrumbs listing={listing} t={t} />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-start mt-8">
 
           {/* LEFT: Listing Details */}
           <div className="space-y-8">
             <div className="bg-[#0A0A0A]/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 overflow-hidden shadow-[0_64px_128px_rgba(0,0,0,0.6)]">
-              <ImageGallery images={listing.images || [listing.image_url]} title={listing.title} />
-              <ListingDetails listing={listing} />
+              <ImageGallery images={listing.images || [listing.image_url]} title={listing.title} t={t} />
+              <ListingDetails listing={listing} t={t} />
             </div>
           </div>
 
@@ -159,15 +159,15 @@ export default async function OglasPage({ params }) {
 
             {/* Seller Card */}
             {seller && (
-              <SellerCard seller={seller} listingUserId={listing.user_id} />
+              <SellerCard seller={seller} listingUserId={listing.user_id} t={t} />
             )}
 
             {/* Contact Form */}
             {(!currentUser || currentUser.id !== listing.user_id) && (
               <div className="bg-[#0A0A0A]/80 backdrop-blur-3xl rounded-[2.5rem] border border-[#185FA5]/30 shadow-[0_32px_64px_rgba(24,95,165,0.1)] overflow-hidden">
-                <ContactHeader />
+                <ContactHeader t={t} />
                 <div className="p-8">
-                  <ContactForm listingId={listing.id} receiverId={listing.user_id} />
+                  <ContactFormWrapper listingId={listing.id} receiverId={listing.user_id} />
                 </div>
               </div>
             )}

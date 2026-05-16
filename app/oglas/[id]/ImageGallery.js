@@ -3,8 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useLanguage } from '../../../components/LanguageContext';
 
-export default function ImageGallery({ images = [], title }) {
-  const { t } = useLanguage();
+export default function ImageGallery({ images = [], title, t }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [scale, setScale] = useState(1);

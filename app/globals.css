@@ -37,31 +37,53 @@ body {
   color: #fff;
 }
 
+/* Performance: Defer off-screen rendering for better scroll FPS */
+.listing-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 400px;
+}
+
+/* Z-Index Scale (Standard UX System) */
+.z-base { z-index: 1; }
+.z-card { z-index: 10; }
+.z-nav { z-index: 50; }
+.z-modal { z-index: 100; }
+.z-toast { z-index: 200; }
+
+/* Accessibility: Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Mobile Performance Optimizations */
 @media (max-width: 640px) {
   * {
-    /* Reduce blur radius on mobile for better performance */
-    --backdrop-blur: blur(20px);
+    --backdrop-blur: blur(12px);
   }
   
   .backdrop-blur-3xl {
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
   }
   
   .backdrop-blur-2xl {
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 
   /* Simplify transitions on mobile */
   .transition-all {
-    transition-duration: 200ms !important;
+    transition-duration: 150ms !important;
   }
 
   .hero-blur {
-    filter: blur(60px) !important;
-    width: 300px !important;
-    height: 300px !important;
+    filter: blur(40px) !important;
+    width: 200px !important;
+    height: 200px !important;
   }
 }

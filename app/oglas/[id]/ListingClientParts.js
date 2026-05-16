@@ -7,8 +7,7 @@ import ReportButton from '../../../components/ReportButton';
 import UserBadges from '../../../components/UserBadges';
 import Image from 'next/image';
 
-export function ListingBreadcrumbs({ listing }) {
-  const { t } = useLanguage();
+export function ListingBreadcrumbs({ listing, t }) {
   return (
     <nav className="flex items-center gap-3 text-[10px] text-white/40 font-black uppercase tracking-[0.2em] overflow-x-auto whitespace-nowrap no-scrollbar">
       <Link href="/" className="hover:text-white transition-colors">{t.breadcrumbHome}</Link>
@@ -24,8 +23,7 @@ export function ListingBreadcrumbs({ listing }) {
   );
 }
 
-export function ListingDetails({ listing }) {
-  const { lang, t } = useLanguage();
+export function ListingDetails({ listing, t }) {
   return (
     <div className="p-8 sm:p-12">
       <div className="flex justify-between items-start mb-6 gap-6">
@@ -73,8 +71,7 @@ export function ListingDetails({ listing }) {
   );
 }
 
-export function SellerCard({ seller, listingUserId }) {
-  const { t } = useLanguage();
+export function SellerCard({ seller, listingUserId, t }) {
   return (
     <div className="bg-[#0A0A0A]/60 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 p-8 shadow-[0_32px_64px_rgba(0,0,0,0.6)] relative group transition-all duration-500 hover:border-white/20">
       <div className="text-[11px] font-black text-white/20 uppercase tracking-[0.3em] mb-8">{t.sellerLabel}</div>
@@ -123,8 +120,14 @@ export function SellerCard({ seller, listingUserId }) {
   );
 }
 
-export function ContactHeader() {
-  const { t } = useLanguage();
+import dynamic from 'next/dynamic';
+
+const ContactForm = dynamic(() => import('./ContactForm'), { 
+  ssr: false,
+  loading: () => <div className="h-48 bg-white/5 rounded-3xl animate-pulse" />
+});
+
+export function ContactHeader({ t }) {
   return (
     <div className="bg-[#185FA5] px-8 py-5 flex items-center gap-3">
       <div className="p-2 bg-white/10 rounded-full">
@@ -135,4 +138,8 @@ export function ContactHeader() {
       <h2 className="text-white font-black text-[13px] uppercase tracking-widest">{t.contactSeller}</h2>
     </div>
   );
+}
+
+export function ContactFormWrapper({ listingId, receiverId }) {
+  return <ContactForm listingId={listingId} receiverId={receiverId} />;
 }
