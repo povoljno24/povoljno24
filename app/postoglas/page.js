@@ -259,7 +259,7 @@ export default function PostOglas() {
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 mb-6">
               {previews.map((src, idx) => (
                 <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden bg-white/[0.03] border border-white/5 group shadow-xl">
-                  <Image src={src} alt="Preview" fill className="object-cover" />
+                  <Image src={src} alt="Preview" fill sizes="(max-width: 640px) 33vw, 100px" className="object-cover" />
                   <button 
                     type="button"
                     onClick={() => removeImage(idx)}

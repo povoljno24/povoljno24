@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -10,7 +10,8 @@ const AdvancedFilters = dynamic(() => import('../components/AdvancedFilters'), {
   loading: () => <div className="h-10 w-32 bg-white/5 rounded-full animate-pulse mx-auto mt-8" />
 });
 
-const cities = [
+// Cities moved outside component or wrapped in useMemo
+const CITIES_LIST = [
   'Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Priština', 'Subotica', 'Zrenjanin', 'Pančevo', 'Čačak', 'Kruševac', 'Kraljevo', 'Novi Pazar', 'Smederevo', 'Leskovac', 'Užice', 'Vranje', 'Valjevo', 'Šabac', 'Sombor', 'Požarevac', 'Pirot', 'Zaječar', 'Kikinda', 'Sremska Mitrovica', 'Jagodina', 'Vršac', 'Bor', 'Prokuplje', 'Loznica'
 ].sort();
 
@@ -41,7 +42,7 @@ export default function HomeClient({ initialListings = [], t, lang }) {
   
   const ITEMS_PER_PAGE = 20;
 
-  const categories = [
+  const categories = useMemo(() => [
     { name: t.electronics, value: 'elektronika' },
     { name: t.cars, value: 'automobili' },
     { name: t.realestate, value: 'nekretnine' },
@@ -59,7 +60,7 @@ export default function HomeClient({ initialListings = [], t, lang }) {
     { name: t.agriculture, value: 'poljoprivreda' },
     { name: t.art, value: 'umetnost' },
     { name: t.other, value: 'ostalo' },
-  ];
+  ], [t]);
 
   async function loadListings(searchTerm, category, minP, maxP, city, condition, sortParams, photoOnly = false, verifiedOnly = false, pageNum = 0, append = false) {
     if (!append) setLoading(true);
@@ -229,7 +230,7 @@ export default function HomeClient({ initialListings = [], t, lang }) {
                 setFilterVerified={setFilterVerified}
                 handleSearch={handleSearch}
                 clearFilters={clearFilters}
-                cities={cities}
+                cities={CITIES_LIST}
               />
             </div>
           )}
@@ -314,6 +315,8 @@ export default function HomeClient({ initialListings = [], t, lang }) {
                           fill 
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
                           priority={index < 4}
+                          decoding="async"
+                          fetchPriority={index < 4 ? "high" : "low"}
                           className="object-contain relative z-10 transition-transform duration-700 pointer-events-none group-hover:scale-105" 
                           draggable={false}
                         />

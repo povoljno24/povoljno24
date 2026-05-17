@@ -126,7 +126,7 @@ export default function Profil() {
         console.error("Failed to save transaction", txError);
       } else {
         setTransactions(prev => [...prev, {
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           sale_price: Number(soldFormData.price),
           was_shipped: soldFormData.wasShipped
         }]);
@@ -294,7 +294,7 @@ export default function Profil() {
               <div className="relative group">
                 <div className="w-24 h-24 rounded-full bg-white/[0.03] overflow-hidden flex items-center justify-center text-3xl font-black text-[#185FA5] shrink-0 border border-white/10 group-hover:border-white/40 transition-all duration-500">
                   {profile?.avatar_url ? (
-                    <Image src={profile.avatar_url} alt="Avatar" fill className="object-cover" />
+                    <Image src={profile.avatar_url} alt="Avatar" fill sizes="96px" className="object-cover" />
                   ) : (
                     (profile?.username?.[0] || user?.email?.[0] || '?').toUpperCase()
                   )}
@@ -412,7 +412,7 @@ export default function Profil() {
                         className="w-32 h-32 rounded-3xl bg-[#050505] overflow-hidden shrink-0 relative flex items-center justify-center border border-white/5 hover:border-[#185FA5] transition-all duration-500"
                       >
                         {listing.image_url ? (
-                          <Image src={listing.image_url} alt={listing.title} fill className="object-cover" />
+                          <Image src={listing.image_url} alt={listing.title} fill sizes="128px" className="object-cover" />
                         ) : (
                           <span className="text-3xl opacity-10">📦</span>
                         )}
@@ -463,7 +463,7 @@ export default function Profil() {
                     <div key={listing.id} className={`${cardClasses} p-6 flex flex-col sm:flex-row gap-8 items-center`}>
                       <Link href={`/oglas/${listing.id}`} className="w-24 h-24 rounded-2xl bg-[#050505] overflow-hidden shrink-0 relative flex items-center justify-center border border-white/5">
                         {listing.image_url ? (
-                          <Image src={listing.image_url} alt={listing.title} fill className="object-cover" />
+                          <Image src={listing.image_url} alt={listing.title} fill sizes="96px" className="object-cover" />
                         ) : (
                           <span className="text-2xl opacity-10">📦</span>
                         )}

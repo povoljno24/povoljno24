@@ -78,7 +78,7 @@ export function SellerCard({ seller, listingUserId, t }) {
       <div className="flex items-center gap-5 mb-8">
         <div className="w-16 h-16 rounded-full bg-white/[0.03] flex items-center justify-center text-2xl font-black text-[#185FA5] shrink-0 border border-white/10 group-hover:border-white/40 transition-all duration-500 relative overflow-hidden">
           {seller.avatar_url ? (
-            <Image src={seller.avatar_url} alt="" fill className="object-cover" />
+            <Image src={seller.avatar_url} alt="" fill sizes="64px" className="object-cover" />
           ) : (
             seller.username ? seller.username[0].toUpperCase() : '?'
           )}

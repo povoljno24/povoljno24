@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import NotificationDropdown from './NotificationDropdown';
 import { useLanguage } from './LanguageContext';
@@ -12,7 +12,7 @@ export default function Navbar() {
   const [notifCount, setNotifCount] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
 
-  async function fetchCounts(currentUser) {
+  const fetchCounts = useCallback(async (currentUser) => {
     if (!currentUser) return;
     const [msgRes, notifRes] = await Promise.all([
       supabase.from('messages').select('*', { count: 'exact', head: true }).eq('receiver_id', currentUser.id).eq('is_read', false),
@@ -20,7 +20,7 @@ export default function Navbar() {
     ]);
     setUnreadMsgCount(msgRes.count || 0);
     setNotifCount(notifRes.count || 0);
-  }
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -43,7 +43,7 @@ export default function Navbar() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchCounts]);
 
   useEffect(() => {
     if (!user) return;
@@ -51,7 +51,7 @@ export default function Navbar() {
     const handleCountsChanged = () => fetchCounts(user);
     window.addEventListener('counts_changed', handleCountsChanged);
 
-    // Real-time subscriptions - without filter to bypass Postgres default replica identity update constraints
+    // Real-time subscriptions
     const msgChannel = supabase.channel(`msg_counts_${user.id}`)
       .on('postgres_changes', { 
         event: '*', 
@@ -73,7 +73,7 @@ export default function Navbar() {
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(notifChannel);
     };
-  }, [user]);
+  }, [user, fetchCounts]);
 
   return (
     <nav className="flex items-center justify-between px-8 py-4 bg-white/[0.03] backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] sticky top-6 z-50 mx-auto max-w-[1200px] w-[calc(100%-3rem)] rounded-full transition-all duration-700 hover:bg-white/[0.05] hover:border-white/20 group">

@@ -20,6 +20,8 @@ body {
 /* Custom Fluid Motion Easing */
 .ease-vanguard {
   transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
 }
 
 /* Hide scrollbars but keep functionality */

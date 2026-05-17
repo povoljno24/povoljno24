@@ -55,10 +55,10 @@ export default function FavoriteButton({ listingId }) {
       onClick={toggleFavorite}
       disabled={loading}
       title={isFavorited ? t.removeSaved : t.saveAd}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[13px] font-semibold transition-all duration-200 cursor-pointer disabled:opacity-50
+      className={`flex items-center gap-3 px-6 py-3 rounded-2xl border text-[11px] font-black uppercase tracking-widest transition-all duration-500 cursor-pointer disabled:opacity-50
         ${isFavorited
-          ? 'bg-red-50 border-red-300 text-red-500 hover:bg-red-100'
-          : 'bg-white border-gray-300 text-gray-600 hover:border-[#185FA5] hover:text-[#185FA5] hover:bg-[#E6F1FB]'
+          ? 'bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]'
+          : 'bg-white/[0.03] border-white/10 text-white/40 hover:border-[#185FA5] hover:text-[#185FA5] hover:bg-[#185FA5]/10'
         }`}
     >
       <svg
@@ -67,7 +67,7 @@ export default function FavoriteButton({ listingId }) {
         fill={isFavorited ? 'currentColor' : 'none'}
         stroke="currentColor"
         strokeWidth={isFavorited ? 0 : 2}
-        className="w-4 h-4 transition-all duration-200"
+        className="w-4 h-4 transition-all duration-300"
       >
         <path
           strokeLinecap="round"

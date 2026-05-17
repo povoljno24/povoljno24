@@ -149,7 +149,7 @@ export default function PorukePage() {
                   <div className="w-20 h-20 rounded-2xl bg-[#050505] overflow-hidden shrink-0 relative flex items-center justify-center border border-white/5 shadow-xl transition-all group-hover:border-white/20">
                     {conv.listing_image ? (
                       <div className="relative w-full h-full">
-                        <Image src={conv.listing_image} alt={conv.listing_title} fill className="object-cover" />
+                        <Image src={conv.listing_image} alt={conv.listing_title} fill sizes="80px" className="object-cover" />
                       </div>
                     ) : (
                       <span className="text-3xl opacity-10">📦</span>

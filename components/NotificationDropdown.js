@@ -67,7 +67,7 @@ export default function NotificationDropdown({ userId, onClose }) {
               >
                 <div className="w-12 h-12 rounded-xl bg-white/[0.03] flex-shrink-0 overflow-hidden relative border border-white/5">
                   {n.listings?.image_url ? (
-                    <Image src={n.listings.image_url} alt="" fill className="object-cover" />
+                    <Image src={n.listings.image_url} alt="" fill sizes="48px" className="object-cover" />
                   ) : (
                     <div className="flex items-center justify-center h-full text-xl opacity-40">{n.type === 'message' ? '💬' : '📉'}</div>
                   )}

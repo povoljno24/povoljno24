@@ -111,6 +111,7 @@ export default function ImageGallery({ images = [], title, t }) {
             src={currentImageUrl} 
             alt={title} 
             fill 
+            sizes="(max-width: 1024px) 100vw, 720px"
             className="object-contain relative z-10 transition-all duration-700 group-hover/main:scale-[1.02] pointer-events-none"
             priority 
             draggable={false}
@@ -161,7 +162,7 @@ export default function ImageGallery({ images = [], title, t }) {
               onContextMenu={(e) => e.preventDefault()}
               className={`relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 transition-all duration-500 border-2 ${currentIndex === idx ? 'border-white opacity-100 shadow-[0_0_20px_rgba(255,255,255,0.1)] scale-105' : 'border-white/5 opacity-30 hover:opacity-100'}`}
             >
-              <Image src={img} alt={`${title} ${idx}`} fill className="object-cover pointer-events-none" draggable={false} />
+              <Image src={img} alt={`${title} ${idx}`} fill sizes="96px" className="object-cover pointer-events-none" draggable={false} />
               <div className="absolute inset-0 z-10 bg-transparent" />
             </button>
           ))}
@@ -234,6 +235,7 @@ export default function ImageGallery({ images = [], title, t }) {
                 src={currentImageUrl} 
                 alt={title} 
                 fill 
+                sizes="100vw"
                 className="object-contain pointer-events-none select-none"
                 draggable={false}
                 unoptimized 

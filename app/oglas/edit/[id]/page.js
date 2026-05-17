@@ -307,7 +307,7 @@ export default function EditOglas({ params }) {
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 mb-6">
               {existingImages.map((src, idx) => (
                 <div key={`exist-${idx}`} className="relative aspect-square rounded-2xl overflow-hidden bg-white/[0.03] border border-white/5 group shadow-xl">
-                  <Image src={src} alt="Existing" fill className="object-cover" />
+                  <Image src={src} alt="Existing" fill sizes="(max-width: 640px) 33vw, 100px" className="object-cover" />
                   <button 
                     type="button"
                     onClick={() => removeExisting(idx)}
@@ -319,7 +319,7 @@ export default function EditOglas({ params }) {
               ))}
               {newPreviews.map((src, idx) => (
                 <div key={`new-${idx}`} className="relative aspect-square rounded-2xl overflow-hidden bg-[#185FA5]/10 border border-[#185FA5]/20 group shadow-xl">
-                  <Image src={src} alt="New" fill className="object-cover" />
+                  <Image src={src} alt="New" fill sizes="(max-width: 640px) 33vw, 100px" className="object-cover" />
                   <div className="absolute inset-0 bg-[#185FA5]/20" />
                   <button 
                     type="button"

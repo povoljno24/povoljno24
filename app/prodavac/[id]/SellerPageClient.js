@@ -32,7 +32,7 @@ export function SellerPageClient({ profile, listings, avgRating, reviewCount, to
           <div className="flex flex-col md:flex-row items-start md:items-center gap-10">
             <div className="w-24 h-24 rounded-full bg-white/[0.03] flex items-center justify-center text-3xl font-black text-[#185FA5] shrink-0 border border-white/10 relative overflow-hidden shadow-2xl">
               {profile.avatar_url ? (
-                <Image src={profile.avatar_url} alt="" fill className="object-cover" />
+                <Image src={profile.avatar_url} alt="" fill sizes="96px" className="object-cover" />
               ) : (
                 profile.username ? profile.username[0].toUpperCase() : '?'
               )}
@@ -118,6 +118,7 @@ export function SellerPageClient({ profile, listings, avgRating, reviewCount, to
                             src={listing.image_url} 
                             alt={listing.title} 
                             fill 
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             className="object-contain relative z-10 transition-transform duration-700 pointer-events-none group-hover:scale-105" 
                             draggable={false}
                           />

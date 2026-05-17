@@ -96,7 +96,7 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-[#050505] overflow-hidden relative shrink-0 border border-white/5">
                           {report.listings?.image_url && (
-                            <Image src={report.listings.image_url} alt="" fill className="object-cover" />
+                            <Image src={report.listings.image_url} alt="" fill sizes="48px" className="object-cover" />
                           )}
                         </div>
                         <div className="min-w-0">

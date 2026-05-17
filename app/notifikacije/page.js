@@ -117,7 +117,7 @@ export default function NotifikacijePage() {
               >
                 <div className="w-16 h-16 rounded-2xl bg-[#050505] overflow-hidden shrink-0 relative flex items-center justify-center border border-white/5 transition-all group-hover:border-white/20">
                   {n.listings?.image_url ? (
-                    <Image src={n.listings.image_url} alt="" fill className="object-cover" />
+                    <Image src={n.listings.image_url} alt="" fill sizes="64px" className="object-cover" />
                   ) : (
                     <div className="text-3xl opacity-10 grayscale">
                       {n.type === 'message' ? '💬' : '📉'}
