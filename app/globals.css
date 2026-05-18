@@ -98,3 +98,38 @@ body {
     height: 200px !important;
   }
 }
+
+/* GPU-Accelerated CSS Aurora Animations */
+@keyframes aurora-1 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(50px, -50px) scale(1.1); }
+  66% { transform: translate(-30px, 20px) scale(0.95); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes aurora-2 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-40px, 60px) scale(1.15); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes aurora-3 {
+  0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+  50% { transform: translate(30px, -30px) scale(0.9) rotate(180deg); }
+  100% { transform: translate(0px, 0px) scale(1) rotate(360deg); }
+}
+
+.animate-aurora-first {
+  animation: aurora-1 25s infinite ease-in-out;
+  will-change: transform;
+}
+
+.animate-aurora-second {
+  animation: aurora-2 30s infinite ease-in-out;
+  will-change: transform;
+}
+
+.animate-aurora-third {
+  animation: aurora-3 35s infinite ease-in-out;
+  will-change: transform;
+}

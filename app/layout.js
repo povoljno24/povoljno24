@@ -6,12 +6,12 @@ import BottomNav from "../components/BottomNav";
 import { LanguageProvider } from "../components/LanguageContext";
 import { ToastProvider } from "../components/ToastContext";
 import RealtimeNotifications from "../components/RealtimeNotifications";
-import AuroraWrapper from "../components/AuroraWrapper";
+import CSSAurora from "../components/CSSAurora";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
-  display: 'swap',
+  display: 'optional',
 });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href={supabaseUrl} />
       </head>
       <body className="min-h-full flex flex-col bg-[#050505] text-[#F5F5F7] font-sans overflow-x-hidden w-full relative selection:bg-[#185FA5] selection:text-white">
-        <AuroraWrapper />
+        <CSSAurora />
 
         <LanguageProvider>
           <ToastProvider>
