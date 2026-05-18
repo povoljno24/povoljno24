@@ -391,7 +391,7 @@ export default function Profil() {
                   href="/postoglas"
                   className="text-[11px] font-black uppercase tracking-[0.2em] text-black bg-white hover:bg-[#185FA5] hover:text-white px-8 py-3 rounded-full transition-all duration-500 shadow-xl"
                 >
-                  + {t.newListing}
+                  {t.newListing}
                 </Link>
               </div>
               
