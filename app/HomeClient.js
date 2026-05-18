@@ -1,9 +1,10 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { useLanguage } from '../components/LanguageContext';
 
 const AdvancedFilters = dynamic(() => import('../components/AdvancedFilters'), { 
   ssr: false,
@@ -15,7 +16,8 @@ const CITIES_LIST = [
   'Beograd', 'Novi Sad', 'Niš', 'Kragujevac', 'Priština', 'Subotica', 'Zrenjanin', 'Pančevo', 'Čačak', 'Kruševac', 'Kraljevo', 'Novi Pazar', 'Smederevo', 'Leskovac', 'Užice', 'Vranje', 'Valjevo', 'Šabac', 'Sombor', 'Požarevac', 'Pirot', 'Zaječar', 'Kikinda', 'Sremska Mitrovica', 'Jagodina', 'Vršac', 'Bor', 'Prokuplje', 'Loznica'
 ].sort();
 
-export default function HomeClient({ initialListings = [], t, lang }) {
+export default function HomeClient({ initialListings = [] }) {
+  const { t } = useLanguage();
   const [listings, setListings] = useState(initialListings);
   
   // Basic search & filter states

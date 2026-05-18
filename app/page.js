@@ -1,11 +1,7 @@
 import { supabaseServer } from '../lib/supabase-server';
 import HomeClient from './HomeClient';
-import { getDictionary } from './dictionaries';
 
-export default async function Home({ searchParams }) {
-  const lang = (await searchParams)?.lang || 'sr';
-  const t = await getDictionary(lang);
-
+export default async function Home() {
   // Initial fetch on server for better LCP
   const { data: initialListings } = await supabaseServer
     .from('listings')
@@ -14,5 +10,5 @@ export default async function Home({ searchParams }) {
     .order('created_at', { ascending: false })
     .range(0, 19);
 
-  return <HomeClient initialListings={initialListings || []} t={t} lang={lang} />;
+  return <HomeClient initialListings={initialListings || []} />;
 }
