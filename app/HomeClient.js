@@ -205,7 +205,7 @@ export default function HomeClient({ initialListings = [], t, lang }) {
             className="mt-8 text-[10px] font-black text-white/20 hover:text-white uppercase tracking-[0.4em] transition-all flex items-center gap-3 mx-auto"
           >
             <span className="w-8 h-[1px] bg-white/10"></span>
-            {showAdvanced ? 'Zatvori filtere' : 'Napredni filteri'}
+            {showAdvanced ? t.closeFilters : t.advancedFilters}
             <span className="w-8 h-[1px] bg-white/10"></span>
           </button>
 

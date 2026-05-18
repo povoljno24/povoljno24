@@ -13,8 +13,8 @@ export default function AdvancedFilters({
   handleSearch, clearFilters, 
   cities 
 }) {
-  const inputClasses = "w-full px-5 py-4 rounded-2xl border border-white/5 bg-white/[0.03] text-white placeholder:text-white/10 outline-none focus:border-[#185FA5] focus:bg-white/10 transition-all text-[14px]";
-  const labelClasses = "text-[10px] font-black text-white/40 uppercase tracking-[0.3em] block mb-3 ml-1";
+  const inputClasses = "w-full px-5 py-4 rounded-2xl border border-white/5 bg-white/[0.03] text-white placeholder:text-white/30 outline-none focus:border-[#185FA5] focus:bg-white/10 transition-all text-[14px]";
+  const labelClasses = "text-[10px] font-black text-white/60 uppercase tracking-[0.3em] block mb-3 ml-1";
 
   return (
     <div className="fixed inset-0 sm:relative sm:inset-auto z-[100] sm:z-10 bg-[#0A0A0A] sm:bg-[#0A0A0A]/90 sm:backdrop-blur-3xl sm:rounded-[3rem] sm:border border-white/10 mt-0 sm:mt-12 shadow-2xl text-left flex flex-col animate-in fade-in slide-in-from-bottom sm:slide-in-from-top-4 duration-500 overflow-hidden">
@@ -69,7 +69,7 @@ export default function AdvancedFilters({
                 <option value="price_asc" className="bg-[#050505]">{t.sortPriceAsc}</option>
                 <option value="price_desc" className="bg-[#050505]">{t.sortPriceDesc}</option>
               </select>
-              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-20">▼</div>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
             </div>
           </div>
           <div>
@@ -96,14 +96,14 @@ export default function AdvancedFilters({
               <button 
                 type="button"
                 onClick={() => setFilterCondition(filterCondition === 'Novo' ? '' : 'Novo')}
-                className={`flex-1 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest transition-all ${filterCondition === 'Novo' ? 'bg-white text-black shadow-2xl scale-[1.02]' : 'text-white/20 hover:text-white/60'}`}
+                className={`flex-1 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest transition-all ${filterCondition === 'Novo' ? 'bg-white text-black shadow-2xl scale-[1.02]' : 'text-white/50 hover:text-white/80'}`}
               >
                 {t.condNew}
               </button>
               <button 
                 type="button"
                 onClick={() => setFilterCondition(filterCondition === 'Polovno' ? '' : 'Polovno')}
-                className={`flex-1 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest transition-all ${filterCondition === 'Polovno' ? 'bg-white text-black shadow-2xl scale-[1.02]' : 'text-white/20 hover:text-white/60'}`}
+                className={`flex-1 rounded-[1.5rem] text-[11px] font-black uppercase tracking-widest transition-all ${filterCondition === 'Polovno' ? 'bg-white text-black shadow-2xl scale-[1.02]' : 'text-white/50 hover:text-white/80'}`}
               >
                 {t.condUsed}
               </button>
@@ -113,11 +113,11 @@ export default function AdvancedFilters({
           {/* Switches (Slike & Sigurnost) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:col-span-2 lg:col-span-3">
              <div>
-              <label className={labelClasses}>Slike</label>
+              <label className={labelClasses}>{t.photosLabel}</label>
               <button 
                 type="button"
                 onClick={() => setFilterPhoto(!filterPhoto)}
-                className={`w-full h-[64px] px-8 rounded-[1.8rem] text-left text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-between border ${filterPhoto ? 'bg-[#185FA5] text-white border-[#185FA5] shadow-[0_0_20px_rgba(24,95,165,0.2)]' : 'bg-white/[0.03] text-white/20 border-white/5 hover:border-white/20'}`}
+                className={`w-full h-[64px] px-8 rounded-[1.8rem] text-left text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-between border ${filterPhoto ? 'bg-[#185FA5] text-white border-[#185FA5] shadow-[0_0_20px_rgba(24,95,165,0.2)]' : 'bg-white/[0.03] text-white/50 border-white/5 hover:border-white/20'}`}
               >
                 <span className="flex items-center gap-3 truncate">📸 {t.onlyWithPhoto || 'Samo sa slikom'}</span>
                 <div className={`w-6 h-6 rounded-lg flex items-center justify-center border transition-all ${filterPhoto ? 'bg-white border-white' : 'border-white/10 bg-black/20'}`}>
@@ -127,11 +127,11 @@ export default function AdvancedFilters({
             </div>
 
             <div>
-              <label className={labelClasses}>Sigurnost</label>
+              <label className={labelClasses}>{t.securityLabel}</label>
               <button 
                 type="button"
                 onClick={() => setFilterVerified(!filterVerified)}
-                className={`w-full h-[64px] px-8 rounded-[1.8rem] text-left text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-between border ${filterVerified ? 'bg-[#1D9E75] text-white border-[#1D9E75] shadow-[0_0_20px_rgba(29,158,117,0.2)]' : 'bg-white/[0.03] text-white/20 border-white/5 hover:border-white/20'}`}
+                className={`w-full h-[64px] px-8 rounded-[1.8rem] text-left text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-between border ${filterVerified ? 'bg-[#1D9E75] text-white border-[#1D9E75] shadow-[0_0_20px_rgba(29,158,117,0.2)]' : 'bg-white/[0.03] text-white/50 border-white/5 hover:border-white/20'}`}
               >
                 <span className="flex items-center gap-3 truncate">🛡️ {t.onlyVerified || 'Samo provereni'}</span>
                 <div className={`w-6 h-6 rounded-lg flex items-center justify-center border transition-all ${filterVerified ? 'bg-white border-white' : 'border-white/10 bg-black/20'}`}>
@@ -148,7 +148,7 @@ export default function AdvancedFilters({
         <button 
           type="button"
           onClick={() => { clearFilters(); setShowAdvanced(false); }}
-          className="w-full sm:w-auto py-5 px-12 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-white bg-white/5 transition-all order-2 sm:order-1"
+          className="w-full sm:w-auto py-5 px-12 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] text-white/50 hover:text-white bg-white/5 transition-all order-2 sm:order-1"
         >
           {t.resetAll}
         </button>

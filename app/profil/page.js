@@ -69,7 +69,7 @@ export default function Profil() {
           setTimeout(() => {
             setDeleteModal({ isOpen: true, listingId: collectedListings[0].id });
             setSoldFormData({ soldOnPlatform: true, price: '', wasShipped: collectedListings[0].status === 'shipped' || true });
-            showToast(t.kpiPrompt || 'Imate prodatih predmeta koji čekaju potvrdu!', 'info');
+          showToast(t.kpiPrompt, 'info');
           }, 1000);
         }
 
@@ -322,30 +322,30 @@ export default function Profil() {
               </div>
               <div className="bg-white/[0.03] rounded-3xl p-5 sm:p-6 border border-white/5 transition-all hover:bg-white/[0.05]">
                 <div className="text-2xl sm:text-3xl font-black text-[#185FA5]">{totalEarnings.toLocaleString()}</div>
-                <div className="text-[9px] sm:text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">Zarada (RSD)</div>
+                <div className="text-[9px] sm:text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">{t.earningsLabel}</div>
               </div>
               <div className="bg-white/[0.03] rounded-3xl p-5 sm:p-6 border border-white/5 transition-all hover:bg-white/[0.05]">
                 <div className="text-2xl sm:text-3xl font-black text-[#1D9E75]">{packagesSent}</div>
-                <div className="text-[9px] sm:text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">Paketa</div>
+                <div className="text-[9px] sm:text-[10px] text-white/20 font-black uppercase tracking-[0.2em] mt-2">{t.packagesLabel}</div>
               </div>
             </div>
           </div>
 
           <div className={cardClasses}>
-            <div className="text-[11px] font-black text-white/20 uppercase tracking-[0.3em] mb-8">Informacije</div>
+            <div className="text-[11px] font-black text-white/20 uppercase tracking-[0.3em] mb-8">{t.infoLabel}</div>
             <div className="space-y-8">
               <div>
-                <div className="text-[10px] font-black text-[#185FA5] uppercase tracking-widest mb-1">Član od</div>
+                <div className="text-[10px] font-black text-[#185FA5] uppercase tracking-widest mb-1">{t.memberSinceLabel2}</div>
                 <div className="text-xl font-bold text-white">{user?.created_at ? new Date(user.created_at).getFullYear() : '...'}</div>
               </div>
               <div>
-                <div className="text-[10px] font-black text-[#1D9E75] uppercase tracking-widest mb-2">Status verifikacije</div>
+                <div className="text-[10px] font-black text-[#1D9E75] uppercase tracking-widest mb-2">{t.verificationStatusLabel}</div>
                 {profile?.phone_verified ? (
                   <div className="flex items-center gap-2 text-white font-bold text-sm">
-                    <span className="w-2 h-2 rounded-full bg-[#1D9E75] shadow-[0_0_10px_#1D9E75]"></span> Verifikovan
+                    <span className="w-2 h-2 rounded-full bg-[#1D9E75] shadow-[0_0_10px_#1D9E75]"></span> {t.verifiedStatus}
                   </div>
                 ) : (
-                  <div className="text-white/20 font-bold text-sm">Nije verifikovan</div>
+                  <div className="text-white/20 font-bold text-sm">{t.notVerifiedStatus}</div>
                 )}
               </div>
               {profile?.bio && (
@@ -558,7 +558,7 @@ export default function Profil() {
                   {profile?.phone_verified ? (
                     <div className="flex items-center justify-between p-6 bg-white/[0.03] rounded-3xl border border-white/5">
                       <div>
-                        <div className="text-[10px] font-black text-[#185FA5] uppercase tracking-widest mb-2">Email verifikovan</div>
+                        <div className="text-[10px] font-black text-[#185FA5] uppercase tracking-widest mb-2">{t.emailVerifiedLabel}</div>
                         <div className="text-lg font-bold text-white">{profile.phone || profile.email}</div>
                       </div>
                       <div className="bg-[#1D9E75]/10 text-[#1D9E75] text-[10px] font-black px-5 py-2.5 rounded-full border border-[#1D9E75]/20 shadow-[0_0_15px_rgba(29,158,117,0.1)]">
@@ -604,10 +604,10 @@ export default function Profil() {
             <div className="bg-[#0A0A0A] border border-white/10 rounded-[3rem] p-10 sm:p-16 w-full max-w-[540px] shadow-[0_64px_128px_rgba(0,0,0,0.8)] relative overflow-hidden">
                <div className="absolute -top-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full blur-[80px] pointer-events-none" />
               
-              <h3 className="text-3xl font-black text-white mb-10 tracking-tight uppercase">{t.deleteAdTitle || 'Brisanje oglasa'}</h3>
+              <h3 className="text-3xl font-black text-white mb-10 tracking-tight uppercase">{t.deleteAdTitle}</h3>
               
               <div className="mb-12 space-y-8">
-                <p className="text-lg font-medium text-white/60 leading-relaxed">{t.didYouSellOnPlatform || 'Da li ste prodali ovaj predmet preko Povoljno24?'}</p>
+                <p className="text-lg font-medium text-white/60 leading-relaxed">{t.didYouSellOnPlatform}</p>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <button 
@@ -615,21 +615,21 @@ export default function Profil() {
                     className={`py-4 rounded-2xl border transition-all text-[12px] font-black uppercase tracking-widest
                       ${soldFormData.soldOnPlatform ? 'bg-white text-black border-white' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/40'}`}
                   >
-                    {t.yes || 'Da'}
+                    {t.yes}
                   </button>
                   <button 
                     onClick={() => setSoldFormData(prev => ({ ...prev, soldOnPlatform: false }))}
                     className={`py-4 rounded-2xl border transition-all text-[12px] font-black uppercase tracking-widest
                       ${!soldFormData.soldOnPlatform ? 'bg-white text-black border-white' : 'bg-white/5 text-white/40 border-white/10 hover:border-white/40'}`}
                   >
-                    {t.no || 'Ne'}
+                    {t.no}
                   </button>
                 </div>
 
                 {soldFormData.soldOnPlatform && (
                   <div className="bg-white/[0.03] p-8 rounded-[2rem] space-y-6 border border-white/5 animate-in slide-in-from-top-4 duration-500">
                     <div>
-                      <label className={labelClasses}>{t.finalPrice || 'Konačna cena'}</label>
+                      <label className={labelClasses}>{t.finalPrice}</label>
                       <div className="relative">
                         <input 
                           type="number" 
@@ -646,7 +646,7 @@ export default function Profil() {
                         {soldFormData.wasShipped && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
                       </div>
                       <input type="checkbox" checked={soldFormData.wasShipped} onChange={e => setSoldFormData(prev => ({ ...prev, wasShipped: e.target.checked }))} className="hidden" />
-                      <span className="text-[12px] font-bold text-white/60 group-hover:text-white transition-colors">{t.sentViaCourier || 'Poslato kurirskom službom'}</span>
+                      <span className="text-[12px] font-bold text-white/60 group-hover:text-white transition-colors">{t.sentViaCourier}</span>
                     </label>
                   </div>
                 )}
@@ -658,14 +658,14 @@ export default function Profil() {
                   className="py-5 text-[12px] font-black uppercase tracking-widest text-white/20 hover:text-white bg-white/5 rounded-2xl transition-all"
                   disabled={updating}
                 >
-                  {t.cancelDelete || 'Odustani'}
+                  {t.cancelDelete}
                 </button>
                 <button 
                   onClick={handleConfirmDelete}
                   disabled={updating || (soldFormData.soldOnPlatform && !soldFormData.price)}
                   className="py-5 text-[12px] font-black uppercase tracking-widest text-white bg-red-500 hover:bg-red-600 rounded-2xl transition-all shadow-[0_20px_40px_rgba(239,68,68,0.2)] disabled:opacity-20"
                 >
-                  {updating ? (t.deleting || '...') : (t.deleteBtn || 'Obriši')}
+                  {updating ? t.deleting : t.deleteBtn}
                 </button>
               </div>
             </div>
