@@ -45,6 +45,15 @@ body {
   contain-intrinsic-size: 1px 400px;
 }
 
+/* Force hardware accelerated mask clipping to solve backdrop-filter / overflow-hidden corner bleeding */
+.listing-card > div {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+  isolation: isolate;
+}
+
 /* Z-Index Scale (Standard UX System) */
 .z-base { z-index: 1; }
 .z-card { z-index: 10; }
